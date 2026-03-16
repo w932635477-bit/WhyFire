@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>竞品分析 - WhyFire</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="analyze.css">
+</head>
+<body class="dashboard-body">
+  <!-- Sidebar (Same as Dashboard) -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L4 8v8c0 7.18 5.12 13.89 12 16 6.88-2.11 12-8.82 12-16V8L16 2z" fill="url(#logoGrad)"/>
+            <path d="M16 8l-6 3v4c0 3.59 2.56 6.95 6 8 3.44-1.05 6-4.41 6-8v-4l-6-3z" fill="#0D0D0D"/>
+            <circle cx="16" cy="15" r="3" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FF6B6B"/>
+                <stop offset="100%" style="stop-color:#FF8E53"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">WhyFire</span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-title">主要功能</span>
+        <a href="dashboard.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>概览</span>
+        </a>
+        <a href="analyze.html" class="nav-item active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <span>竞品分析</span>
+        </a>
+        <a href="diagnose.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>内容诊断</span>
+        </a>
+        <a href="templates.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+          <span>钩子模板库</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Usage Card -->
+    <div class="usage-card">
+      <div class="usage-header">
+        <span class="usage-plan">训练版</span>
+        <span class="usage-badge">活跃</span>
+      </div>
+      <div class="usage-stats">
+        <div class="usage-item">
+          <span class="usage-label">竞品分析</span>
+          <div class="usage-bar">
+            <div class="usage-fill" style="width: 45%"></div>
+          </div>
+          <span class="usage-count">∞ 无限</span>
+        </div>
+        <div class="usage-item">
+          <span class="usage-label">视频诊断</span>
+          <div class="usage-bar">
+            <div class="usage-fill" style="width: 60%"></div>
+          </div>
+          <span class="usage-count">6/10 次</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">竞品分析</h1>
+        <p class="page-subtitle">粘贴爆款笔记链接，AI 秒级分析爆款要素</p>
+      </div>
+    </header>
+
+    <!-- Analyze Content -->
+    <div class="dashboard-content">
+      <!-- Input Section -->
+      <div class="analyze-input-section">
+        <div class="input-card">
+          <div class="input-header">
+            <div class="input-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <div class="input-title">
+              <h3>输入笔记链接</h3>
+              <p>支持小红书笔记链接，如 https://xhslink.com/xxx 或 https://www.xiaohongshu.com/explore/xxx</p>
+            </div>
+          </div>
+
+          <div class="input-field">
+            <input type="text" id="noteUrl" placeholder="粘贴小红书笔记链接..." class="url-input">
+            <button class="btn btn-primary analyze-btn" id="analyzeBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <span>开始分析</span>
+            </button>
+          </div>
+
+          <div class="input-examples">
+            <span class="example-label">示例链接：</span>
+            <button class="example-link" data-url="https://xhslink.com/example1">护肤博主爆款</button>
+            <button class="example-link" data-url="https://xhslink.com/example2">穿搭笔记</button>
+            <button class="example-link" data-url="https://xhslink.com/example3">美食探店</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State (Hidden by default) -->
+      <div class="loading-section" id="loadingSection" style="display: none;">
+        <div class="loading-card">
+          <div class="loading-animation">
+            <div class="loading-ring"></div>
+            <div class="loading-ring"></div>
+            <div class="loading-ring"></div>
+          </div>
+          <div class="loading-text">
+            <h3>AI 正在分析...</h3>
+            <p>正在提取爆款要素，请稍候</p>
+          </div>
+          <div class="loading-steps">
+            <div class="step-item completed">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>获取笔记数据</span>
+            </div>
+            <div class="step-item active">
+              <div class="step-spinner"></div>
+              <span>AI 分析内容</span>
+            </div>
+            <div class="step-item">
+              <div class="step-circle"></div>
+              <span>生成洞察</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section (Hidden by default) -->
+      <div class="results-section" id="resultsSection" style="display: none;">
+        <!-- Note Preview -->
+        <div class="note-preview-card">
+          <div class="note-image">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%2326262B' width='200' height='200'/%3E%3Ctext x='50%25' y='40%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E📝%3C/text%3E%3Ctext x='50%25' y='70%25' dominant-baseline='middle' text-anchor='middle' fill='%23A1A1AA' font-size='12'%3E笔记封面%3C/text%3E%3C/svg%3E" alt="笔记封面">
+          </div>
+          <div class="note-info">
+            <h2 class="note-title-text">30岁以后，护肤这样做就对了！不花冤枉钱</h2>
+            <div class="note-author">
+              <div class="author-avatar">👑</div>
+              <div class="author-details">
+                <span class="author-name">护肤小达人</span>
+                <span class="author-stats">12.5万粉丝 · 护肤博主</span>
+              </div>
+            </div>
+            <div class="note-stats">
+              <div class="stat">
+                <span class="stat-num">2.3万</span>
+                <span class="stat-name">点赞</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num">8956</span>
+                <span class="stat-name">收藏</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num">1234</span>
+                <span class="stat-name">评论</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis Scores -->
+        <div class="scores-grid">
+          <div class="score-card">
+            <div class="score-header">
+              <span class="score-icon">🎯</span>
+              <span class="score-label">钩子强度</span>
+            </div>
+            <div class="score-value">
+              <span class="score-number">92</span>
+              <span class="score-suffix">/100</span>
+            </div>
+            <div class="score-bar">
+              <div class="score-fill excellent" style="width: 92%"></div>
+            </div>
+            <p class="score-desc">开头使用"年龄焦虑"钩子，立刻抓住 30+ 女性用户注意力</p>
+          </div>
+
+          <div class="score-card">
+            <div class="score-header">
+              <span class="score-icon">💡</span>
+              <span class="score-label">内容价值</span>
+            </div>
+            <div class="score-value">
+              <span class="score-number">88</span>
+              <span class="score-suffix">/100</span>
+            </div>
+            <div class="score-bar">
+              <div class="score-fill great" style="width: 88%"></div>
+            </div>
+            <p class="score-desc">提供具体可执行的护肤建议，价值感强</p>
+          </div>
+
+          <div class="score-card">
+            <div class="score-header">
+              <span class="score-icon">🎨</span>
+              <span class="score-label">视觉吸引力</span>
+            </div>
+            <div class="score-value">
+              <span class="score-number">95</span>
+              <span class="score-suffix">/100</span>
+            </div>
+            <div class="score-bar">
+              <div class="score-fill excellent" style="width: 95%"></div>
+            </div>
+            <p class="score-desc">封面简洁干净，配色高级，文字对比鲜明</p>
+          </div>
+
+          <div class="score-card">
+            <div class="score-header">
+              <span class="score-icon">🔥</span>
+              <span class="score-label">爆款潜力</span>
+            </div>
+            <div class="score-value">
+              <span class="score-number">91</span>
+              <span class="score-suffix">/100</span>
+            </div>
+            <div class="score-bar">
+              <div class="score-fill excellent" style="width: 91%"></div>
+            </div>
+            <p class="score-desc">综合各维度，具有高度传播潜力</p>
+          </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="insights-card">
+          <div class="insights-header">
+            <h3>
+              <span class="insights-icon">💡</span>
+              关键洞察
+            </h3>
+            <span class="insights-badge">AI 分析</span>
+          </div>
+
+          <div class="insights-list">
+            <div class="insight-item">
+              <div class="insight-title">
+                <span class="insight-num">01</span>
+                <span>标题钩子分析</span>
+              </div>
+              <p class="insight-content">
+                "30岁以后" 触发年龄焦虑，"这样做就对了" 提供解决方案的确定性，"不花冤枉钱" 击中消费痛点。
+                <strong>建议：你的标题可以使用类似结构："XX岁以后，XX这样做就对了！不XX"</strong>
+              </p>
+            </div>
+
+            <div class="insight-item">
+              <div class="insight-title">
+                <span class="insight-num">02</span>
+                <span>封面设计模式</span>
+              </div>
+              <p class="insight-content">
+                使用"前后对比"视觉框架，左侧展示"错误示范"，右侧展示"正确示范"，对比强烈。
+                <strong>建议：使用 Canva 制作类似对比风格的封面</strong>
+              </p>
+            </div>
+
+            <div class="insight-item">
+              <div class="insight-title">
+                <span class="insight-num">03</span>
+                <span>正文结构</span>
+              </div>
+              <p class="insight-content">
+                采用"问题-解决方案"结构：先抛出常见护肤误区（痛点），再给出科学护肤步骤（解决方案），最后总结关键点（行动召唤）。
+                <strong>这个结构适合 80% 的知识类内容</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button class="btn btn-outline">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+            收藏分析
+          </button>
+          <button class="btn btn-outline">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            导出报告
+          </button>
+          <button class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            分析下一个
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="analyze.js"></script>
+</body>
+</html>

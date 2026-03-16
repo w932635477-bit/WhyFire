@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhyFire - 小红书 AI 教练</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L4 8v8c0 7.18 5.12 13.89 12 16 6.88-2.11 12-8.82 12-16V8L16 2z" fill="url(#logoGrad)"/>
+            <path d="M16 8l-6 3v4c0 3.59 2.56 6.95 6 8 3.44-1.05 6-4.41 6-8v-4l-6-3z" fill="#0D0D0D"/>
+            <circle cx="16" cy="15" r="3" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FF6B6B"/>
+                <stop offset="100%" style="stop-color:#FF8E53"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">WhyFire</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features" class="nav-link">功能</a>
+        <a href="#pricing" class="nav-link">定价</a>
+        <a href="#" class="nav-link">博客</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-ghost">登录</button>
+        <button class="btn btn-primary">免费试用</button>
+      </div>
+
+      <button class="nav-menu-btn" aria-label="菜单">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section - Mission: Impossible Style -->
+  <section class="hero-mi">
+    <!-- Background Image with Overlay -->
+    <div class="hero-mi-bg">
+      <div class="hero-mi-image"></div>
+      <div class="hero-mi-overlay"></div>
+      <div class="hero-mi-scanlines"></div>
+      <div class="hero-mi-grid"></div>
+      <div class="hero-mi-vignette"></div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="hero-mi-content">
+      <!-- Top Secret Badge -->
+      <div class="mi-badge">
+        <div class="mi-badge-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+        </div>
+        <span>机密档案 · AI 分析系统</span>
+        <div class="mi-badge-status">
+          <span class="status-dot"></span>
+          ACTIVE
+        </div>
+      </div>
+
+      <!-- Main Headline -->
+      <div class="mi-headline">
+        <div class="mi-title-wrapper">
+          <span class="mi-title-en">MISSION:</span>
+          <span class="mi-title-cn">碟一下</span>
+        </div>
+        <h1 class="mi-main-title">
+          <span class="mi-accent">你的竞争对手</span>
+        </h1>
+      </div>
+
+      <!-- Subtitle with Glass Panel -->
+      <div class="mi-glass-panel mi-subtitle-panel">
+        <div class="mi-panel-header">
+          <span class="panel-icon">🎯</span>
+          <span class="panel-title">目标锁定</span>
+        </div>
+        <p class="mi-subtitle">
+          小红书 0-1万粉博主的 <strong>AI 教练</strong><br>
+          粘贴链接 → 秒级分析 → 找出爆款密码
+        </p>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="mi-cta">
+        <button class="btn btn-mi-primary">
+          <div class="btn-mi-bg"></div>
+          <span class="btn-mi-content">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            <span>开始执行任务</span>
+          </span>
+        </button>
+        <button class="btn btn-mi-outline">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+          </svg>
+          <span>观看演示</span>
+        </button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="mi-stats">
+        <div class="mi-stat-card">
+          <div class="stat-number">2,847</div>
+          <div class="stat-label">活跃特工</div>
+        </div>
+        <div class="mi-stat-divider"></div>
+        <div class="mi-stat-card">
+          <div class="stat-number">156%</div>
+          <div class="stat-label">平均提升</div>
+        </div>
+        <div class="mi-stat-divider"></div>
+        <div class="mi-stat-card">
+          <div class="stat-number">2.3s</div>
+          <div class="stat-label">分析速度</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side - Target Profile Card -->
+    <div class="hero-mi-profile">
+      <div class="mi-profile-card">
+        <div class="profile-header">
+          <div class="profile-status">
+            <span class="status-indicator"></span>
+            <span>TARGET ANALYZED</span>
+          </div>
+          <div class="profile-id">ID: XHS-7829</div>
+        </div>
+
+        <div class="profile-content">
+          <div class="profile-avatar">
+            <div class="avatar-ring"></div>
+            <div class="avatar-inner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="profile-info">
+            <div class="profile-label">分析目标</div>
+            <div class="profile-name">护肤小达人</div>
+            <div class="profile-meta">12.5万粉丝 · 护肤博主</div>
+          </div>
+
+          <div class="profile-scores">
+            <div class="score-row">
+              <div class="score-info">
+                <span class="score-icon">🎯</span>
+                <span class="score-name">钩子强度</span>
+              </div>
+              <div class="score-bar-mi">
+                <div class="score-fill-mi" style="width: 92%"></div>
+              </div>
+              <span class="score-val">92</span>
+            </div>
+            <div class="score-row">
+              <div class="score-info">
+                <span class="score-icon">💡</span>
+                <span class="score-name">内容价值</span>
+              </div>
+              <div class="score-bar-mi">
+                <div class="score-fill-mi" style="width: 88%"></div>
+              </div>
+              <span class="score-val">88</span>
+            </div>
+            <div class="score-row">
+              <div class="score-info">
+                <span class="score-icon">🎨</span>
+                <span class="score-name">视觉吸引力</span>
+              </div>
+              <div class="score-bar-mi">
+                <div class="score-fill-mi" style="width: 95%"></div>
+              </div>
+              <span class="score-val">95</span>
+            </div>
+          </div>
+
+          <div class="profile-action">
+            <button class="btn btn-profile-btn">
+              <span>查看完整分析 →</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">核心功能</span>
+        <h2 class="section-title">让 AI 成为你的<br><span class="gradient-text">内容军师</span></h2>
+        <p class="section-subtitle">四大核心功能，帮你从 0 到 1 万粉</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card feature-large">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect x="4" y="8" width="40" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M4 16h40" stroke="currentColor" stroke-width="2"/>
+              <circle cx="10" cy="12" r="2" fill="currentColor"/>
+              <circle cx="16" cy="12" r="2" fill="currentColor"/>
+              <path d="M14 26l6 4 8-10 6 6" stroke="url(#featGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="featGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#FF6B6B"/>
+                  <stop offset="100%" style="stop-color:#FF8E53"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h3 class="feature-title">竞品分析</h3>
+          <p class="feature-desc">粘贴爆款笔记链接，AI 秒级分析标题、封面、正文、标签的爆款要素，告诉你"他为什么能火"</p>
+          <div class="feature-tags">
+            <span class="tag">标题分析</span>
+            <span class="tag">封面诊断</span>
+            <span class="tag">情感曲线</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-purple">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M24 4v40M4 24h40" stroke="currentColor" stroke-width="2"/>
+              <circle cx="24" cy="24" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M24 16v-4M24 36v4M16 24h-4M36 24h4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">内容诊断</h3>
+          <p class="feature-desc">分析你的笔记，对比头部博主，找出真实差距</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-green">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect x="8" y="8" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+              <rect x="26" y="8" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+              <rect x="8" y="26" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M26 33h14M33 26v14" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">可视化对比</h3>
+          <p class="feature-desc">优化前后效果对比，直观看到改进空间</p>
+        </div>
+
+        <div class="feature-card feature-wide">
+          <div class="feature-icon feature-icon-yellow">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M8 40L24 8l16 32H8z" stroke="currentColor" stroke-width="2" fill="none"/>
+              <path d="M24 18v12M24 34v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">钩子模板库</h3>
+          <p class="feature-desc">1000+ 爆款开头模板，按行业、场景分类，一键复制使用。让你的笔记开头不再平庸</p>
+          <div class="feature-preview">
+            <div class="hook-preview">
+              <span class="hook-badge">热门</span>
+              <p>"我花了 3000 块买来的教训，免费分享给你..."</p>
+            </div>
+            <div class="hook-preview">
+              <span class="hook-badge">反直觉</span>
+              <p>"大多数人以为...但其实..."</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">透明定价</span>
+        <h2 class="section-title">选择适合你的<span class="gradient-text">成长方案</span></h2>
+        <p class="section-subtitle">从免费体验到专业版，总有一款适合你</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Free Plan -->
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3 class="plan-name">免费版</h3>
+            <div class="plan-price">
+              <span class="price-amount">¥0</span>
+              <span class="price-period">/月</span>
+            </div>
+            <p class="plan-desc">体验核心功能</p>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>竞品分析 3次/天</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>基础分析报告</span>
+            </li>
+            <li class="disabled">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              <span>视频诊断</span>
+            </li>
+          </ul>
+          <button class="btn btn-outline btn-block">免费开始</button>
+        </div>
+
+        <!-- Starter Plan -->
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3 class="plan-name">入门版</h3>
+            <div class="plan-price">
+              <span class="price-amount">¥9</span>
+              <span class="price-period">/月</span>
+            </div>
+            <p class="plan-desc">轻度使用用户</p>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>竞品分析 30次/月</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>详细分析报告</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>钩子模板库</span>
+            </li>
+            <li class="disabled">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              <span>视频诊断</span>
+            </li>
+          </ul>
+          <button class="btn btn-outline btn-block">选择入门版</button>
+        </div>
+
+        <!-- Trainer Plan - Popular -->
+        <div class="pricing-card pricing-popular">
+          <div class="popular-badge">最受欢迎</div>
+          <div class="pricing-header">
+            <h3 class="plan-name">训练版</h3>
+            <div class="plan-price">
+              <span class="price-amount">¥29</span>
+              <span class="price-period">/月</span>
+            </div>
+            <p class="plan-desc">认真做内容的核心用户</p>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>竞品分析 <strong>无限</strong></span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>视频诊断 10次/月</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>钩子训练 30次/月</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>内容诊断</span>
+            </li>
+          </ul>
+          <button class="btn btn-primary btn-block">选择训练版</button>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3 class="plan-name">Pro版</h3>
+            <div class="plan-price">
+              <span class="price-amount">¥69</span>
+              <span class="price-period">/月</span>
+            </div>
+            <p class="plan-desc">专业博主 & MCN</p>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>全部功能 <strong>无限</strong></span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>视频诊断 20次/月</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>钩子训练 100次/月</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>VidLuxe 联动</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>优先客服支持</span>
+            </li>
+          </ul>
+          <button class="btn btn-outline btn-block">选择 Pro 版</button>
+        </div>
+      </div>
+
+      <div class="pricing-footer">
+        <p>💡 所有套餐支持 7 天无理由退款 · 微信/支付宝支付</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="cta-bg">
+      <div class="cta-gradient"></div>
+    </div>
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="cta-title">准备好让你的内容<span class="gradient-text">火起来</span>了吗？</h2>
+        <p class="cta-subtitle">加入 2,847 位博主，开始你的爆款之旅</p>
+        <button class="btn btn-primary btn-lg">
+          <span>免费开始分析</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M16 2L4 8v8c0 7.18 5.12 13.89 12 16 6.88-2.11 12-8.82 12-16V8L16 2z" fill="url(#logoGrad2)"/>
+                <path d="M16 8l-6 3v4c0 3.59 2.56 6.95 6 8 3.44-1.05 6-4.41 6-8v-4l-6-3z" fill="#0D0D0D"/>
+                <circle cx="16" cy="15" r="3" fill="url(#logoGrad2)"/>
+                <defs>
+                  <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FF6B6B"/>
+                    <stop offset="100%" style="stop-color:#FF8E53"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <span class="logo-text">WhyFire</span>
+          </a>
+          <p class="footer-tagline">小红书 AI 教练</p>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>产品</h4>
+            <a href="#">功能介绍</a>
+            <a href="#">定价</a>
+            <a href="#">更新日志</a>
+          </div>
+          <div class="footer-col">
+            <h4>资源</h4>
+            <a href="#">博客</a>
+            <a href="#">帮助中心</a>
+            <a href="#">API 文档</a>
+          </div>
+          <div class="footer-col">
+            <h4>公司</h4>
+            <a href="#">关于我们</a>
+            <a href="#">联系我们</a>
+            <a href="#">隐私政策</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2024 WhyFire. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
