@@ -1,0 +1,20 @@
+{
+  "name": "whyfire",
+  "version": "1.0.0",
+  "description": "> 小红书 0-1万粉博主的 AI 教练 — 告诉你为什么他能火，你不火",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.58.2",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}
