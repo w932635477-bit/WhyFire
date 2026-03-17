@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const notoSansSC = Noto_Sans_SC({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-sans",
+});
 
 export const metadata: Metadata = {
-  title: "WhyFire - 海外创意灵感库",
-  description: "小红书博主的海外创意灵感库，AI 帮你解读热门视频，给你本土化创作建议",
+  title: "WhyFire - 小红书 AI 教练",
+  description: "小红书 0-1万粉博主的 AI 教练 — 告诉你为什么他能火，你不火",
 };
 
 export default function RootLayout({
@@ -15,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      <body className={inter.className}>{children}</body>
+    <html lang="zh-CN" className={notoSansSC.variable}>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }

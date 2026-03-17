@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>海外创意灵感库 - WhyFire</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="wizard.css">
+</head>
+<body class="dashboard-body">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L4 8v8c0 7.18 5.12 13.89 12 16 6.88-2.11 12-8.82 12-16V8L16 2z" fill="url(#logoGrad)"/>
+            <path d="M16 8l-6 3v4c0 3.59 2.56 6.95 6 8 3.44-1.05 6-4.41 6-8v-4l-6-3z" fill="#0D0D0D"/>
+            <circle cx="16" cy="15" r="3" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FF6B6B"/>
+                <stop offset="100%" style="stop-color:#FF8E53"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">WhyFire</span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-title">主要功能</span>
+        <a href="wizard.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          <span>AI 教练流程</span>
+        </a>
+        <a href="dashboard.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>概览</span>
+        </a>
+        <a href="analyze.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <span>竞品分析</span>
+        </a>
+        <a href="diagnose.html" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span>内容诊断</span>
+        </a>
+        <a href="inspiration.html" class="nav-item active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>海外创意灵感库</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-title">账户</span>
+        <a href="#" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>设置</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Usage Card -->
+    <div class="usage-card">
+      <div class="usage-header">
+        <span class="usage-plan">训练版</span>
+        <span class="usage-badge">活跃</span>
+      </div>
+      <div class="usage-stats">
+        <div class="usage-item">
+          <span class="usage-label">竞品分析</span>
+          <div class="usage-bar">
+            <div class="usage-fill" style="width: 100%"></div>
+          </div>
+          <span class="usage-count">∞ 无限</span>
+        </div>
+        <div class="usage-item">
+          <span class="usage-label">视频诊断</span>
+          <div class="usage-bar">
+            <div class="usage-fill" style="width: 60%"></div>
+          </div>
+          <span class="usage-count">6/10 次</span>
+        </div>
+        <div class="usage-item">
+          <span class="usage-label">AI解读</span>
+          <div class="usage-bar">
+            <div class="usage-fill" style="width: 33%"></div>
+          </div>
+          <span class="usage-count">10/30 次</span>
+        </div>
+      </div>
+      <div class="usage-footer">
+        <span>3 月 28 日重置</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">海外创意灵感库</h1>
+        <p class="page-subtitle">基于你的分析结果，AI 为你精选了 8 个相关海外爆款 🌍</p>
+      </div>
+
+      <div class="topbar-right">
+        <button class="topbar-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+
+        <div class="user-menu">
+          <div class="user-avatar">
+            <span>王</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name">王小明</span>
+            <span class="user-email">xiaoming@email.com</span>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Inspiration Content -->
+    <div class="dashboard-content">
+      <!-- Context Banner -->
+      <section class="context-banner">
+        <div class="context-icon">🎯</div>
+        <div class="context-text">
+          <h3>为你精选的灵感</h3>
+          <p>基于你刚才分析的竞品（护肤类）和你的内容差距（钩子强度不足），AI 从 YouTube/TikTok 热门内容中精选了这些可借鉴的创意。</p>
+        </div>
+        <div class="context-stats">
+          <div class="stat-item">
+            <span class="stat-num">8</span>
+            <span class="stat-label">精选视频</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">护肤</span>
+            <span class="stat-label">相关类别</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inspiration Grid (6-10 cards) -->
+      <section class="inspiration-grid">
+        <!-- Inspiration Card 1 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform">YouTube</div>
+            <div class="video-duration">3:24</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">The Skincare Routine That Changed My Life</h3>
+            <div class="video-meta">
+              <span class="video-views">2.3M views</span>
+              <span class="video-author">@SkincareByHyram</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>开头用 "Changed My Life" 制造好奇心，30秒内展示皮肤对比图。</p>
+              <p><strong>本土化建议：</strong>可改为"30岁以后护肤这样做就对了！"配合前后对比图。</p>
+              <p><strong>可借鉴元素：</strong>生活化场景 + 对比展示 + 简单步骤</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 2 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform tiktok">TikTok</div>
+            <div class="video-duration">0:45</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">POV: You finally found the right serum</h3>
+            <div class="video-meta">
+              <span class="video-views">5.1M views</span>
+              <span class="video-author">@labbeautymuf</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>POV 视角 + 情绪共鸣，15秒展示产品使用前后变化。</p>
+              <p><strong>本土化建议：</strong>改为"找到适合的精华后..."配合表情变化和皮肤状态。</p>
+              <p><strong>可借鉴元素：</strong>POV 视角 + 快节奏 + 情绪点</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 3 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform">YouTube</div>
+            <div class="video-duration">8:15</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">3 Skincare Mistakes That Age You Faster</h3>
+            <div class="video-meta">
+              <span class="video-views">1.8M views</span>
+              <span class="video-author">@Doctorly</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>"3个错误"数字钩子 + "老得更快"恐惧诉求。</p>
+              <p><strong>本土化建议：</strong>改为"这3个护肤习惯让你老10岁！90%的人都在做"。</p>
+              <p><strong>可借鉴元素：</strong>数字钩子 + 负面警示 + 专家背书</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 4 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform tiktok">TikTok</div>
+            <div class="video-duration">0:30</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">Dermatologist reacts to viral skincare hacks</h3>
+            <div class="video-meta">
+              <span class="video-views">3.7M views</span>
+              <span class="video-author">@dermdoctor</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>专家反应类内容，借势热门话题，权威背书。</p>
+              <p><strong>本土化建议：</strong>可做"皮肤科医生测评小红书热门护肤偏方"系列。</p>
+              <p><strong>可借鉴元素：</strong>专家身份 + 热点借势 + 反应类内容</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 5 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform">YouTube</div>
+            <div class="video-duration">12:30</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">$20 vs $200 Skincare: Is Expensive Worth It?</h3>
+            <div class="video-meta">
+              <span class="video-views">4.2M views</span>
+              <span class="video-author">@JamesWelsh</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>价格对比钩子，满足用户"不花冤枉钱"心理。</p>
+              <p><strong>本土化建议：</strong>改为"50块vs500块护肤品，差距真的有那么大吗？"</p>
+              <p><strong>可借鉴元素：</strong>对比测评 + 价格敏感 + 真实结论</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 6 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform tiktok">TikTok</div>
+            <div class="video-duration">0:58</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">My morning skincare routine (age 35)</h3>
+            <div class="video-meta">
+              <span class="video-views">2.9M views</span>
+              <span class="video-author">@skincarewithsoph</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>年龄标签 + 日常Routine，真实感强。</p>
+              <p><strong>本土化建议：</strong>改为"35岁皮肤状态公开！我的晨间护肤全流程"。</p>
+              <p><strong>可借鉴元素：</strong>年龄标签 + 真实展示 + 过程记录</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 7 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform">YouTube</div>
+            <div class="video-duration">6:45</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">I tried the viral "slugging" trend for 30 days</h3>
+            <div class="video-meta">
+              <span class="video-views">1.5M views</span>
+              <span class="video-author">@BeautyWithin</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>挑战实验类 + 热门趋势 + 时间维度。</p>
+              <p><strong>本土化建议：</strong>改为"亲测！这个小红书爆火的护肤法坚持30天会怎样？"</p>
+              <p><strong>可借鉴元素：</strong>挑战实验 + 热点借势 + 过程记录</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+
+        <!-- Inspiration Card 8 -->
+        <div class="inspiration-card">
+          <div class="video-thumbnail">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%231a1a2e' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FAFAFA' font-size='48'%3E🎬%3C/text%3E%3C/svg%3E" alt="Video Thumbnail">
+            <div class="video-platform tiktok">TikTok</div>
+            <div class="video-duration">0:22</div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">Things I stopped buying for clear skin</h3>
+            <div class="video-meta">
+              <span class="video-views">8.2M views</span>
+              <span class="video-author">@skinbyshaira</span>
+            </div>
+          </div>
+          <div class="insight-panel">
+            <div class="insight-header">
+              <span class="insight-icon">💡</span>
+              <span>AI 解读</span>
+            </div>
+            <div class="insight-content">
+              <p><strong>创意要点：</strong>"不再买"反向思维 + 清单式内容 + 节省暗示。</p>
+              <p><strong>本土化建议：</strong>改为"戒掉这5样东西，皮肤真的变好了！省下几千块"。</p>
+              <p><strong>可借鉴元素：</strong>反向思维 + 清单式 + 节省心理</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              收藏灵感
+            </button>
+            <a href="#" class="btn btn-sm btn-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              查看原视频
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Buttons -->
+      <section class="action-section">
+        <button class="btn btn-outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+          查看收藏的灵感
+        </button>
+        <button class="btn btn-outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          刷新推荐
+        </button>
+        <button class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          完成流程
+        </button>
+      </section>
+    </div>
+  </main>
+
+  <script src="inspiration.js"></script>
+</body>
+</html>

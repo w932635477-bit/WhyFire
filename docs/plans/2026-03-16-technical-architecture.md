@@ -1,8 +1,8 @@
 # WhyFire 技术架构设计文档
 
-> 版本：v2.1 (已修复)
-> 日期：2026-03-16
-> 状态：✅ 已通过最佳实践审核
+> 版本：v3.0 (向导式流程)
+> 日期：2026-03-17
+> 状态：✅ 已更新为向导式流程设计
 
 ---
 
@@ -12,6 +12,7 @@
 |------|------|---------|
 | v2.0 | 2026-03-16 | 腾讯云部署方案 |
 | v2.1 | 2026-03-16 | 修复34个审核问题 |
+| v3.0 | 2026-03-17 | 向导式流程设计，海外创意灵感库（精准推荐6-10个） |
 
 ---
 
@@ -21,14 +22,19 @@
 
 小红书 0-1万粉博主的 AI 教练 — 告诉你为什么他能火，你不火
 
-### 1.2 核心功能
+### 1.2 产品形态
 
-| 功能 | 优先级 | 描述 |
-|------|--------|------|
-| 竞品分析 | P0 | 粘贴链接 → AI 分析爆款要素 |
-| 内容诊断 | P0 | 分析用户笔记 → 找出差距 |
-| 可视化对比 | P1 | 展示优化前后效果 |
-| 钩子模板库 | P1 | 提供创意开头灵感 |
+**向导式流程**（Wizard UI）— 用户按步骤完成分析，每一步依赖前一步的数据
+
+### 1.3 核心功能（按流程顺序）
+
+| 步骤 | 功能 | 优先级 | 描述 |
+|------|------|--------|------|
+| Step 1 | 竞品分析 | P0 | 粘贴竞品链接 → AI 分析爆款要素 |
+| Step 2 | 内容诊断 | P0 | 分析用户笔记 → 找出与竞品的差距 |
+| Step 3 | 可视化对比 | P0 | 雷达图/柱状图展示差距 |
+| Step 4 | 海外创意灵感库 | P1 | 精准推荐 6-10 个相关海外爆款 |
+| Step 5 | 完成提醒 | P1 | 提醒用户拍完再回来诊断 |
 
 ### 1.3 技术目标
 
@@ -75,7 +81,7 @@
 
 ---
 
-## 三、目录结构
+## 三、目录结构（向导式流程）
 
 ```
 /whyfire
@@ -90,20 +96,43 @@
 │   │   ├── signup/               # 注册
 │   │   └── callback/             # OAuth 回调
 │   │
-│   ├── (dashboard)/              # 用户仪表盘组 (需认证)
+│   ├── (wizard)/                 # 向导式流程组 (需认证)
+│   │   ├── layout.tsx            # 向导布局（含进度条）
+│   │   ├── page.tsx              # 流程入口/选择
+│   │   │
+│   │   ├── step1-competitor/     # Step 1: 竞品分析
+│   │   │   └── page.tsx
+│   │   │
+│   │   ├── step2-diagnose/       # Step 2: 内容诊断
+│   │   │   └── page.tsx
+│   │   │
+│   │   ├── step3-compare/        # Step 3: 可视化对比
+│   │   │   └── page.tsx
+│   │   │
+│   │   ├── step4-inspiration/    # Step 4: 海外创意灵感库
+│   │   │   └── page.tsx          # 精准推荐 6-10 个视频
+│   │   │
+│   │   └── step5-complete/       # Step 5: 完成提醒
+│   │       └── page.tsx
+│   │
+│   ├── (dashboard)/              # 用户仪表盘组 (需认证，高级功能)
 │   │   ├── layout.tsx            # 仪表盘布局
 │   │   ├── page.tsx              # 仪表盘首页
-│   │   ├── analyze/              # 竞品分析
-│   │   ├── diagnose/             # 内容诊断
-│   │   ├── templates/            # 钩子模板库
-│   │   ├── settings/             # 设置
-│   │   └── login-platform/       # 平台登录（小红书等）
+│   │   ├── history/              # 历史记录
+│   │   ├── favorites/            # 收藏的灵感
+│   │   └── settings/             # 设置
 │   │
 │   ├── api/                      # API 路由
 │   │   ├── auth/                 # NextAuth.js
 │   │   │   └── [...nextauth]/route.ts
-│   │   ├── scrape/               # 数据抓取
-│   │   ├── analyze/              # AI 分析
+│   │   ├── wizard/               # 向导流程 API
+│   │   │   ├── competitor/route.ts    # 竞品分析
+│   │   │   ├── diagnose/route.ts      # 内容诊断
+│   │   │   ├── compare/route.ts       # 可视化对比
+│   │   │   └── inspiration/route.ts   # 灵感推荐
+│   │   ├── scrape/               # 数据抓取（小红书）
+│   │   ├── youtube/              # YouTube API
+│   │   ├── tiktok/               # TikTok API (Apify)
 │   │   ├── webhooks/             # Webhooks
 │   │   │   ├── wechat/           # 微信支付
 │   │   │   └── alipay/           # 支付宝
@@ -118,9 +147,15 @@
 ├── components/                   # React 组件
 │   ├── ui/                       # Shadcn/ui 组件 (Client Components)
 │   │   └── ... (自动标记 'use client')
+│   ├── wizard/                   # 向导流程组件
+│   │   ├── progress-bar.tsx      # 'use client' 步骤进度条
+│   │   ├── step-navigation.tsx   # 'use client' 上一步/下一步
+│   │   ├── competitor-form.tsx   # 'use client' 竞品链接输入
+│   │   ├── diagnose-form.tsx     # 'use client' 自己链接输入
+│   │   ├── compare-chart.tsx     # 'use client' 可视化对比图表
+│   │   ├── inspiration-card.tsx  # 'use client' 灵感卡片
+│   │   └── analysis-result.tsx   # Server Component
 │   ├── features/                 # 业务组件
-│   │   ├── analyze-form.tsx      # 'use client' (有交互)
-│   │   ├── analyze-result.tsx    # Server Component
 │   │   ├── pricing-card.tsx      # 'use client' (有交互)
 │   │   └── usage-stats.tsx       # Server Component
 │   └── layout/                   # 布局组件
@@ -131,14 +166,22 @@
 ├── lib/                          # 核心库
 │   ├── anthropic/                # Claude API
 │   │   ├── client.ts
-│   │   ├── prompts.ts
+│   │   ├── prompts/              # 分析 Prompts
+│   │   │   ├── competitor.ts     # 竞品分析
+│   │   │   ├── diagnose.ts       # 内容诊断
+│   │   │   └── inspiration.ts    # 灵感解读
 │   │   └── analyze.ts
 │   ├── platforms/                # 多平台数据抓取
 │   │   ├── base.ts
 │   │   ├── types.ts
-│   │   ├── xiaohongshu/
-│   │   ├── douyin/
+│   │   ├── xiaohongshu/          # 小红书
+│   │   ├── youtube/              # YouTube
+│   │   ├── tiktok/               # TikTok
 │   │   └── index.ts
+│   ├── wizard/                   # 向导流程
+│   │   ├── session.ts            # 会话数据管理
+│   │   ├── steps.ts              # 步骤配置
+│   │   └── validators.ts         # 步骤验证
 │   ├── payment/                  # 支付
 │   │   ├── wechat/
 │   │   ├── alipay/
@@ -183,9 +226,153 @@
 
 ---
 
-## 四、数据库设计
+## 四、向导式流程设计
 
-### 4.1 Schema 定义
+### 4.1 数据流
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           向导式流程数据流                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Step 1: 竞品分析
+    │
+    ├── 输入：竞品笔记链接
+    ├── 处理：小红书数据抓取 + Claude Sonnet 分析
+    └── 输出：竞品分析结果（存入 session）
+          │
+          ▼
+Step 2: 内容诊断
+    │
+    ├── 输入：用户笔记链接 + Step 1 的竞品数据
+    ├── 处理：小红书数据抓取 + Claude Sonnet 分析 + 对比
+    └── 输出：诊断结果 + 差距分析（存入 session）
+          │
+          ▼
+Step 3: 可视化对比
+    │
+    ├── 输入：Step 1 + Step 2 的数据
+    ├── 处理：数据聚合 + 图表生成
+    └── 输出：可视化对比图表
+          │
+          ▼
+Step 4: 海外创意灵感库
+    │
+    ├── 输入：前几步的分析结果（用户类别、差距点）
+    ├── 处理：YouTube/TikTok API 搜索 + 相关性筛选 + Claude Haiku 解读
+    └── 输出：6-10 个精选视频 + 每个的本土化建议
+          │
+          ▼
+Step 5: 完成与提醒
+    │
+    ├── 输入：所有步骤的数据
+    ├── 处理：汇总 + 生成报告
+    └── 输出：完整报告 + 下次诊断提醒
+```
+
+### 4.2 Session 数据结构
+
+```typescript
+// lib/wizard/session.ts
+
+interface WizardSession {
+  id: string;
+  userId: string;
+  currentStep: number;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Step 1: 竞品分析
+  competitorAnalysis?: {
+    noteUrl: string;
+    noteData: XhsNoteData;
+    result: CompetitorAnalysisResult;
+  };
+
+  // Step 2: 内容诊断
+  selfDiagnosis?: {
+    noteUrl: string;
+    noteData: XhsNoteData;
+    result: DiagnosisResult;
+  };
+
+  // Step 3: 可视化对比（从 Step 1 + Step 2 计算）
+  comparison?: {
+    radarChart: RadarChartData;
+    gapAnalysis: GapAnalysis;
+  };
+
+  // Step 4: 灵感推荐
+  inspirations?: {
+    videos: InspirationVideo[];  // 6-10 个
+    selectedIds: string[];       // 用户收藏的
+  };
+
+  // Step 5: 完成
+  completedAt?: Date;
+  reportUrl?: string;
+}
+
+// 存储方式：MVP 用 Session Storage，V2 用数据库
+```
+
+### 4.3 步骤配置
+
+```typescript
+// lib/wizard/steps.ts
+
+export const WIZARD_STEPS = [
+  {
+    id: 1,
+    slug: 'competitor',
+    title: '竞品分析',
+    description: '分析爆款笔记，拆解成功要素',
+    required: true,
+  },
+  {
+    id: 2,
+    slug: 'diagnose',
+    title: '内容诊断',
+    description: '分析自己的内容，找出差距',
+    required: true,
+  },
+  {
+    id: 3,
+    slug: 'compare',
+    title: '可视化对比',
+    description: '对比差距，一目了然',
+    required: true,
+  },
+  {
+    id: 4,
+    slug: 'inspiration',
+    title: '灵感推荐',
+    description: '精选 6-10 个相关海外爆款',
+    required: false,  // 可选，但推荐
+  },
+  {
+    id: 5,
+    slug: 'complete',
+    title: '完成',
+    description: '查看报告，再次诊断提醒',
+    required: true,
+  },
+] as const;
+
+export function getNextStep(currentStep: number): number | null {
+  return currentStep < WIZARD_STEPS.length ? currentStep + 1 : null;
+}
+
+export function getPrevStep(currentStep: number): number | null {
+  return currentStep > 1 ? currentStep - 1 : null;
+}
+```
+
+---
+
+## 五、数据库设计
+
+### 5.1 Schema 定义
 
 ```prisma
 // prisma/schema.prisma
