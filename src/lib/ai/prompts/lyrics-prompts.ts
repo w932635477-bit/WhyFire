@@ -3,6 +3,18 @@
  */
 
 import type { SceneType, DialectType } from '@/types'
+import {
+  buildDongbeiProductPrompt,
+  buildDongbeiFunnyPrompt,
+  buildDongbeiIPPrompt,
+  buildDongbeiVlogPrompt,
+} from './dialect-dongbei'
+import {
+  buildSichuanProductPrompt,
+  buildSichuanFunnyPrompt,
+  buildSichuanIPPrompt,
+  buildSichuanVlogPrompt,
+} from './dialect-sichuan'
 
 interface PromptContext {
   scene: SceneType
@@ -42,6 +54,22 @@ const SCENE_DESCRIPTIONS: Record<SceneType, string> = {
  * 构建产品推广场景 Prompt
  */
 function buildProductPrompt(ctx: PromptContext): string {
+  // 使用专门的东北话 Prompt
+  if (ctx.dialect === 'dongbei') {
+    return buildDongbeiProductPrompt({
+      name: ctx.productName || '产品',
+      sellingPoints: ctx.sellingPoints || [],
+    })
+  }
+
+  // 使用专门的四川话 Prompt
+  if (ctx.dialect === 'sichuan') {
+    return buildSichuanProductPrompt({
+      name: ctx.productName || '产品',
+      sellingPoints: ctx.sellingPoints || [],
+    })
+  }
+
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const productName = ctx.productName || '产品'
   const sellingPoints = ctx.sellingPoints?.join('、') || ''
@@ -69,6 +97,22 @@ function buildProductPrompt(ctx: PromptContext): string {
  * 构建搞笑洗脑场景 Prompt
  */
 function buildFunnyPrompt(ctx: PromptContext): string {
+  // 使用专门的东北话 Prompt
+  if (ctx.dialect === 'dongbei') {
+    return buildDongbeiFunnyPrompt({
+      theme: ctx.theme || '日常生活',
+      keywords: ctx.keywords || [],
+    })
+  }
+
+  // 使用专门的四川话 Prompt
+  if (ctx.dialect === 'sichuan') {
+    return buildSichuanFunnyPrompt({
+      theme: ctx.theme || '日常生活',
+      keywords: ctx.keywords || [],
+    })
+  }
+
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const theme = ctx.theme || '日常生活'
   const keywords = ctx.keywords?.join('、') || ''
@@ -94,6 +138,24 @@ function buildFunnyPrompt(ctx: PromptContext): string {
  * 构建 IP 混剪场景 Prompt
  */
 function buildIPPrompt(ctx: PromptContext): string {
+  // 使用专门的东北话 Prompt
+  if (ctx.dialect === 'dongbei') {
+    return buildDongbeiIPPrompt({
+      ipName: ctx.ipName || 'IP',
+      coreElements: ctx.coreElements || [],
+      mood: ctx.mood || '酷炫',
+    })
+  }
+
+  // 使用专门的四川话 Prompt
+  if (ctx.dialect === 'sichuan') {
+    return buildSichuanIPPrompt({
+      ipName: ctx.ipName || 'IP',
+      coreElements: ctx.coreElements || [],
+      mood: ctx.mood || '酷炫',
+    })
+  }
+
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const ipName = ctx.ipName || 'IP'
   const coreElements = ctx.coreElements?.join('、') || ''
@@ -122,6 +184,24 @@ IP名称: ${ipName}
  * 构建日常 Vlog 场景 Prompt
  */
 function buildVlogPrompt(ctx: PromptContext): string {
+  // 使用专门的东北话 Prompt
+  if (ctx.dialect === 'dongbei') {
+    return buildDongbeiVlogPrompt({
+      activities: ctx.activities || ['日常生活'],
+      location: ctx.location || '',
+      mood: ctx.mood || '轻松',
+    })
+  }
+
+  // 使用专门的四川话 Prompt
+  if (ctx.dialect === 'sichuan') {
+    return buildSichuanVlogPrompt({
+      activities: ctx.activities || ['日常生活'],
+      location: ctx.location || '',
+      mood: ctx.mood || '轻松',
+    })
+  }
+
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const activities = ctx.activities?.join('、') || '日常生活'
   const location = ctx.location || ''

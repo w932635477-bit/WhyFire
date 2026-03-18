@@ -3,6 +3,9 @@
  * 类型定义
  */
 
+// Video types
+export * from './video'
+
 // 场景类型
 export type SceneType = 'product' | 'funny' | 'ip' | 'vlog';
 

@@ -1,0 +1,172 @@
+{
+  "tasks": [
+    {
+      "id": "task-025",
+      "title": "积分系统数据库设计",
+      "description": "设计积分包、交易记录、用户积分表",
+      "priority": "P0",
+      "status": "completed",
+      "estimated_time": "1h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/types/credits.ts",
+          "docs/database/credits-schema.sql"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-026",
+      "title": "微信支付集成",
+      "description": "集成微信支付 Native API",
+      "priority": "P0",
+      "status": "completed",
+      "estimated_time": "3h",
+      "dependencies": ["task-025"],
+      "files": {
+        "create": [
+          "src/lib/wechat-pay/client.ts",
+          "src/lib/wechat-pay/types.ts",
+          "src/app/api/payments/create/route.ts",
+          "src/app/api/payments/callback/route.ts"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-027",
+      "title": "积分包购买页面",
+      "description": "创建积分包选择和购买页面",
+      "priority": "P0",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": ["task-025", "task-026"],
+      "files": {
+        "create": [
+          "src/app/credits/page.tsx",
+          "src/components/credits/package-card.tsx",
+          "src/components/credits/payment-modal.tsx",
+          "src/app/api/credits/packages/route.ts",
+          "src/app/api/credits/balance/route.ts",
+          "src/app/api/credits/transactions/route.ts",
+          "src/app/api/payments/status/route.ts"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-028",
+      "title": "视频滤镜系统",
+      "description": "实现视频滤镜效果",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/lib/ffmpeg/filters.ts",
+          "src/components/features/video/filter-selector.tsx"
+        ],
+        "modify": [
+          "src/lib/ffmpeg/video-synthesizer.ts"
+        ]
+      }
+    },
+    {
+      "id": "task-029",
+      "title": "视频转场效果",
+      "description": "实现视频转场动画",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/lib/ffmpeg/transitions.ts",
+          "src/components/features/video/transition-selector.tsx"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-030",
+      "title": "模板库数据库设计",
+      "description": "设计视频模板表结构",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "1h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/types/templates.ts",
+          "docs/database/templates-schema.sql"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-031",
+      "title": "模板库页面",
+      "description": "创建模板浏览和应用页面",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": ["task-030"],
+      "files": {
+        "create": [
+          "src/app/templates/page.tsx",
+          "src/components/templates/template-card.tsx",
+          "src/components/templates/template-preview.tsx"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-032",
+      "title": "东北话歌词支持",
+      "description": "添加东北话歌词生成支持",
+      "priority": "P2",
+      "status": "completed",
+      "estimated_time": "1.5h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/lib/ai/prompts/dialect-dongbei.ts"
+        ],
+        "modify": [
+          "src/lib/ai/prompts/lyrics-prompts.ts",
+          "src/lib/minimax/client.ts",
+          "src/components/features/dialect-selector.tsx"
+        ]
+      }
+    },
+    {
+      "id": "task-033",
+      "title": "四川话歌词支持",
+      "description": "添加四川话歌词生成支持",
+      "priority": "P2",
+      "status": "completed",
+      "estimated_time": "1.5h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/lib/ai/prompts/dialect-sichuan.ts"
+        ],
+        "modify": [
+          "src/lib/ai/prompts/lyrics-prompts.ts",
+          "src/lib/minimax/client.ts",
+          "src/components/features/dialect-selector.tsx"
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "project": "WhyFire v2.0",
+    "sprint": "Beta",
+    "updated_at": "2026-03-18T22:00:00Z",
+    "total_tasks": 9,
+    "completed_tasks": 9,
+    "estimated_total_time": "16h"
+  }
+}

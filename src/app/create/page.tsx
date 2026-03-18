@@ -11,6 +11,7 @@ import {
   type IPInputs,
   type VlogInputs
 } from '@/types'
+import { MusicGenerator } from '@/components/features/music/music-generator'
 
 export default function CreatePage() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -18,6 +19,7 @@ export default function CreatePage() {
   const [inputs, setInputs] = useState<SceneInputs | null>(null)
   const [lyrics, setLyrics] = useState<string | null>(null)
   const [musicUrl, setMusicUrl] = useState<string | null>(null)
+  const [musicTaskId, setMusicTaskId] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
 
   const handleSceneSelect = (selectedScene: SceneType) => {
@@ -58,7 +60,23 @@ export default function CreatePage() {
       case 2:
         return <LyricsGenerator scene={scene!} inputs={inputs!} lyrics={lyrics} setLyrics={setLyrics} onNext={() => setCurrentStep(3)} />
       case 3:
-        return <MusicGenerator lyrics={lyrics!} musicUrl={musicUrl} setMusicUrl={setMusicUrl} onNext={() => setCurrentStep(4)} />
+        return (
+          <MusicGenerator
+            lyrics={lyrics || ''}
+            dialect={(inputs as ProductInputs)?.targetAudience ? 'mandarin' : 'mandarin'}
+            style="rap"
+            onMusicGenerated={(audioUrl, taskId) => {
+              setMusicUrl(audioUrl)
+              setMusicTaskId(taskId)
+            }}
+            onError={(error) => {
+              console.error('音乐生成失败:', error)
+              alert(`音乐生成失败: ${error.message}`)
+            }}
+            onNext={() => setCurrentStep(4)}
+            initialTaskId={musicTaskId || undefined}
+          />
+        )
       case 4:
         return <VideoSelector musicUrl={musicUrl!} onNext={() => setCurrentStep(5)} />
       case 5:
@@ -253,65 +271,7 @@ function LyricsGenerator({
   )
 }
 
-// 音乐生成组件
-function MusicGenerator({
-  lyrics,
-  musicUrl,
-  setMusicUrl,
-  onNext,
-}: {
-  lyrics: string
-  musicUrl: string | null
-  setMusicUrl: (url: string) => void
-  onNext: () => void
-}) {
-  const [isGenerating, setIsGenerating] = useState(false)
-
-  const generateMusic = async () => {
-    setIsGenerating(true)
-    try {
-      // TODO: 调用 MiniMax API
-      // 模拟生成
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      setMusicUrl('/demo-music.mp3')
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  return (
-    <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-      <h2 className="text-xl font-semibold mb-6">生成 Rap 音乐</h2>
-
-      {!musicUrl ? (
-        <div className="text-center py-12">
-          <button
-            onClick={generateMusic}
-            disabled={isGenerating}
-            className="gradient-btn px-8 py-4 rounded-xl font-medium text-white text-lg"
-          >
-            {isGenerating ? '生成中...' : '点击生成音乐'}
-          </button>
-          <p className="text-gray-500 text-sm mt-4">AI 将为歌词配上 Rap 伴奏</p>
-        </div>
-      ) : (
-        <div>
-          <div className="bg-dark-700 rounded-lg p-4 mb-4">
-            <audio controls src={musicUrl} className="w-full" />
-          </div>
-          <div className="flex justify-end">
-            <button
-              onClick={onNext}
-              className="gradient-btn px-6 py-3 rounded-lg font-medium text-white"
-            >
-              下一步：选择视频
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+// 音乐生成组件 - 已集成到步骤4，使用 MusicGenerator 组件
 
 // 视频选择组件
 function VideoSelector({

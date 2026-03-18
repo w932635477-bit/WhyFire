@@ -1,12 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SceneType, DialectType } from '@/types'
+import type { MiniMaxMusicStyle } from '@/lib/minimax/types'
 
 export type StepType = 'scene' | 'dialect' | 'lyrics' | 'music' | 'video'
 
 interface ProductInfo {
   name: string
   sellingPoints: string[]
+}
+
+interface MusicState {
+  taskId: string | null
+  audioUrl: string | null
+  status: 'idle' | 'generating' | 'polling' | 'completed' | 'failed'
+  error: string | null
 }
 
 interface VideoCreationState {
@@ -20,17 +28,30 @@ interface VideoCreationState {
   // 产品信息（用于歌词生成）
   productInfo: ProductInfo
 
+  // 歌词
+  lyrics: string | null
+
   // 任务 ID（用于跟踪生成状态）
   lyricsId: string | null
-  musicTaskId: string | null
+
+  // 音乐状态
+  music: MusicState
+
+  // 音乐风格
+  musicStyle: MiniMaxMusicStyle
 
   // Actions
   setStep: (step: StepType) => void
   setScene: (scene: SceneType | null) => void
   setDialect: (dialect: DialectType) => void
   setProductInfo: (info: ProductInfo) => void
+  setLyrics: (lyrics: string | null) => void
   setLyricsId: (id: string | null) => void
   setMusicTaskId: (id: string | null) => void
+  setMusicAudioUrl: (url: string | null) => void
+  setMusicStatus: (status: MusicState['status']) => void
+  setMusicError: (error: string | null) => void
+  setMusicStyle: (style: MiniMaxMusicStyle) => void
   reset: () => void
   nextStep: () => void
   prevStep: () => void
@@ -47,8 +68,15 @@ const initialState = {
     name: '',
     sellingPoints: []
   },
+  lyrics: null,
   lyricsId: null,
-  musicTaskId: null
+  music: {
+    taskId: null,
+    audioUrl: null,
+    status: 'idle' as MusicState['status'],
+    error: null,
+  },
+  musicStyle: 'rap' as MiniMaxMusicStyle,
 }
 
 export const useVideoCreationStore = create<VideoCreationState>()(
@@ -64,9 +92,31 @@ export const useVideoCreationStore = create<VideoCreationState>()(
 
       setProductInfo: (productInfo) => set({ productInfo }),
 
+      setLyrics: (lyrics) => set({ lyrics }),
+
       setLyricsId: (lyricsId) => set({ lyricsId }),
 
-      setMusicTaskId: (musicTaskId) => set({ musicTaskId }),
+      setMusicTaskId: (taskId) =>
+        set((state) => ({
+          music: { ...state.music, taskId },
+        })),
+
+      setMusicAudioUrl: (audioUrl) =>
+        set((state) => ({
+          music: { ...state.music, audioUrl },
+        })),
+
+      setMusicStatus: (status) =>
+        set((state) => ({
+          music: { ...state.music, status },
+        })),
+
+      setMusicError: (error) =>
+        set((state) => ({
+          music: { ...state.music, error },
+        })),
+
+      setMusicStyle: (musicStyle) => set({ musicStyle }),
 
       reset: () => set(initialState),
 
@@ -84,7 +134,7 @@ export const useVideoCreationStore = create<VideoCreationState>()(
         if (currentIndex > 0) {
           set({ currentStep: STEP_ORDER[currentIndex - 1] })
         }
-      }
+      },
     }),
     {
       name: 'video-creation-storage',
@@ -92,8 +142,10 @@ export const useVideoCreationStore = create<VideoCreationState>()(
         currentStep: state.currentStep,
         scene: state.scene,
         dialect: state.dialect,
-        productInfo: state.productInfo
-      })
+        productInfo: state.productInfo,
+        lyrics: state.lyrics,
+        musicStyle: state.musicStyle,
+      }),
     }
   )
 )

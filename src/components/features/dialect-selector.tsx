@@ -13,8 +13,8 @@ interface DialectOption {
 const dialects: DialectOption[] = [
   { id: 'mandarin', name: '普通话', flag: '🇨🇳', available: true },
   { id: 'cantonese', name: '粤语', flag: '🇭🇰', available: true },
-  { id: 'dongbei', name: '东北话', flag: '⛄', available: false },
-  { id: 'sichuan', name: '四川话', flag: '🐼', available: false },
+  { id: 'dongbei', name: '东北话', flag: '⛄', available: true },
+  { id: 'sichuan', name: '四川话', flag: '🐼', available: true },
 ]
 
 interface DialectSelectorProps {

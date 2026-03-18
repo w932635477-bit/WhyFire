@@ -7,6 +7,17 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '50mb',
     },
   },
+  webpack: (config, { isServer }) => {
+    // FFmpeg.wasm requires these configurations
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+      }
+    }
+    return config
+  },
 }
 
 export default nextConfig
