@@ -1,26 +1,24 @@
-import type { Metadata } from "next";
-import { Noto_Sans_SC } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 
-const notoSansSC = Noto_Sans_SC({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-noto-sans",
-});
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "WhyFire - 小红书 AI 教练",
-  description: "小红书 0-1万粉博主的 AI 教练 — 告诉你为什么他能火，你不火",
-};
+  title: 'WhyFire - AI Rap 视频一键生成',
+  description: '输入信息，一键生成创意 Rap 短视频',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="zh-CN" className={notoSansSC.variable}>
-      <body className="font-sans antialiased">{children}</body>
+    <html lang="zh-CN">
+      <body className={`${inter.className} bg-dark-900 text-white min-h-screen`}>
+        {children}
+      </body>
     </html>
-  );
+  )
 }

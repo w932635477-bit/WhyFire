@@ -1,61 +1,58 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        // Background
-        "bg-primary": "#0A0A0B",
-        "bg-secondary": "#111113",
-        "bg-tertiary": "#18181B",
-        "bg-card": "#141416",
-        "bg-card-hover": "#1A1A1D",
-        // Text
-        "text-primary": "#FAFAFA",
-        "text-secondary": "#A1A1AA",
-        "text-tertiary": "#71717A",
-        // Accent
-        "accent-primary": "#FF6B6B",
-        "accent-secondary": "#FF8E53",
-        // Status
-        "green-primary": "#34D399",
-        "green-secondary": "#10B981",
-        "purple-primary": "#A78BFA",
-        "purple-secondary": "#8B5CF6",
-        "yellow-primary": "#FBBF24",
-        "yellow-secondary": "#F59E0B",
-        // Border
-        "border-subtle": "rgba(255, 255, 255, 0.06)",
-        "border-default": "rgba(255, 255, 255, 0.1)",
-        "border-strong": "rgba(255, 255, 255, 0.15)",
+        // 主色调 - 活力橙红渐变
+        primary: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f97316',
+          600: '#ea580c',
+          700: '#c2410c',
+          800: '#9a3412',
+          900: '#7c2d12',
+        },
+        // 强调色 - 紫色
+        accent: {
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#a855f7',
+          600: '#9333ea',
+          700: '#7e22ce',
+          800: '#6b21a8',
+          900: '#581c87',
+        },
+        // 背景色
+        dark: {
+          900: '#0f0f0f',
+          800: '#1a1a1a',
+          700: '#2a2a2a',
+          600: '#3a3a3a',
+        },
       },
       fontFamily: {
-        sans: ["'Noto Sans SC'", "'Plus Jakarta Sans'", "sans-serif"],
-        mono: ["'Space Mono'", "'SF Mono'", "monospace"],
-      },
-      borderRadius: {
-        sm: "6px",
-        md: "10px",
-        lg: "16px",
-        xl: "24px",
-      },
-      boxShadow: {
-        sm: "0 1px 2px rgba(0, 0, 0, 0.3)",
-        md: "0 4px 12px rgba(0, 0, 0, 0.4)",
-        lg: "0 8px 32px rgba(0, 0, 0, 0.5)",
-        glow: "0 0 40px rgba(255, 107, 107, 0.3)",
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
-        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce-slow': 'bounce 2s infinite',
       },
     },
   },
   plugins: [],
-};
+}
 
-export default config;
+export default config

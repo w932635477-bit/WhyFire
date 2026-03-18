@@ -1,38 +1,29 @@
 {
   "name": "whyfire",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "小红书博主的海外创意灵感库",
+  "description": "AI Rap 视频一键生成器 - 输入信息，一键生成创意短视频",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "lint": "next lint"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "next": "^15.2.0",
-    "playwright": "^1.58.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@types/node": "^20.17.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.0",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^15.2.0",
-    "jsdom": "^29.0.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.6.0",
-    "vitest": "^4.1.0"
+    "typescript": "^5.6.0"
   }
 }

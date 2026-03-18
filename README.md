@@ -1,57 +1,22 @@
 # WhyFire
 
-> 小红书博主的海外创意灵感库 — 看见海外正在火的创意
+> AI Rap 视频一键生成器 - 输入信息，一键生成创意短视频
 
-## Slogan
+## 功能特色
 
-**打破创作瓶颈，找到你的下一个爆款** / Break the creative block
-
-## 一句话定位
-
-帮助小红书博主发现海外热门创意内容，AI 解读创意要点，给出本土化建议
-
-## 核心价值
-
-**"不知道拍什么？看看海外正在火的创意，AI 帮你解读并本土化"**
-
-## 核心功能
-
-- 🌍 **海外热门聚合** — YouTube/TikTok 趋势内容
-- 🤖 **AI 创意解读** — Claude Haiku 文本分析，提取创意要点
-- 🇨🇳 **本土化建议** — 如何改编适合小红书
-- 📌 **灵感收藏** — 收藏整理你的创意库
+- 4 大使用场景：产品推广、 搞笑洗脑 | IP混剪 | 日常Vlog
+- AI 生成 Rap 歌词（Claude）
+- AI 生成 Rap 音乐（MiniMax）
+- 视频模板 + 用户上传
+- 一键合成成品
 
 ## 技术栈
-
-- **框架**: Next.js 15 (App Router) + React 18
+- **框架**: Next.js 15 + React 18
 - **样式**: Tailwind CSS
-- **数据源**: YouTube Data API v3 (主) + Apify TikTok (辅)
-- **AI**: Claude Haiku (文本分析)
-- **存储**: SQLite
+- **AI**: Claude API + MiniMax API
+- **视频合成**: FFmpeg.wasm
 
-## 项目结构
-
-```
-/WhyFire
-├── docs/           # 文档
-├── src/
-│   ├── app/        # Next.js App Router
-│   │   ├── api/    # API Routes
-│   │   │   ├── youtube/   # YouTube 数据接口
-│   │   │   ├── tiktok/    # TikTok 数据接口
-│   │   │   └── analyze/   # AI 分析接口
-│   │   ├── page.tsx       # 首页瀑布流
-│   │   └── layout.tsx
-│   ├── components/ # React 组件
-│   │   ├── VideoCard.tsx  # 视频卡片
-│   │   ├── AnalysisPanel.tsx  # AI 解读面板
-│   │   └── FilterBar.tsx  # 筛选器
-│   └── lib/        # 工具库
-│       ├── youtube.ts     # YouTube API 封装
-│       ├── tiktok.ts      # TikTok API 封装
-│       └── claude.ts      # Claude API 封装
-└── public/         # 静态资源
-```
+- **语言**: TypeScript
 
 ## 快速开始
 
@@ -68,35 +33,32 @@ pnpm dev
 ```
 
 ## 环境变量
-
 | 变量名 | 用途 | 获取地址 |
 |--------|------|---------|
-| `YOUTUBE_API_KEY` | YouTube Data API | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
-| `APIFY_TOKEN` | TikTok 数据源 | [Apify Console](https://console.apify.com/) |
-| `ANTHROPIC_API_KEY` | Claude AI 分析 | [Anthropic Console](https://console.anthropic.com/) |
+| `ANTHROPIC_API_KEY` | Claude API | [Anthropic Console](https://console.anthropic.com/) |
+| `MINIMAX_API_KEY` | MiniMax API | [MiniMax 开放平台](https://platform.minimaxi.com/) |
+| `MINIMAX_GROUP_ID` | MiniMax Group ID | MiniMax 控制台 |
 
-## 成本估算
+## 用户流程
+1. 选择场景（产品推广/搞笑/IP混剪/日常Vlog）
+2. 输入信息（根据场景不同）
+3. AI 生成 Rap 歌词
+4. AI 生成 Rap 音乐
+5. 选择视频（上传/模板）
+6. 合成成品视频
 
-| 服务 | 月成本 |
-|------|--------|
-| YouTube API | 免费 (10,000 单位/天) |
-| Apify TikTok | $49/月 |
-| Claude Haiku | ~$5-10/月 |
-| **总计** | **~¥400/月** |
-
-## 文档
-
-- [产品需求文档 PRD](./docs/REQUIREMENTS.md) ⭐ 核心
-- [产品设计文档](./docs/PRODUCT_DESIGN.md)
-- [工作计划](./docs/WORK_PLAN.md)
+7. 下载分享
 
 ## 开发进度
+- [x] 项目初始化
+- [x] 四大场景选择
+- [x] Claude 歌词生成
+- [ ] MiniMax 音乐生成
+- [ ] 视频上传
+- [ ] FFmpeg.wasm 合成
+- [ ] 视频模板
 
-- [x] 确定产品定位和目标用户
-- [x] 确定新方向：参照系扩宽
-- [x] 确定技术方案 v2.0
-- [ ] YouTube Data API 集成
-- [ ] Claude Haiku 分析 API
-- [ ] 瀑布流 UI 组件
-- [ ] TikTok 集成
-- [ ] 收藏功能
+- [ ] 测试与优化
+
+## 许可证
+MIT
