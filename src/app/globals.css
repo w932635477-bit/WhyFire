@@ -1,15 +1,83 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #0F0F23;
-  --foreground: #F8FAFC;
-  --primary: #1E1B4B;
-  --secondary: #4338CA;
-  --cta: #22C55E;
+  /* Colors - Brand */
+  --color-primary: #8B5CF6;
+  --color-primary-hover: #7C3AED;
+  --color-secondary: #10B981;
+  --color-secondary-hover: #059669;
+
+  /* Colors - Background */
+  --color-background: #111113;
+  --color-card: #1A1A1C;
+  --color-card-hover: #222224;
+
+  /* Colors - Border */
+  --color-border: #2A2A2E;
+  --color-border-hover: #3A3A3E;
+
+  /* Colors - Text */
+  --color-foreground: #FAFAFA;
+  --color-muted: #71717A;
+
+  /* Colors - Semantic */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'system-ui', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-hero: 3.5rem;
+
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Legacy variables for backward compatibility */
+  --background: #111113;
+  --foreground: #FAFAFA;
+  --primary: #8B5CF6;
+  --secondary: #10B981;
+  --cta: #10B981;
 }
 
 * {
@@ -17,16 +85,17 @@
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Poppins', system-ui, sans-serif;
+  color: var(--color-foreground);
+  background: var(--color-background);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* 标题字体 */
 .font-display {
-  font-family: 'Righteous', 'Poppins', system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 800;
 }
 
 /* 自定义滚动条 */
@@ -36,21 +105,21 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: #1A1A1C;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #36365a;
+  background: #2A2A2E;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4a6a;
+  background: #3A3A3E;
 }
 
 /* 渐变文字 - 紫到绿 */
 .gradient-text {
-  background: linear-gradient(135deg, #4338CA, #22C55E);
+  background: linear-gradient(135deg, #8B5CF6, #10B981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -58,7 +127,7 @@ body {
 
 /* 渐变文字 - 亮紫到深紫 */
 .gradient-text-purple {
-  background: linear-gradient(135deg, #7c8ff8, #4338CA);
+  background: linear-gradient(135deg, #A78BFA, #8B5CF6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -66,14 +135,14 @@ body {
 
 /* CTA 按钮 - 活力绿 */
 .btn-cta {
-  background: linear-gradient(135deg, #22C55E, #16a34a);
+  background: linear-gradient(135deg, #10B981, #059669);
   transition: all 0.2s ease;
 }
 
 .btn-cta:hover {
-  background: linear-gradient(135deg, #4ade80, #22C55E);
+  background: linear-gradient(135deg, #34D399, #10B981);
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
 }
 
 .btn-cta:active {
@@ -149,10 +218,10 @@ body {
 /* 脉冲发光 - CTA 绿色 */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(34, 197, 94, 0.5);
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
   }
 }
 
@@ -189,7 +258,7 @@ body {
 /* 渐变边框 */
 .gradient-border {
   position: relative;
-  background: #0F0F23;
+  background: #111113;
 }
 
 .gradient-border::before {
@@ -198,7 +267,7 @@ body {
   inset: 0;
   padding: 1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, #4338CA, #22C55E);
+  background: linear-gradient(135deg, #8B5CF6, #10B981);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -207,7 +276,7 @@ body {
 
 /* Focus 状态 */
 *:focus-visible {
-  outline: 2px solid #22C55E;
+  outline: 2px solid #10B981;
   outline-offset: 2px;
 }
 
