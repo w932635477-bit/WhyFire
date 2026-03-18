@@ -5,6 +5,7 @@
  */
 
 import { FFmpegClient, getFFmpegClient } from './ffmpeg-client'
+import type { VideoResolution } from './types'
 import { SubtitleRenderer } from '@/lib/subtitle/subtitle-renderer'
 import type { LyricLine } from '@/lib/subtitle/subtitle-styles'
 import type { SubtitleConfig } from '@/lib/subtitle/subtitle-styles'
@@ -58,6 +59,8 @@ export interface VideoSynthesizerOptions {
   onProgress?: (progress: SynthesisProgress) => void
   /** Use multi-threaded FFmpeg (optional, defaults to true) */
   multiThread?: boolean
+  /** Output resolution (optional, defaults to '720p') */
+  resolution?: VideoResolution
 }
 
 /**
@@ -162,6 +165,7 @@ export class VideoSynthesizer {
       outputFilename = FILE_NAMES.OUTPUT_VIDEO,
       onProgress,
       multiThread = true,
+      resolution = '720p',
     } = options
 
     this.progressCallback = onProgress || null
@@ -223,6 +227,7 @@ export class VideoSynthesizer {
         inputAudio: FILE_NAMES.INPUT_AUDIO,
         outputVideo: outputFilename,
         subtitleFile: FILE_NAMES.SUBTITLE_FILE,
+        resolution,
       })
       this.updateProgress('synthesizing', 1, 'Video synthesized')
 

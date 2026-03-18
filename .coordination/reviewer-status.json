@@ -2,14 +2,14 @@
   "agent": "reviewer",
   "worktree": ".worktrees/reviewer",
   "branch": "agent/reviewer",
-  "status": "idle",
+  "status": "review_submitted",
   "current_task": null,
-  "last_activity": null,
+  "last_activity": "2026-03-18T09:47:12Z",
   "review_queue": [],
   "stats": {
-    "reviews_completed": 0,
+    "reviews_completed": 2,
     "issues_found": 0,
     "approvals": 0,
-    "rejections": 0
+    "rejections": 2
   }
 }

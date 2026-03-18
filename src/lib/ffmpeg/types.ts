@@ -15,6 +15,19 @@ export interface FFmpegProgress {
 }
 
 /**
+ * 视频分辨率类型
+ */
+export type VideoResolution = '720p' | '1080p'
+
+/**
+ * 视频分辨率配置
+ */
+export const VIDEO_RESOLUTIONS: Record<VideoResolution, { width: number; height: number }> = {
+  '720p': { width: 1280, height: 720 },
+  '1080p': { width: 1920, height: 1080 },
+}
+
+/**
  * 视频合成选项
  */
 export interface VideoSynthesisOptions {
@@ -26,6 +39,8 @@ export interface VideoSynthesisOptions {
   outputVideo: string
   /** 可选：字幕文件名 */
   subtitleFile?: string
+  /** 可选：输出分辨率（默认 '720p'） */
+  resolution?: VideoResolution
 }
 
 /**

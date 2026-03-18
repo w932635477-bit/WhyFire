@@ -13,6 +13,9 @@ import { useFFmpeg } from '@/hooks/use-ffmpeg'
 import type { LyricLine } from '@/lib/subtitle/subtitle-styles'
 import type { SubtitleConfig } from '@/lib/subtitle/subtitle-styles'
 import { PRESET_STYLES, SubtitleStyle } from '@/lib/subtitle/subtitle-styles'
+import type { VideoResolution } from '@/lib/ffmpeg/types'
+import { VIDEO_RESOLUTIONS } from '@/lib/ffmpeg/types'
+import type { PlanType } from '@/types/subscription'
 
 /**
  * Video Synthesizer Component Props
@@ -38,6 +41,8 @@ export interface VideoSynthesizerProps {
   autoStart?: boolean
   /** Show preview after completion */
   showPreview?: boolean
+  /** User subscription plan (defaults to 'free') */
+  userPlan?: PlanType
 }
 
 /**
@@ -202,6 +207,58 @@ function StyleSelector({
 }
 
 /**
+ * Resolution Selector Component
+ */
+function ResolutionSelector({
+  currentResolution,
+  onResolutionChange,
+  disabled,
+  userPlan,
+}: {
+  currentResolution: VideoResolution
+  onResolutionChange: (resolution: VideoResolution) => void
+  disabled: boolean
+  userPlan: PlanType
+}) {
+  const resolutions: VideoResolution[] = ['720p', '1080p']
+  const isPremiumUser = userPlan !== 'free'
+
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {resolutions.map((resolution) => {
+        const isLocked = resolution === '1080p' && !isPremiumUser
+        const isSelected = currentResolution === resolution
+        const { width, height } = VIDEO_RESOLUTIONS[resolution]
+
+        return (
+          <button
+            key={resolution}
+            onClick={() => !isLocked && onResolutionChange(resolution)}
+            disabled={disabled || isLocked}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isSelected
+                ? 'bg-purple-600 text-white'
+                : isLocked
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={isLocked ? 'Upgrade to access 1080p resolution' : `${width}x${height}`}
+          >
+            <span>{resolution}</span>
+            <span className="text-xs opacity-60">({width}x{height})</span>
+            {isLocked && (
+              <svg className="w-3.5 h-3.5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
  * Main Video Synthesizer Component
  */
 export function VideoSynthesizerComponent({
@@ -215,6 +272,7 @@ export function VideoSynthesizerComponent({
   className = '',
   autoStart = false,
   showPreview = true,
+  userPlan = 'free',
 }: VideoSynthesizerProps) {
   // State
   const [isSynthesizing, setIsSynthesizing] = useState(false)
@@ -228,6 +286,7 @@ export function VideoSynthesizerComponent({
   })
   const [currentStyle, setCurrentStyle] = useState<SubtitleStyle>(subtitleConfig.style)
   const [currentConfig, setCurrentConfig] = useState<SubtitleConfig>(subtitleConfig)
+  const [currentResolution, setCurrentResolution] = useState<VideoResolution>('720p')
 
   // Refs
   const synthesizerRef = useRef<VideoSynthesizer | null>(null)
@@ -243,6 +302,13 @@ export function VideoSynthesizerComponent({
   const handleStyleChange = useCallback((style: SubtitleStyle) => {
     setCurrentStyle(style)
     setCurrentConfig(PRESET_STYLES[style])
+  }, [])
+
+  /**
+   * Handle resolution change
+   */
+  const handleResolutionChange = useCallback((resolution: VideoResolution) => {
+    setCurrentResolution(resolution)
   }, [])
 
   /**
@@ -265,6 +331,7 @@ export function VideoSynthesizerComponent({
         audioFile,
         lyrics,
         subtitleConfig: currentConfig,
+        resolution: currentResolution,
         onProgress: (info) => {
           setProgressInfo(info)
           onProgress?.(info.overallProgress)
@@ -280,7 +347,7 @@ export function VideoSynthesizerComponent({
     } finally {
       setIsSynthesizing(false)
     }
-  }, [videoFile, audioFile, lyrics, currentConfig, isSynthesizing, onProgress, onComplete, onError])
+  }, [videoFile, audioFile, lyrics, currentConfig, currentResolution, isSynthesizing, onProgress, onComplete, onError])
 
   /**
    * Reset synthesis state
@@ -332,6 +399,24 @@ export function VideoSynthesizerComponent({
           onStyleChange={handleStyleChange}
           disabled={isSynthesizing}
         />
+      </div>
+
+      {/* Resolution Selector */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Output Resolution
+        </label>
+        <ResolutionSelector
+          currentResolution={currentResolution}
+          onResolutionChange={handleResolutionChange}
+          disabled={isSynthesizing}
+          userPlan={userPlan}
+        />
+        {userPlan === 'free' && (
+          <p className="mt-1.5 text-xs text-gray-500">
+            Upgrade to Lite or Pro to unlock 1080p HD export
+          </p>
+        )}
       </div>
 
       {/* Input Info */}

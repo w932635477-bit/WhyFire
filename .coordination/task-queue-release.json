@@ -1,0 +1,127 @@
+{
+  "tasks": [
+    {
+      "id": "task-034",
+      "title": "订阅系统数据库设计",
+      "description": "设计订阅计划、用户订阅表",
+      "priority": "P0",
+      "status": "completed",
+      "estimated_time": "1h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/types/subscription.ts",
+          "docs/database/subscription-schema.sql"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-035",
+      "title": "订阅计划展示页面",
+      "description": "创建订阅计划选择页面（轻量版/专业版）",
+      "priority": "P0",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": ["task-034"],
+      "files": {
+        "create": [
+          "src/app/subscription/page.tsx",
+          "src/components/subscription/plan-card.tsx",
+          "src/components/subscription/subscription-modal.tsx"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-036",
+      "title": "微信支付订阅集成",
+      "description": "集成微信支付订阅 API",
+      "priority": "P0",
+      "status": "completed",
+      "estimated_time": "3h",
+      "dependencies": ["task-034"],
+      "files": {
+        "create": [
+          "src/app/api/subscription/create/route.ts",
+          "src/app/api/subscription/callback/route.ts",
+          "src/app/api/subscription/status/route.ts"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-037",
+      "title": "1080p 视频导出",
+      "description": "支持 1080p 无水印高清视频导出",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": [],
+      "files": {
+        "create": [],
+        "modify": [
+          "src/lib/ffmpeg/video-synthesizer.ts",
+          "src/components/features/video/video-synthesizer.tsx"
+        ]
+      }
+    },
+    {
+      "id": "task-038",
+      "title": "手机号登录",
+      "description": "添加手机号 + 验证码登录方式",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "src/app/api/auth/sms/route.ts",
+          "src/components/auth/phone-login-form.tsx"
+        ],
+        "modify": [
+          "src/app/login/page.tsx"
+        ]
+      }
+    },
+    {
+      "id": "task-039",
+      "title": "用户权益管理",
+      "description": "根据订阅状态管理用户权益（水印、分辨率、方言等）",
+      "priority": "P1",
+      "status": "completed",
+      "estimated_time": "2h",
+      "dependencies": ["task-034", "task-035"],
+      "files": {
+        "create": [
+          "src/lib/subscription/entitlements.ts",
+          "src/hooks/use-entitlements.ts"
+        ],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-040",
+      "title": "部署配置",
+      "description": "生产环境部署配置（Vercel + 监控）",
+      "priority": "P1",
+      "status": "pending",
+      "estimated_time": "1h",
+      "dependencies": [],
+      "files": {
+        "create": [
+          "vercel.json"
+        ],
+        "modify": []
+      }
+    }
+  ],
+  "metadata": {
+    "project": "WhyFire v2.0",
+    "sprint": "Release",
+    "updated_at": "2026-03-18T23:30:00Z",
+    "total_tasks": 7,
+    "completed_tasks": 6,
+    "estimated_total_time": "13h"
+  }
+}

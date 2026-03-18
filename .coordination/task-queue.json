@@ -1,204 +1,37 @@
 {
   "tasks": [
-    {
-      "id": "task-009",
-      "title": "设置 Supabase 客户端",
-      "description": "配置 Supabase 客户端连接，创建认证 hooks",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "1h",
-      "dependencies": [],
-      "files": {
-        "create": [
-          "src/lib/supabase/client.ts",
-          "src/lib/supabase/server.ts",
-          "src/hooks/use-auth.ts",
-          "src/types/auth.ts"
-        ],
-        "modify": [".env.local"]
-      },
-      "acceptance_criteria": [
-        "创建 Supabase 浏览器客户端",
-        "创建 Supabase 服务端客户端",
-        "实现 useAuth hook",
-        "支持登录、登出、获取当前用户"
-      ]
-    },
-    {
-      "id": "task-010",
-      "title": "实现登录页面",
-      "description": "创建邮箱验证码登录页面",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "2h",
-      "dependencies": ["task-009"],
-      "files": {
-        "create": [
-          "src/app/(auth)/login/page.tsx",
-          "src/components/auth/login-form.tsx",
-          "src/components/auth/login-form.test.tsx"
-        ],
-        "modify": []
-      },
-      "acceptance_criteria": [
-        "邮箱输入框 + 发送验证码按钮",
-        "验证码输入框（6位）",
-        "登录成功跳转到 /create",
-        "错误处理和提示"
-      ]
-    },
-    {
-      "id": "task-011",
-      "title": "实现 Auth Provider",
-      "description": "创建认证上下文提供者",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "1h",
-      "dependencies": ["task-009"],
-      "files": {
-        "create": ["src/components/providers/auth-provider.tsx"],
-        "modify": ["src/app/layout.tsx"]
-      },
-      "acceptance_criteria": [
-        "AuthProvider 包裹应用",
-        "提供 user 状态",
-        "自动刷新 token"
-      ]
-    },
-    {
-      "id": "task-012",
-      "title": "创建创作流程页面布局",
-      "description": "创建 /create 页面的整体布局和步骤导航",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "1.5h",
-      "dependencies": [],
-      "files": {
-        "create": [
-          "src/app/create/layout.tsx",
-          "src/components/create/step-indicator.tsx",
-          "src/stores/video-creation-store.ts"
-        ],
-        "modify": ["src/app/create/page.tsx"]
-      },
-      "acceptance_criteria": [
-        "步骤指示器 (1-5步)",
-        "创建 Zustand store 管理状态",
-        "响应式布局"
-      ]
-    },
-    {
-      "id": "task-013",
-      "title": "实现歌词生成 API",
-      "description": "创建 /api/lyrics/generate 接口，集成 Claude API",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "2h",
-      "dependencies": [],
-      "files": {
-        "create": [
-          "src/app/api/lyrics/generate/route.ts",
-          "src/lib/ai/claude-client.ts",
-          "src/lib/ai/prompts/lyrics-prompts.ts"
-        ],
-        "modify": []
-      },
-      "acceptance_criteria": [
-        "接收场景、方言、产品信息",
-        "调用 Claude API 生成歌词",
-        "返回歌词内容 + 时间轴",
-        "错误处理"
-      ]
-    },
-    {
-      "id": "task-014",
-      "title": "实现歌词预览组件",
-      "description": "创建歌词预览和编辑组件",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "1.5h",
-      "dependencies": ["task-008", "task-013"],
-      "files": {
-        "create": [
-          "src/components/features/lyrics/lyrics-preview.tsx",
-          "src/components/features/lyrics/lyrics-editor.tsx"
-        ],
-        "modify": []
-      },
-      "acceptance_criteria": [
-        "显示歌词内容",
-        "支持在线编辑",
-        "高亮当前行"
-      ]
-    },
-    {
-      "id": "task-015",
-      "title": "实现音乐生成进度组件",
-      "description": "创建音乐生成进度展示组件",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "1.5h",
-      "dependencies": [],
-      "files": {
-        "create": [
-          "src/components/features/music/music-generation-progress.tsx",
-          "src/components/features/music/music-generation-progress.test.tsx"
-        ],
-        "modify": []
-      },
-      "acceptance_criteria": [
-        "显示生成阶段（准备/伴奏/人声/混音）",
-        "进度条动画",
-        "轮询状态更新",
-        "完成/失败回调"
-      ]
-    },
-    {
-      "id": "task-016",
-      "title": "实现视频上传组件",
-      "description": "创建视频/图片上传组件",
-      "priority": "P0",
-      "status": "pending",
-      "assigned_to": null,
-      "created_at": "2026-03-18T18:00:00Z",
-      "estimated_time": "2h",
-      "dependencies": [],
-      "files": {
-        "create": [
-          "src/components/features/video/media-uploader.tsx",
-          "src/components/features/video/media-uploader.test.tsx",
-          "src/app/api/upload/route.ts"
-        ],
-        "modify": []
-      },
-      "acceptance_criteria": [
-        "拖拽上传支持",
-        "支持 mp4/mov/jpg/png/gif",
-        "文件大小限制 (100MB 视频, 20MB 图片)",
-        "上传进度显示",
-        "预览缩略图"
-      ]
-    }
+    {"id": "task-001", "title": "设置设计系统基础", "status": "completed", "completed_at": "2026-03-18T09:00:00Z"},
+    {"id": "task-002", "title": "实现 Button 组件", "status": "completed", "completed_at": "2026-03-18T09:15:00Z"},
+    {"id": "task-003", "title": "实现 Input 组件", "status": "completed", "completed_at": "2026-03-18T09:30:00Z"},
+    {"id": "task-004", "title": "实现 Header 组件", "status": "completed", "completed_at": "2026-03-18T09:45:00Z"},
+    {"id": "task-005", "title": "实现 Hero 区（首页）", "status": "completed", "completed_at": "2026-03-18T10:00:00Z"},
+    {"id": "task-006", "title": "实现 SceneSelector 组件", "status": "completed", "completed_at": "2026-03-18T10:15:00Z"},
+    {"id": "task-007", "title": "实现 DialectSelector 组件", "status": "completed", "completed_at": "2026-03-18T10:30:00Z"},
+    {"id": "task-008", "title": "实现 ChatPanel 组件", "status": "completed", "completed_at": "2026-03-18T10:45:00Z"},
+    {"id": "task-009", "title": "设置 Supabase 客户端", "status": "completed", "completed_at": "2026-03-18T11:00:00Z"},
+    {"id": "task-010", "title": "实现登录页面", "status": "completed", "completed_at": "2026-03-18T11:30:00Z"},
+    {"id": "task-011", "title": "实现 Auth Provider", "status": "completed", "completed_at": "2026-03-18T11:45:00Z"},
+    {"id": "task-012", "title": "创建创作流程页面布局", "status": "completed", "completed_at": "2026-03-18T12:00:00Z"},
+    {"id": "task-013", "title": "实现歌词生成 API", "status": "completed", "completed_at": "2026-03-18T12:30:00Z"},
+    {"id": "task-014", "title": "实现歌词预览组件", "status": "completed", "completed_at": "2026-03-18T13:00:00Z"},
+    {"id": "task-015", "title": "实现音乐生成进度组件", "status": "completed", "completed_at": "2026-03-18T13:30:00Z"},
+    {"id": "task-016", "title": "实现视频上传组件", "status": "completed", "completed_at": "2026-03-18T14:00:00Z"},
+    {"id": "task-017", "title": "实现音乐生成 API (MiniMax)", "status": "completed", "completed_at": "2026-03-18T19:40:00Z"},
+    {"id": "task-018", "title": "实现音乐状态查询 API", "status": "completed", "completed_at": "2026-03-18T19:40:00Z"},
+    {"id": "task-020", "title": "FFmpeg.wasm 初始化", "status": "completed", "completed_at": "2026-03-18T19:40:00Z"},
+    {"id": "task-022", "title": "字幕渲染引擎", "status": "completed", "completed_at": "2026-03-18T19:40:00Z"},
+    {"id": "task-023", "title": "用户资料页面", "status": "completed", "completed_at": "2026-03-18T19:40:00Z"},
+    {"id": "task-024", "title": "我的作品页面", "status": "completed", "completed_at": "2026-03-18T19:40:00Z"},
+    {"id": "task-019", "title": "集成音乐生成到创作流程", "status": "pending", "dependencies": ["task-017", "task-018"]},
+    {"id": "task-021", "title": "视频合成器组件", "status": "pending", "dependencies": ["task-020"]}
   ],
   "metadata": {
     "project": "WhyFire v2.0",
-    "sprint": "MVP Week 2",
-    "updated_at": "2026-03-18T18:00:00Z",
-    "total_tasks": 8,
-    "estimated_total_time": "12.5h"
+    "sprint": "Alpha (Week 3)",
+    "updated_at": "2026-03-18T19:45:00Z",
+    "total_tasks": 24,
+    "completed_tasks": 22,
+    "pending_tasks": 2,
+    "test_count": 508
   }
 }

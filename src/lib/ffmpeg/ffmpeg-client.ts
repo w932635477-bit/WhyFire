@@ -11,8 +11,10 @@ import type {
   FFmpegProgress,
   SharedArrayBufferSupport,
   VideoSynthesisOptions,
+  VideoResolution,
   WriteFileOptions,
 } from './types'
+import { VIDEO_RESOLUTIONS } from './types'
 
 /**
  * FFmpeg.wasm 版本信息
@@ -344,15 +346,41 @@ export class FFmpegClient {
    * @param options 合成选项
    */
   async synthesizeVideo(options: VideoSynthesisOptions): Promise<string> {
-    const { inputVideo, inputAudio, outputVideo, subtitleFile } = options
+    const { inputVideo, inputAudio, outputVideo, subtitleFile, resolution = '720p' } = options
+
+    const { width, height } = VIDEO_RESOLUTIONS[resolution]
 
     const args: string[] = [
       '-i',
       inputVideo,
       '-i',
       inputAudio,
+    ]
+
+    // 构建视频滤镜
+    const videoFilters: string[] = []
+
+    // 添加缩放滤镜
+    videoFilters.push(`scale=${width}:${height}:force_original_aspect_ratio=decrease`)
+    videoFilters.push(`pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`)
+
+    // 如果有字幕文件，添加字幕
+    if (subtitleFile) {
+      videoFilters.push(`subtitles=${subtitleFile}`)
+    }
+
+    // 如果有视频滤镜，添加到命令中
+    if (videoFilters.length > 0) {
+      args.push('-vf', videoFilters.join(','))
+    }
+
+    args.push(
       '-c:v',
-      'copy', // 视频流直接复制
+      'libx264', // 使用 H.264 编码（因为需要重新编码）
+      '-preset',
+      'fast', // 编码速度预设
+      '-crf',
+      '23', // 质量参数
       '-c:a',
       'aac', // 音频编码为 AAC
       '-map',
@@ -360,14 +388,9 @@ export class FFmpegClient {
       '-map',
       '1:a:0', // 使用第二个输入的音频
       '-shortest', // 以最短的流为准
-    ]
-
-    // 如果有字幕文件，添加字幕
-    if (subtitleFile) {
-      args.push('-vf', `subtitles=${subtitleFile}`)
-    }
-
-    args.push('-y', outputVideo) // 覆盖输出文件
+      '-y',
+      outputVideo
+    ) // 覆盖输出文件
 
     await this.exec(args)
     return outputVideo
