@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('音乐生成失败:', error)
-    return NextResponse.json(
+    return NextResponse.json({
       error: '音乐生成失败',
       audioUrl: null,
       duration: 0,

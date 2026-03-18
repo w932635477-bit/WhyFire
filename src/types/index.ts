@@ -6,6 +6,9 @@
 // 场景类型
 export type SceneType = 'product' | 'funny' | 'ip' | 'vlog';
 
+// 方言类型
+export type DialectType = 'mandarin' | 'cantonese' | 'dongbei' | 'sichuan';
+
 // 场景配置
 export interface SceneConfig {
   id: SceneType;
