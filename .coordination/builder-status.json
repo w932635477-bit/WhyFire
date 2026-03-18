@@ -1,0 +1,15 @@
+{
+  "agent": "builder",
+  "worktree": ".worktrees/builder",
+  "branch": "agent/builder",
+  "status": "idle",
+  "current_task": null,
+  "last_activity": null,
+  "commits_pending_review": [],
+  "stats": {
+    "tasks_completed": 0,
+    "files_modified": 0,
+    "lines_added": 0,
+    "lines_removed": 0
+  }
+}

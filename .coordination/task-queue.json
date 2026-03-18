@@ -1,0 +1,50 @@
+{
+  "tasks": [
+    {
+      "id": "task-001",
+      "title": "实现 Button 组件",
+      "description": "创建可复用的 Button 组件，支持多种变体",
+      "priority": "high",
+      "status": "pending",
+      "assigned_to": null,
+      "created_at": "2026-03-18T10:00:00Z",
+      "files": {
+        "create": ["src/components/ui/Button.tsx", "src/components/ui/Button.test.tsx"],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-002",
+      "title": "实现 SceneSelector 组件",
+      "description": "创建场景选择器组件",
+      "priority": "high",
+      "status": "pending",
+      "assigned_to": null,
+      "created_at": "2026-03-18T10:00:00Z",
+      "dependencies": ["task-001"],
+      "files": {
+        "create": ["src/components/features/SceneSelector.tsx"],
+        "modify": []
+      }
+    },
+    {
+      "id": "task-003",
+      "title": "实现 DialectSelector 组件",
+      "description": "创建方言选择器组件",
+      "priority": "medium",
+      "status": "pending",
+      "assigned_to": null,
+      "created_at": "2026-03-18T10:00:00Z",
+      "dependencies": ["task-001"],
+      "files": {
+        "create": ["src/components/features/DialectSelector.tsx"],
+        "modify": []
+      }
+    }
+  ],
+  "metadata": {
+    "project": "WhyFire v2.0",
+    "sprint": "MVP-01",
+    "updated_at": "2026-03-18T10:00:00Z"
+  }
+}

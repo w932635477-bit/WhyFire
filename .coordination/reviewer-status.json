@@ -1,0 +1,15 @@
+{
+  "agent": "reviewer",
+  "worktree": ".worktrees/reviewer",
+  "branch": "agent/reviewer",
+  "status": "idle",
+  "current_task": null,
+  "last_activity": null,
+  "review_queue": [],
+  "stats": {
+    "reviews_completed": 0,
+    "issues_found": 0,
+    "approvals": 0,
+    "rejections": 0
+  }
+}

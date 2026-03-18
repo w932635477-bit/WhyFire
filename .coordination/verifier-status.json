@@ -1,0 +1,15 @@
+{
+  "agent": "verifier",
+  "worktree": ".worktrees/verifier",
+  "branch": "agent/verifier",
+  "status": "idle",
+  "current_task": null,
+  "last_activity": null,
+  "test_results": {
+    "last_run": null,
+    "total_tests": 0,
+    "passed": 0,
+    "failed": 0,
+    "coverage": 0
+  }
+}

@@ -34,3 +34,13 @@ coverage/
 
 # Misc
 *.pem
+
+# Multi-Agent Worktrees
+.worktrees/
+.coordination/*.tmp
+
+# Keep coordination templates
+!.coordination/README.md
+!.coordination/task-queue.json
+!.coordination/*-status.json
+!.coordination/review-feedback.json

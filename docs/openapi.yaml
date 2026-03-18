@@ -1,0 +1,977 @@
+openapi: 3.0.3
+info:
+  title: WhyFire API
+  description: AI Rap 视频一键生成器 API 接口文档
+  version: 1.0.0
+  contact:
+    name: WhyFire Team
+    email: support@whyfire.com
+
+servers:
+  - url: https://whyfire.com/api
+    description: Production
+  - url: http://localhost:3000/api
+    description: Development
+
+tags:
+  - name: Auth
+    description: 认证相关接口
+  - name: User
+    description: 用户管理
+  - name: Lyrics
+    description: 歌词生成
+  - name: Music
+    description: 音乐生成
+  - name: Video
+    description: 视频合成
+  - name: Payment
+    description: 支付相关
+  - name: Subscription
+    description: 订阅管理
+  - name: Points
+    description: 积分系统
+
+paths:
+  # ==================== 认证接口 ====================
+  /auth/send-code:
+    post:
+      tags: [Auth]
+      summary: 发送验证码
+      operationId: sendCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                code: 0
+                message: success
+                data:
+                  expiresIn: 300
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 邮箱登录/注册
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "123456"
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+                      expiresIn:
+                        type: integer
+                        example: 3600
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: 退出登录
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 刷新Token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      expiresIn:
+                        type: integer
+
+  # ==================== 用户接口 ====================
+  /user/profile:
+    get:
+      tags: [User]
+      summary: 获取当前用户信息
+      operationId: getProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      email:
+                        type: string
+                      nickname:
+                        type: string
+                      avatarUrl:
+                        type: string
+                      role:
+                        type: string
+                        enum: [guest, user, vip, admin]
+                      points:
+                        type: object
+                        properties:
+                          balance:
+                            type: integer
+                          totalEarned:
+                            type: integer
+                          totalSpent:
+                            type: integer
+                      subscription:
+                        type: object
+                        properties:
+                          planType:
+                            type: string
+                            enum: [free, light, pro]
+                          status:
+                            type: string
+                            enum: [active, expired, cancelled]
+                          endDate:
+                            type: string
+                            format: date
+    patch:
+      tags: [User]
+      summary: 更新用户信息
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  maxLength: 50
+                avatarUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # ==================== 歌词接口 ====================
+  /lyrics/generate:
+    post:
+      tags: [Lyrics]
+      summary: 生成歌词
+      operationId: generateLyrics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LyricsGenerateRequest'
+      responses:
+        '200':
+          description: 生成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      lyricsId:
+                        type: string
+                        format: uuid
+                      content:
+                        type: string
+                      wordCount:
+                        type: integer
+                      estimatedDuration:
+                        type: integer
+                      dialect:
+                        type: string
+        '402':
+          $ref: '#/components/responses/InsufficientPoints'
+
+  /lyrics/chat:
+    post:
+      tags: [Lyrics]
+      summary: AI对话修改歌词
+      operationId: chatLyrics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lyricsId, message]
+              properties:
+                lyricsId:
+                  type: string
+                  format: uuid
+                message:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: 修改成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      lyricsId:
+                        type: string
+                      content:
+                        type: string
+                      chatHistory:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            role:
+                              type: string
+                              enum: [user, assistant]
+                            content:
+                              type: string
+                      version:
+                        type: integer
+
+  /lyrics/preview:
+    post:
+      tags: [Lyrics]
+      summary: 预览歌词(TTS)
+      operationId: previewLyrics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lyricsId]
+              properties:
+                lyricsId:
+                  type: string
+                  format: uuid
+                dialect:
+                  type: string
+                  enum: [mandarin, dongbei, cantonese, sichuan]
+      responses:
+        '200':
+          description: 预览生成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      audioUrl:
+                        type: string
+                        format: uri
+                      duration:
+                        type: integer
+
+  # ==================== 音乐接口 ====================
+  /music/generate:
+    post:
+      tags: [Music]
+      summary: 创建音乐生成任务
+      operationId: generateMusic
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lyricsId]
+              properties:
+                lyricsId:
+                  type: string
+                  format: uuid
+                dialect:
+                  type: string
+                  enum: [mandarin, dongbei, cantonese, sichuan]
+                  default: mandarin
+                style:
+                  type: string
+                  enum: [trap, old_school, drill, lofi]
+                  default: trap
+                bpm:
+                  type: integer
+                  minimum: 60
+                  maximum: 180
+                  default: 120
+      responses:
+        '200':
+          description: 任务创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      taskId:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed]
+                      estimatedTime:
+                        type: integer
+                        description: 预计等待时间（秒）
+
+  /music/status/{taskId}:
+    get:
+      tags: [Music]
+      summary: 查询音乐生成状态
+      operationId: getMusicStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      taskId:
+                        type: string
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed]
+                      progress:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                      message:
+                        type: string
+                      musicUrl:
+                        type: string
+                        format: uri
+                      duration:
+                        type: integer
+
+  # ==================== 视频接口 ====================
+  /video/upload:
+    post:
+      tags: [Video]
+      summary: 上传素材
+      operationId: uploadMedia
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, type]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 视频或图片文件
+                type:
+                  type: string
+                  enum: [video, image]
+      responses:
+        '200':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      fileId:
+                        type: string
+                        format: uuid
+                      url:
+                        type: string
+                        format: uri
+                      type:
+                        type: string
+                        enum: [video, image]
+                      size:
+                        type: integer
+                      duration:
+                        type: integer
+                      width:
+                        type: integer
+                      height:
+                        type: integer
+        '413':
+          description: 文件过大
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /video/synthesize:
+    post:
+      tags: [Video]
+      summary: 创建视频合成任务
+      operationId: synthesizeVideo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoSynthesizeRequest'
+      responses:
+        '200':
+          description: 任务创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      videoId:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [draft, generating, completed, failed]
+
+  /video/list:
+    get:
+      tags: [Video]
+      summary: 获取我的视频列表
+      operationId: listVideos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, generating, completed, failed]
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+
+  # ==================== 支付接口 ====================
+  /payment/create:
+    post:
+      tags: [Payment]
+      summary: 创建支付订单
+      operationId: createPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productType, productId, paymentMethod]
+              properties:
+                productType:
+                  type: string
+                  enum: [subscription, points]
+                productId:
+                  type: string
+                  description: 订阅方案ID或积分包ID
+                  example: light
+                paymentMethod:
+                  type: string
+                  enum: [wechat, alipay]
+      responses:
+        '200':
+          description: 订单创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      orderId:
+                        type: string
+                        format: uuid
+                      orderNo:
+                        type: string
+                      amount:
+                        type: number
+                      paymentMethod:
+                        type: string
+                      qrCodeUrl:
+                        type: string
+                        format: uri
+                      expiredAt:
+                        type: string
+                        format: date-time
+
+  # ==================== 订阅接口 ====================
+  /subscription/plans:
+    get:
+      tags: [Subscription]
+      summary: 获取订阅方案
+      operationId: getSubscriptionPlans
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      plans:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SubscriptionPlan'
+                      pointPackages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PointPackage'
+
+  # ==================== 积分接口 ====================
+  /points/balance:
+    get:
+      tags: [Points]
+      summary: 获取积分余额
+      operationId: getPointsBalance
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      balance:
+                        type: integer
+                      totalEarned:
+                        type: integer
+                      totalSpent:
+                        type: integer
+
+  /points/signin:
+    post:
+      tags: [Points]
+      summary: 每日签到
+      operationId: dailySignin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 签到成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      earned:
+                        type: integer
+                        example: 1
+                      balance:
+                        type: integer
+                      alreadySignedIn:
+                        type: boolean
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        nickname:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+        role:
+          type: string
+          enum: [guest, user, vip, admin]
+
+    SuccessResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 10001
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+
+    PaginatedResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+            total:
+              type: integer
+            page:
+              type: integer
+            pageSize:
+              type: integer
+            hasMore:
+              type: boolean
+
+    LyricsGenerateRequest:
+      type: object
+      required: [scene, dialect]
+      properties:
+        scene:
+          type: string
+          enum: [product, funny, ip, vlog]
+        dialect:
+          type: string
+          enum: [mandarin, dongbei, cantonese, sichuan]
+        productName:
+          type: string
+          maxLength: 50
+        sellingPoints:
+          type: array
+          items:
+            type: string
+            maxLength: 30
+          maxItems: 5
+        style:
+          type: string
+          enum: [funny, cool, emotional, energetic]
+        duration:
+          type: integer
+          minimum: 15
+          maximum: 60
+          default: 30
+        customPrompt:
+          type: string
+          maxLength: 500
+
+    VideoSynthesizeRequest:
+      type: object
+      required: [lyricsId, musicId]
+      properties:
+        lyricsId:
+          type: string
+          format: uuid
+        musicId:
+          type: string
+          format: uuid
+        mediaFiles:
+          type: array
+          items:
+            type: object
+            properties:
+              fileId:
+                type: string
+                format: uuid
+              type:
+                type: string
+                enum: [video, image]
+        templateId:
+          type: string
+          format: uuid
+        subtitleStyle:
+          type: string
+          enum: [dynamic_1, dynamic_2, typewriter, fade]
+        effects:
+          type: array
+          items:
+            type: string
+        outputQuality:
+          type: string
+          enum: [720p, 1080p]
+          default: 720p
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        points:
+          type: integer
+        features:
+          type: array
+          items:
+            type: string
+        isPopular:
+          type: boolean
+
+    PointPackage:
+      type: object
+      properties:
+        id:
+          type: string
+        points:
+          type: integer
+        price:
+          type: number
+
+  responses:
+    Success:
+      description: 操作成功
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponse'
+
+    BadRequest:
+      description: 参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 10002
+            message: 请求参数错误
+            data: null
+
+    Unauthorized:
+      description: 未授权
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 20001
+            message: 请先登录
+            data: null
+
+    RateLimited:
+      description: 请求频率超限
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 10003
+            message: 请求频率超限
+            data: null
+
+    InsufficientPoints:
+      description: 积分不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 20004
+            message: 积分不足
+            data: null
