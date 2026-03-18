@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { CREATION_STEPS, SCENE_CONFIGS,
+import {
+  CREATION_STEPS,
+  SCENE_CONFIGS,
   type SceneType,
-  type SceneInputs
-  type ProductInputs
-  type FunnyInputs
-  type IPInputs
+  type SceneInputs,
+  type ProductInputs,
+  type FunnyInputs,
+  type IPInputs,
   type VlogInputs
 } from '@/types'
 
@@ -135,7 +137,7 @@ function InputForm({
             </label>
             {field.type === 'textarea' ? (
               <textarea
-                value={(inputs as Record<string, unknown>)[field.key] as string || ''}
+                value={(inputs as unknown as Record<string, unknown>)[field.key] as string || ''}
                 onChange={(e) => handleInputChange(field.key, e.target.value)}
                 placeholder={field.placeholder}
                 className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
@@ -144,7 +146,7 @@ function InputForm({
             ) : field.type === 'array' ? (
               <input
                 type="text"
-                value={((inputs as Record<string, unknown>)[field.key] as string[])?.join('， ') || ''}
+                value={((inputs as unknown as Record<string, unknown>)[field.key] as string[])?.join('， ') || ''}
                 onChange={(e) => handleArrayInputChange(field.key, e.target.value)}
                 placeholder={field.placeholder}
                 className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
@@ -152,7 +154,7 @@ function InputForm({
             ) : (
               <input
                 type={field.type === 'number' ? 'number' : 'text'}
-                value={(inputs as Record<string, unknown>)[field.key] as string || ''}
+                value={(inputs as unknown as Record<string, unknown>)[field.key] as string || ''}
                 onChange={(e) => handleInputChange(field.key, e.target.value)}
                 placeholder={field.placeholder}
                 className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
