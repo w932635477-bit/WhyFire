@@ -1,242 +1,411 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Colors - Brand */
-  --color-primary: #8B5CF6;
-  --color-primary-hover: #7C3AED;
-  --color-secondary: #10B981;
-  --color-secondary-hover: #059669;
+  /* Background Colors */
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0A;
+  --bg-tertiary: #141414;
+  --bg-elevated: #1C1C1E;
+  --bg-glass: rgba(255,255,255,0.03);
+  --bg-glass-hover: rgba(255,255,255,0.06);
 
-  /* Colors - Background */
-  --color-background: #111113;
-  --color-card: #1A1A1C;
-  --color-card-hover: #222224;
+  /* Text Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-muted: #52525B;
+  --text-accent: #8B5CF6;
 
-  /* Colors - Border */
-  --color-border: #2A2A2E;
-  --color-border-hover: #3A3A3E;
+  /* Accent Colors */
+  --accent-purple: #8B5CF6;
+  --accent-purple-hover: #9F67FF;
+  --accent-green: #10B981;
+  --accent-green-hover: #34D399;
 
-  /* Colors - Text */
-  --color-foreground: #FAFAFA;
-  --color-muted: #71717A;
-
-  /* Colors - Semantic */
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-info: #3B82F6;
-
-  /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'system-ui', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
-  --font-size-hero: 3.5rem;
-
-  /* Spacing */
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --spacing-5: 1.25rem;
-  --spacing-6: 1.5rem;
-  --spacing-8: 2rem;
-  --spacing-10: 2.5rem;
-  --spacing-12: 3rem;
-  --spacing-16: 4rem;
-
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-full: 9999px;
+  /* Border Colors */
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-medium: rgba(255,255,255,0.1);
+  --border-strong: rgba(255,255,255,0.15);
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 60px rgba(139,92,246,0.15);
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
 
-  /* Legacy variables for backward compatibility */
-  --background: #111113;
-  --foreground: #FAFAFA;
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Font - Distinctive Neo-Brutalist */
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Legacy compatibility */
+  --background: #000000;
+  --foreground: #FFFFFF;
   --primary: #8B5CF6;
   --secondary: #10B981;
   --cta: #10B981;
+  --dark-900: #000000;
+  --dark-800: #0A0A0A;
+  --dark-700: #141414;
+  --dark-600: #1C1C1E;
+
+  /* Legacy color variables */
+  --color-primary: #8B5CF6;
+  --color-primary-hover: #9F67FF;
+  --color-secondary: #10B981;
+  --color-secondary-hover: #34D399;
+  --color-background: #000000;
+  --color-card: #141414;
+  --color-card-hover: #1C1C1E;
+  --color-border: rgba(255,255,255,0.06);
+  --color-border-hover: rgba(255,255,255,0.1);
+  --color-foreground: #FFFFFF;
+  --color-muted: #A1A1AA;
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: var(--color-foreground);
-  background: var(--color-background);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
-/* 标题字体 */
-.font-display {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  font-weight: 800;
-}
-
-/* 自定义滚动条 */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1A1A1C;
+  background: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A2A2E;
-  border-radius: 4px;
+  background: var(--border-medium);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A3A3E;
+  background: var(--border-strong);
 }
 
-/* 渐变文字 - 紫到绿 */
-.gradient-text {
-  background: linear-gradient(135deg, #8B5CF6, #10B981);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Accent Text Colors - Solid, no gradients */
+.text-accent {
+  color: var(--accent-purple);
 }
 
-/* 渐变文字 - 亮紫到深紫 */
-.gradient-text-purple {
-  background: linear-gradient(135deg, #A78BFA, #8B5CF6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.text-accent-green {
+  color: var(--accent-green);
 }
 
-/* CTA 按钮 - 活力绿 */
+/* Neo-Brutalism: Thick Borders */
+.border-thick {
+  border: 3px solid rgba(255, 255, 255, 0.9);
+}
+
+.border-thick-purple {
+  border: 3px solid var(--accent-purple);
+}
+
+.border-thick-green {
+  border: 3px solid var(--accent-green);
+}
+
+.border-thick-subtle {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Neo-Brutalism: Hard Shadows */
+.shadow-hard {
+  box-shadow: 4px 4px 0px rgba(139, 92, 246, 0.6);
+}
+
+.shadow-hard-green {
+  box-shadow: 4px 4px 0px rgba(16, 185, 129, 0.6);
+}
+
+.shadow-hard-white {
+  box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.3);
+}
+
+.shadow-hard-sm {
+  box-shadow: 2px 2px 0px rgba(139, 92, 246, 0.6);
+}
+
+.shadow-hard-lg {
+  box-shadow: 6px 6px 0px rgba(139, 92, 246, 0.6);
+}
+
+.shadow-hard-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shadow-hard-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px rgba(139, 92, 246, 0.6);
+}
+
+/* Neo-Brutalism: Solid Backgrounds */
+.bg-solid-purple {
+  background: var(--accent-purple);
+}
+
+.bg-solid-green {
+  background: var(--accent-green);
+}
+
+.bg-solid-dark {
+  background: #0d0d0d;
+}
+
+.bg-solid-card {
+  background: #111111;
+}
+
+/* Solid Cards - Neo-Brutalism */
+.solid-card {
+  background: #111111;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.solid-card-accent {
+  background: #111111;
+  border: 3px solid var(--accent-purple);
+}
+
+/* Primary CTA Button - Neo-Brutalism */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--accent-green);
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 0;
+  border: 3px solid #000;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 4px 4px 0px #000;
+}
+
+.btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
+}
+
+.btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000;
+}
+
+/* Secondary Button - Neo-Brutalism */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 0;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #fff;
+}
+
+/* CTA Button - Neo-Brutalism */
 .btn-cta {
-  background: linear-gradient(135deg, #10B981, #059669);
-  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  background: var(--accent-green);
+  color: #000;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 0;
+  border: 3px solid #000;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 4px 4px 0px #000;
 }
 
 .btn-cta:hover {
-  background: linear-gradient(135deg, #34D399, #10B981);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
 }
 
 .btn-cta:active {
-  transform: translateY(0);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000;
 }
 
-/* Soft UI 卡片 */
+/* Card Styles - Neo-Brutalism */
+.card {
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px rgba(139, 92, 246, 0.5);
+}
+
+.card-brutal {
+  background: #111;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 0;
+  box-shadow: 4px 4px 0px #000;
+}
+
+.card-brutal:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
+}
+
+/* Legacy card styles - keeping for compatibility */
+.card-glass {
+  background: rgba(17, 17, 17, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-glass:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px rgba(139, 92, 246, 0.4);
+}
+
 .card-soft {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  transition: all 0.2s ease;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card-soft:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-/* 玻璃效果 */
-.glass {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px rgba(139, 92, 246, 0.3);
 }
 
-/* 动画 */
+/* Display Font */
+.font-display {
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+
+/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slideUp 0.5s ease-out;
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+  50% { box-shadow: 0 0 40px rgba(16,185,129,0.5); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.5); }
+}
+
+@keyframes musicBar {
+  0%, 100% { height: 8px; }
+  50% { height: 24px; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out;
 }
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
-/* 脉冲发光 - CTA 绿色 */
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
-  }
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
 }
 
 .pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
-}
-
-/* 音乐波形动画 */
-@keyframes musicBar {
-  0%, 100% {
-    height: 8px;
-  }
-  50% {
-    height: 24px;
-  }
 }
 
 .music-bar {
@@ -255,32 +424,28 @@ body {
   animation-delay: 0.3s;
 }
 
-/* 渐变边框 */
-.gradient-border {
-  position: relative;
-  background: #111113;
+/* Neo-Brutalism Borders */
+.brutal-border {
+  border: 3px solid var(--accent-purple);
 }
 
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, #8B5CF6, #10B981);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+.brutal-border-white {
+  border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
-/* Focus 状态 */
+/* Focus States */
 *:focus-visible {
-  outline: 2px solid #10B981;
+  outline: 2px solid var(--accent-purple);
   outline-offset: 2px;
 }
 
-/* 减少动画 */
+/* Selection */
+::selection {
+  background: rgba(139,92,246,0.3);
+  color: white;
+}
+
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -289,4 +454,578 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================
+   SUNO STYLE COMPONENTS - Refined Studio Dark
+   ============================================ */
+
+/* Suno Style: Selection Chips - Pill shaped, soft hover */
+.suno-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.suno-chip:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.suno-chip.active {
+  background: var(--accent-purple);
+  border-color: var(--accent-purple);
+  color: white;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.suno-chip.active:hover {
+  background: var(--accent-purple-hover);
+  border-color: var(--accent-purple-hover);
+}
+
+.suno-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Suno Style: Large Text Input Area */
+.suno-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 16px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.suno-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.suno-textarea:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* Suno Style: Clean Input Field */
+.suno-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.suno-input::placeholder {
+  color: var(--text-muted);
+}
+
+.suno-input:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* Suno Style: Primary Create Button */
+.suno-btn-create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 18px 32px;
+  background: var(--accent-green);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.suno-btn-create:hover {
+  background: var(--accent-green-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.suno-btn-create:active {
+  transform: translateY(0);
+}
+
+.suno-btn-create:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Suno Style: Secondary Action Button */
+.suno-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suno-btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* Suno Style: Card Panel */
+.suno-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.suno-panel-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.suno-panel-body {
+  padding: 24px;
+}
+
+.suno-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Suno Style: History Item */
+.suno-history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suno-history-item:hover {
+  background: var(--bg-elevated);
+  transform: translateX(4px);
+}
+
+.suno-history-thumb {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-green) 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.suno-history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.suno-history-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suno-history-time {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Suno Style: Section Label */
+.suno-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* Suno Style: Scene Card */
+.suno-scene-card {
+  padding: 24px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.suno-scene-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-purple);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
+}
+
+.suno-scene-card.active {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+.suno-scene-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.suno-scene-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.suno-scene-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Suno Style: Video Preview Container */
+.suno-preview {
+  aspect-ratio: 16 / 9;
+  background: var(--bg-tertiary);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.suno-preview-placeholder {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.suno-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Suno Style: Credits Badge */
+.suno-credits {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.suno-credits-icon {
+  color: var(--accent-purple);
+}
+
+/* Suno Style: Progress Ring */
+.suno-progress {
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+
+.suno-progress svg {
+  transform: rotate(-90deg);
+}
+
+.suno-progress circle {
+  fill: none;
+  stroke-width: 3;
+}
+
+.suno-progress .track {
+  stroke: var(--border-medium);
+}
+
+.suno-progress .fill {
+  stroke: var(--accent-green);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+/* Suno Layout: Split View */
+.suno-split-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  min-height: calc(100vh - 80px);
+}
+
+@media (min-width: 1024px) {
+  .suno-split-layout {
+    grid-template-columns: 1fr 400px;
+  }
+}
+
+.suno-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.suno-side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Suno Style: Status Badge */
+.suno-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.suno-status.processing {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent-purple);
+}
+
+.suno-status.completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+}
+
+.suno-status.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.suno-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Suno Style: Divider */
+.suno-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 16px 0;
+}
+
+/* Suno Style: Empty State */
+.suno-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.suno-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.suno-empty-text {
+  font-size: 14px;
+}
+
+/* ============================================
+   WHYFIRE CREATE PAGE - REFINED STUDIO
+   ============================================ */
+
+/* Phase Transition Animations */
+@keyframes phaseSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Audio Player Styling */
+audio {
+  filter: contrast(0.9) brightness(1.1);
+  border-radius: 12px;
+}
+
+audio::-webkit-media-controls-panel {
+  background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+  border-radius: 12px;
+}
+
+audio::-webkit-media-controls-play-button {
+  background-color: #10b981;
+  border-radius: 50%;
+}
+
+audio::-webkit-media-controls-play-button:hover {
+  background-color: #34d399;
+}
+
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+  color: #a1a1aa;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+audio::-webkit-media-controls-timeline {
+  background: #27272a;
+  border-radius: 4px;
+  height: 4px;
+}
+
+audio::-webkit-media-controls-timeline::-webkit-slider-thumb {
+  background: #8b5cf6;
+  border-radius: 50%;
+}
+
+/* Scene Chip Hover Effect */
+.scene-chip-active {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Progress Phase Glow */
+.progress-glow-violet {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.progress-glow-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Typewriter Cursor */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.typewriter-cursor::after {
+  content: '▋';
+  animation: blink 1s infinite;
+  color: #8b5cf6;
+}
+
+/* Lyrics Container Scrollbar */
+.lyrics-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lyrics-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lyrics-scroll::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 2px;
+}
+
+/* Button Press Effect */
+.btn-press {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Fade In Animation for Content */
+.fade-in-content {
+  animation: phaseSlideIn 0.4s ease-out;
+}
+
+/* Gradient Text for Headers */
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtle Background Pattern */
+.bg-pattern-subtle {
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
 }

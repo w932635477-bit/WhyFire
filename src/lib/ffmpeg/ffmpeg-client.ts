@@ -1,10 +1,11 @@
 /**
  * FFmpeg.wasm 客户端封装
  * 提供视频处理能力的浏览器端实现
+ *
+ * 注意：FFmpeg.wasm 0.12.x 使用动态 import() 加载核心
+ * 在 webpack/Next.js 环境下需要特殊处理
  */
 
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
 import type {
   FFmpegLoadOptions,
   FFmpegLogMessage,
@@ -16,19 +17,41 @@ import type {
 } from './types'
 import { VIDEO_RESOLUTIONS } from './types'
 
+// 动态导入 FFmpeg 和 fetchFile（避免 SSR 问题）
+let FFmpegClass: any = null
+let fetchFileUtil: any = null
+
+/**
+ * 动态加载 FFmpeg 模块
+ */
+async function loadFFmpegModule() {
+  if (typeof window === 'undefined') {
+    throw new Error('FFmpeg 只能在浏览器环境中使用')
+  }
+
+  if (!FFmpegClass) {
+    const ffmpegModule = await import('@ffmpeg/ffmpeg')
+    FFmpegClass = ffmpegModule.FFmpeg
+
+    const utilModule = await import('@ffmpeg/util')
+    fetchFileUtil = utilModule.fetchFile
+  }
+
+  return { FFmpeg: FFmpegClass, fetchFile: fetchFileUtil }
+}
+
 /**
  * FFmpeg.wasm 版本信息
  */
-const FFMPEG_CORE_VERSION = '0.12.6'
-const FFMPEG_CORE_BASE_URL = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/esm`
-const FFMPEG_CORE_MT_BASE_URL = `https://unpkg.com/@ffmpeg/core-mt@${FFMPEG_CORE_VERSION}/dist/esm`
+const FFMPEG_CORE_VERSION = '0.12.10'
+const FFMPEG_CORE_CDN_URL = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`
 
 /**
  * FFmpeg 客户端类
  * 封装 FFmpeg.wasm 的加载、文件操作和命令执行
  */
 export class FFmpegClient {
-  private ffmpeg: FFmpeg | null = null
+  private ffmpeg: any = null
   private loaded = false
   private loading = false
   private multiThread = false
@@ -38,7 +61,6 @@ export class FFmpegClient {
    * 检测 SharedArrayBuffer 支持
    */
   static checkSharedArrayBufferSupport(): SharedArrayBufferSupport {
-    // 检查是否在浏览器环境
     if (typeof window === 'undefined') {
       return {
         supported: false,
@@ -47,7 +69,6 @@ export class FFmpegClient {
       }
     }
 
-    // 检查 SharedArrayBuffer 是否可用
     if (typeof SharedArrayBuffer === 'undefined') {
       return {
         supported: false,
@@ -57,7 +78,6 @@ export class FFmpegClient {
       }
     }
 
-    // 检查是否在安全上下文（HTTPS 或 localhost）
     const isSecureContext = window.isSecureContext
     if (!isSecureContext) {
       return {
@@ -67,9 +87,7 @@ export class FFmpegClient {
       }
     }
 
-    return {
-      supported: true,
-    }
+    return { supported: true, reason: '', suggestion: '' }
   }
 
   /**
@@ -87,10 +105,8 @@ export class FFmpegClient {
 
   /**
    * 加载 FFmpeg.wasm
-   * @param options 加载选项
    */
   async load(options: FFmpegLoadOptions = {}): Promise<void> {
-    // 如果已经加载或正在加载，直接返回
     if (this.loaded) {
       console.log('[FFmpeg] 已经加载完成')
       return
@@ -98,7 +114,6 @@ export class FFmpegClient {
 
     if (this.loading) {
       console.log('[FFmpeg] 正在加载中...')
-      // 等待加载完成
       while (this.loading) {
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
@@ -108,9 +123,9 @@ export class FFmpegClient {
     this.loading = true
 
     try {
-      const { onProgress, onLog, multiThread: useMultiThread = true } = options
+      const { onProgress, onLog, multiThread: useMultiThread = false } = options
 
-      // 检测是否支持多线程
+      // 检测多线程支持（默认不使用多线程以避免复杂性）
       const supportsMultiThread = useMultiThread
         ? await FFmpegClient.checkMultiThreadSupport()
         : false
@@ -118,18 +133,21 @@ export class FFmpegClient {
 
       console.log(`[FFmpeg] 使用${supportsMultiThread ? '多线程' : '单线程'}模式`)
 
+      // 动态加载 FFmpeg 模块
+      const { FFmpeg, fetchFile } = await loadFFmpegModule()
+
       // 创建 FFmpeg 实例
       this.ffmpeg = new FFmpeg()
 
       // 设置日志回调
       if (onLog) {
-        this.ffmpeg.on('log', ({ type, message }) => {
+        this.ffmpeg.on('log', ({ type, message }: { type: string; message: string }) => {
           onLog({ type, message })
         })
       }
 
       // 设置进度回调
-      this.ffmpeg.on('progress', ({ progress, time }) => {
+      this.ffmpeg.on('progress', ({ progress, time }: { progress: number; time: number }) => {
         const progressData: FFmpegProgress = {
           ratio: progress,
           time,
@@ -137,35 +155,22 @@ export class FFmpegClient {
         this.progressCallback?.(progressData)
       })
 
-      // 确定 core URL
-      const baseURL = supportsMultiThread ? FFMPEG_CORE_MT_BASE_URL : FFMPEG_CORE_BASE_URL
+      console.log('[FFmpeg] 开始加载核心...')
+
+      // 使用 UMD 版本从 CDN 加载（绕过 webpack 的 ESM import 拦截）
+      const coreURL = `${FFMPEG_CORE_CDN_URL}/ffmpeg-core.js`
+      const wasmURL = `${FFMPEG_CORE_CDN_URL}/ffmpeg-core.wasm`
+
+      onProgress?.(0.3)
+
+      console.log('[FFmpeg] coreURL:', coreURL)
+      console.log('[FFmpeg] wasmURL:', wasmURL)
 
       // 加载 FFmpeg 核心
-      if (supportsMultiThread) {
-        // 多线程模式
-        const coreURL = options.coreURL || `${baseURL}/ffmpeg-core.js`
-        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-        const workerURL = await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
-
-        onProgress?.(0.3)
-
-        await this.ffmpeg.load({
-          coreURL,
-          wasmURL,
-          workerURL,
-        })
-      } else {
-        // 单线程模式
-        const coreURL = options.coreURL || `${baseURL}/ffmpeg-core.js`
-        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-
-        onProgress?.(0.3)
-
-        await this.ffmpeg.load({
-          coreURL,
-          wasmURL,
-        })
-      }
+      await this.ffmpeg.load({
+        coreURL,
+        wasmURL,
+      })
 
       this.loaded = true
       onProgress?.(1.0)
@@ -211,9 +216,6 @@ export class FFmpegClient {
 
   /**
    * 写入文件到虚拟文件系统
-   * @param filename 文件名
-   * @param data 文件数据
-   * @param options 选项
    */
   async writeFile(
     filename: string,
@@ -240,10 +242,9 @@ export class FFmpegClient {
     let fileData: Uint8Array
 
     if (typeof data === 'string') {
-      // 字符串转 Uint8Array
       fileData = new TextEncoder().encode(data)
     } else if (data instanceof Blob) {
-      // Blob 转 Uint8Array
+      const { fetchFile } = await loadFFmpegModule()
       fileData = await fetchFile(data)
     } else {
       fileData = data
@@ -255,8 +256,6 @@ export class FFmpegClient {
 
   /**
    * 从虚拟文件系统读取文件
-   * @param filename 文件名
-   * @returns 文件数据
    */
   async readFile(filename: string): Promise<Uint8Array> {
     if (!this.ffmpeg || !this.loaded) {
@@ -264,7 +263,6 @@ export class FFmpegClient {
     }
 
     const data = await this.ffmpeg.readFile(filename)
-    // 确保返回 Uint8Array
     const uint8Data = data instanceof Uint8Array ? data : new TextEncoder().encode(data)
     console.log(`[FFmpeg] 文件 ${filename} 读取完成，大小: ${uint8Data.length} bytes`)
     return uint8Data
@@ -272,13 +270,9 @@ export class FFmpegClient {
 
   /**
    * 从虚拟文件系统读取文件为 Blob
-   * @param filename 文件名
-   * @param mimeType MIME 类型
-   * @returns Blob
    */
   async readFileAsBlob(filename: string, mimeType: string = 'video/mp4'): Promise<Blob> {
     const data = await this.readFile(filename)
-    // 将 Uint8Array 转换为普通数组以避免 SharedArrayBuffer 类型问题
     const arrayBuffer = new ArrayBuffer(data.length)
     const view = new Uint8Array(arrayBuffer)
     view.set(data)
@@ -287,9 +281,6 @@ export class FFmpegClient {
 
   /**
    * 从虚拟文件系统读取文件为 Object URL
-   * @param filename 文件名
-   * @param mimeType MIME 类型
-   * @returns Object URL
    */
   async readFileAsObjectURL(filename: string, mimeType?: string): Promise<string> {
     const blob = await this.readFileAsBlob(filename, mimeType)
@@ -298,7 +289,6 @@ export class FFmpegClient {
 
   /**
    * 删除虚拟文件系统中的文件
-   * @param filename 文件名
    */
   async deleteFile(filename: string): Promise<void> {
     if (!this.ffmpeg || !this.loaded) {
@@ -311,8 +301,6 @@ export class FFmpegClient {
 
   /**
    * 执行 FFmpeg 命令
-   * @param args 命令参数数组
-   * @param timeout 超时时间（毫秒），默认 5 分钟
    */
   async exec(args: string[], timeout: number = 5 * 60 * 1000): Promise<void> {
     if (!this.ffmpeg || !this.loaded) {
@@ -324,7 +312,6 @@ export class FFmpegClient {
     const startTime = Date.now()
 
     try {
-      // 使用 Promise.race 实现超时
       await Promise.race([
         this.ffmpeg.exec(args),
         new Promise((_, reject) =>
@@ -343,7 +330,6 @@ export class FFmpegClient {
 
   /**
    * 合成视频和音频
-   * @param options 合成选项
    */
   async synthesizeVideo(options: VideoSynthesisOptions): Promise<string> {
     const { inputVideo, inputAudio, outputVideo, subtitleFile, resolution = '720p' } = options
@@ -357,40 +343,36 @@ export class FFmpegClient {
       inputAudio,
     ]
 
-    // 构建视频滤镜
     const videoFilters: string[] = []
 
-    // 添加缩放滤镜
     videoFilters.push(`scale=${width}:${height}:force_original_aspect_ratio=decrease`)
     videoFilters.push(`pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`)
 
-    // 如果有字幕文件，添加字幕
     if (subtitleFile) {
       videoFilters.push(`subtitles=${subtitleFile}`)
     }
 
-    // 如果有视频滤镜，添加到命令中
     if (videoFilters.length > 0) {
       args.push('-vf', videoFilters.join(','))
     }
 
     args.push(
       '-c:v',
-      'libx264', // 使用 H.264 编码（因为需要重新编码）
+      'libx264',
       '-preset',
-      'fast', // 编码速度预设
+      'fast',
       '-crf',
-      '23', // 质量参数
+      '23',
       '-c:a',
-      'aac', // 音频编码为 AAC
+      'aac',
       '-map',
-      '0:v:0', // 使用第一个输入的视频
+      '0:v:0',
       '-map',
-      '1:a:0', // 使用第二个输入的音频
-      '-shortest', // 以最短的流为准
+      '1:a:0',
+      '-shortest',
       '-y',
       outputVideo
-    ) // 覆盖输出文件
+    )
 
     await this.exec(args)
     return outputVideo
@@ -421,9 +403,6 @@ export class FFmpegClient {
 
 let ffmpegInstance: FFmpegClient | null = null
 
-/**
- * 获取 FFmpeg 客户端单例
- */
 export function getFFmpegClient(): FFmpegClient {
   if (!ffmpegInstance) {
     ffmpegInstance = new FFmpegClient()
@@ -431,9 +410,6 @@ export function getFFmpegClient(): FFmpegClient {
   return ffmpegInstance
 }
 
-/**
- * 重置 FFmpeg 客户端单例
- */
 export function resetFFmpegClient(): void {
   if (ffmpegInstance) {
     ffmpegInstance.terminate().catch(console.error)

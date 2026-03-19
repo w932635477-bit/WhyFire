@@ -1,0 +1,54 @@
+{
+  "name": "ffmpeg",
+  "version": "0.12.10",
+  "description": "FFmpeg 核心包（v0.12.10) - 包含 EFFmpeg.wasm 栲.FFmpeg 和 ffmpeg 巽数工具",
+  "types": "FFmpegLoadOptions",
+  "FFmpegLogMessage",
+  "FFmpegProgress",
+  "SharedArrayBufferSupport",
+  "VideoResolution",
+  " WriteFileOptions",
+} from './types'
+import { VIDEO_RESOLUTIONS } from './types'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+
+import type {
+  FFmpegLoadOptions,
+  FFmpegLogMessage {
+  type: 'log' | 'progress'
+  message: string
+  time: number
+}
+
+export interface SharedArrayBufferSupport {
+  supported: boolean
+  reason: string
+  suggestion: string
+}
+
+export interface VideoResolution {
+  width: number
+  height: number
+}
+
+export const VIDEO_RESOLUTIONS: {
+  '480p': | { width: 854, height: 480 },
+  '720p': | { width: 1280, height: 720 },
+  '1080p': | { width: 1920, height: 1080 },
+} as const VIDEO_RESOLUTIONS = {
+  '480p': 854,
+  '720p': 1280,
+  '1080p': 1920,
+  1080,
+}
+
+// ============================================
+// FFmpeg 客户端单例 - 简化版本，// ============================================
+
+/**
+ * 加载 FFmpeg.wasm 栔回 FFmpegClient 实例
+ */
+const client = new FFmpegClient()
+
+export { FFmpegClient }

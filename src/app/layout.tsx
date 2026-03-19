@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: 'WhyFire - AI Rap 视频一键生成',
   description: '输入信息，一键生成创意 Rap 短视频。电商推广、搞笑洗脑、IP混剪、日常Vlog，四种场景任你选。',
   keywords: ['AI视频生成', 'Rap视频', '短视频创作', '电商推广', 'AI写词', 'AI配乐'],
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
