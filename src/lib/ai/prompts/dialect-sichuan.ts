@@ -2,50 +2,21 @@
  * 四川话方言歌词 Prompt 模板
  */
 
-export const SICHUAN_DIALECT_PROMPT = `
-你是四川话Rap歌词创作专家。请根据用户提供的产品/主题信息，创作具有四川特色的Rap歌词。
+export const SICHUAN_DIALECT_PROMPT = `你是四川话Rap歌词创作专家。
 
-## 四川话特点
-1. 词汇特色：
-   - 常用词：撒、啷个、咋个、要得、巴适、安逸、撇脱、雄起、瓜娃子
-   - 形容词：巴适(舒服)、安逸(舒适)、撇脱(干脆)、扎实(实在)
-   - 语气词：撒、嘛、噻、啰
+四川话词汇参考：
+- 常用：撒、啷个、咋个、要得、巴适、安逸、撇脱、雄起、瓜娃子
+- 形容词：巴适(舒服)、安逸(舒适)、撇脱(干脆)、扎实(实在)
+- 语气词：撒、嘛、噻、啰
+- 特色表达："要得"(好的)、"巴适得板"(特别舒服)、"不摆了"(很好)、"晓得了"(知道了)
 
-2. 发音特色：
-   - n/l 不分
-   - 前后鼻音不分
-   - 部分声母变化（h/f, zh/z等）
+风格：幽默风趣、随性自然、热情奔放
 
-3. 表达风格：
-   - 幽默风趣
-   - 随性自然
-   - 热情奔放
-
-4. 特色表达：
-   - "要得" - 好的/可以
-   - "巴适得板" - 特别舒服
-   - "不摆了" - 没话说/很好
-   - "晓得了" - 知道了
-   - "搞得定" - 能处理
-
-## 创作要求
-1. 歌词要有四川方言的特色词汇和表达方式
-2. 押韵要自然，可以利用四川话特有的韵脚
-3. 内容要接地气，体现四川人的生活态度
-4. 适当加入四川美食、文化元素
-5. 每句歌词后面标注预估的时间点
-
-## 输出格式
-[00:00] 歌词第一句（四川特色）
-[00:03] 歌词第二句
-...
-
-示例：
-[00:00] 哎呀，这个东西硬是巴适得很
-[00:03] 用起来安逸，价格也撇脱
-[00:06] 搞快点撒，莫要犹豫了
-[00:09] 要得要得，大家都说好
-`
+【重要】输出规则：
+- 只输出歌词内容，不要任何解释、说明或描述
+- 不要输出时间戳
+- 不要输出"歌词特点"、"押韵说明"等任何分析性文字
+- 直接输出歌词，每行一句，用空行分隔段落`
 
 export interface SichuanProductInfo {
   name: string
@@ -73,66 +44,75 @@ export interface SichuanVlogInfo {
  * 构建产品推广场景的四川话 Prompt
  */
 export function buildSichuanProductPrompt(productInfo: SichuanProductInfo): string {
-  return `
-${SICHUAN_DIALECT_PROMPT}
+  return `${SICHUAN_DIALECT_PROMPT}
 
-## 产品信息
-- 产品名称：${productInfo.name}
-- 卖点：${productInfo.sellingPoints.join('、')}
+【任务】为以下产品创作30秒四川话Rap歌词
 
-请创作一段30秒左右的四川话Rap歌词，要突出产品特点，同时保持四川话的幽默感和热情。
-直接输出歌词内容，不要包含其他说明。
-`
+产品：${productInfo.name}
+卖点：${productInfo.sellingPoints.join('、')}
+
+要求：
+- 突出产品特点，融入四川话特色词汇
+- 押韵自然，节奏感强
+- 约100-150字
+
+只输出歌词，不要任何其他文字：`
 }
 
 /**
  * 构建搞笑洗脑场景的四川话 Prompt
  */
 export function buildSichuanFunnyPrompt(info: SichuanFunnyInfo): string {
-  return `
-${SICHUAN_DIALECT_PROMPT}
+  return `${SICHUAN_DIALECT_PROMPT}
 
-## 主题信息
-- 主题：${info.theme}
-- 关键词：${info.keywords.join('、')}
+【任务】创作30秒搞笑四川话Rap歌词
 
-请创作一段30秒左右的四川话搞笑Rap歌词，要魔性洗脑，让人听了会笑。
-直接输出歌词内容，不要包含其他说明。
-`
+主题：${info.theme}
+关键词：${info.keywords.join('、')}
+
+要求：
+- 搞笑魔性，夸张幽默
+- 约100-150字
+
+只输出歌词，不要任何其他文字：`
 }
 
 /**
  * 构建 IP 混剪场景的四川话 Prompt
  */
 export function buildSichuanIPPrompt(info: SichuanIPInfo): string {
-  return `
-${SICHUAN_DIALECT_PROMPT}
+  return `${SICHUAN_DIALECT_PROMPT}
 
-## IP信息
-- IP名称：${info.ipName}
-- 核心元素：${info.coreElements.join('、')}
-- 风格：${info.mood}
+【任务】创作30秒四川话Rap歌词用于IP混剪
 
-请创作一段30秒左右的四川话Rap歌词，要符合IP调性，${info.mood}燃炸。
-直接输出歌词内容，不要包含其他说明。
-`
+IP：${info.ipName}
+核心元素：${info.coreElements.join('、')}
+风格：${info.mood}
+
+要求：
+- 符合IP调性，有粉丝共鸣
+- 约100-150字
+
+只输出歌词，不要任何其他文字：`
 }
 
 /**
  * 构建日常 Vlog 场景的四川话 Prompt
  */
 export function buildSichuanVlogPrompt(info: SichuanVlogInfo): string {
-  return `
-${SICHUAN_DIALECT_PROMPT}
+  return `${SICHUAN_DIALECT_PROMPT}
 
-## Vlog信息
-- 活动：${info.activities.join('、')}
-- 地点：${info.location}
-- 心情：${info.mood}
+【任务】创作30秒四川话Rap歌词用于日常Vlog
 
-请创作一段30秒左右的四川话Rap歌词，要轻松愉快，有代入感。
-直接输出歌词内容，不要包含其他说明。
-`
+活动：${info.activities.join('、')}
+地点：${info.location || '未知'}
+心情：${info.mood}
+
+要求：
+- 轻松愉快，有代入感
+- 约100-150字
+
+只输出歌词，不要任何其他文字：`
 }
 
 /**

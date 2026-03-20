@@ -3,7 +3,7 @@
  */
 
 // 客户端
-export { MiniMaxClient, getMiniMaxClient, generateMusicWithWait } from './client'
+export { MiniMaxClient, getMiniMaxClient } from './client'
 
 // 类型
 export type {

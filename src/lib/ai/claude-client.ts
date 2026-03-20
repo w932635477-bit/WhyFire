@@ -1,64 +1,80 @@
 /**
  * Claude API 客户端封装
- * 用于生成 Rap 歌词
+ * 使用 EvoLink 国内代理访问 Claude API (OpenAI 兼容格式)
  */
 
-import Anthropic from '@anthropic-ai/sdk'
+const EVOLINK_BASE_URL = 'https://api.evolink.ai/v1'
+const DEFAULT_MODEL = 'claude-sonnet-4-20250514'
 
-// Claude 客户端单例
-let anthropicClient: Anthropic | null = null
+interface ChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
 
-/**
- * 获取 Claude API 客户端
- */
-export function getClaudeClient(): Anthropic {
-  if (!anthropicClient) {
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY 环境变量未配置')
+interface ChatCompletionResponse {
+  choices: Array<{
+    message: {
+      content: string
     }
-    anthropicClient = new Anthropic({ apiKey })
-  }
-  return anthropicClient
+  }>
 }
 
 /**
- * 调用 Claude API 生成文本
+ * 调用 Claude API 生成文本 (通过 EvoLink OpenAI 兼容接口)
  */
 export async function generateWithClaude(prompt: string, options?: {
   maxTokens?: number
   temperature?: number
   model?: string
 }): Promise<string> {
-  const client = getClaudeClient()
+  const apiKey = process.env.EVOLINK_API_KEY
+  if (!apiKey) {
+    throw new Error('EVOLINK_API_KEY 环境变量未配置')
+  }
 
   const {
     maxTokens = 1024,
     temperature = 0.8,
-    model = 'claude-sonnet-4-20250514'
+    model = DEFAULT_MODEL
   } = options || {}
 
-  const message = await client.messages.create({
-    model,
-    max_tokens: maxTokens,
-    temperature,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+  const response = await fetch(`${EVOLINK_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      temperature,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    }),
   })
 
-  const content = message.content[0]
-  if (content.type !== 'text') {
-    throw new Error('Claude 返回了非文本内容')
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Claude API 调用失败: ${response.status} - ${errorText}`)
   }
 
-  return content.text
+  const data: ChatCompletionResponse = await response.json()
+  return data.choices[0]?.message?.content || ''
 }
 
 /**
- * 默认导出客户端
+ * 获取 Claude API 客户端配置
  */
-export default getClaudeClient
+export function getClaudeConfig() {
+  return {
+    baseURL: EVOLINK_BASE_URL,
+    model: DEFAULT_MODEL,
+    hasApiKey: !!process.env.EVOLINK_API_KEY,
+  }
+}
+
+export default { generateWithClaude, getClaudeConfig }

@@ -3,18 +3,6 @@
  */
 
 import type { SceneType, DialectType } from '@/types'
-import {
-  buildDongbeiProductPrompt,
-  buildDongbeiFunnyPrompt,
-  buildDongbeiIPPrompt,
-  buildDongbeiVlogPrompt,
-} from './dialect-dongbei'
-import {
-  buildSichuanProductPrompt,
-  buildSichuanFunnyPrompt,
-  buildSichuanIPPrompt,
-  buildSichuanVlogPrompt,
-} from './dialect-sichuan'
 
 interface PromptContext {
   scene: SceneType
@@ -31,198 +19,204 @@ interface PromptContext {
 }
 
 /**
- * 方言描述映射
+ * 语言描述映射
  */
 const DIALECT_DESCRIPTIONS: Record<DialectType, string> = {
-  mandarin: '普通话',
-  cantonese: '粤语（广东话），带有港式风味',
-  dongbei: '东北话，带有东北方言特色',
-  sichuan: '四川话，带有川渝方言特色',
+  mandarin: 'Mandarin Chinese (普通话)',
+  cantonese: 'Cantonese (粤语)',
+  english: 'English',
 }
 
 /**
  * 场景类型描述映射
  */
 const SCENE_DESCRIPTIONS: Record<SceneType, string> = {
-  product: '产品推广',
-  funny: '搞笑洗脑',
-  ip: 'IP混剪',
-  vlog: '日常Vlog',
+  product: 'Product Promotion',
+  funny: 'Funny/Viral',
+  ip: 'IP Mashup',
+  vlog: 'Daily Vlog',
 }
 
 /**
  * 构建产品推广场景 Prompt
  */
 function buildProductPrompt(ctx: PromptContext): string {
-  // 使用专门的东北话 Prompt
-  if (ctx.dialect === 'dongbei') {
-    return buildDongbeiProductPrompt({
-      name: ctx.productName || '产品',
-      sellingPoints: ctx.sellingPoints || [],
-    })
-  }
-
-  // 使用专门的四川话 Prompt
-  if (ctx.dialect === 'sichuan') {
-    return buildSichuanProductPrompt({
-      name: ctx.productName || '产品',
-      sellingPoints: ctx.sellingPoints || [],
-    })
-  }
-
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
-  const productName = ctx.productName || '产品'
-  const sellingPoints = ctx.sellingPoints?.join('、') || ''
+  const productName = ctx.productName || 'Product'
+  const sellingPoints = ctx.sellingPoints?.join(', ') || ''
 
-  return `你是一位专业的 Rap 歌词创作专家。请根据以下信息创作一段 30 秒的 Rap 歌词：
+  if (ctx.dialect === 'english') {
+    return `You are a professional Rap lyricist.
+
+【Task】Create a 30-second Rap lyrics for product promotion
+
+Language: English
+Product: ${productName}
+Selling Points: ${sellingPoints}
+
+Requirements:
+- Catchy rhythm, natural rhyming
+- Naturally incorporate product selling points
+- Marketing appeal, memorable
+- About 80-120 words
+
+【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
+  }
+
+  return `你是专业的Rap歌词创作专家。
+
+【任务】创作30秒Rap歌词
 
 场景: 产品推广
-方言: ${dialectDesc}
+语言: ${dialectDesc}
 产品: ${productName}
 卖点: ${sellingPoints}
 
 要求:
-- 歌词要有节奏感，适合 Rap 演唱，押韵自然
-- ${ctx.dialect === 'cantonese' ? '使用粤语俚语和表达方式' : '语言风格接地气'}
-- ${ctx.dialect === 'cantonese' ? '参考香港 Rap 的风格' : ''}
-- 自然融入产品卖点，不要生硬广告感
-- 风格${ctx.dialect === 'cantonese' ? '港式' : ''}幽默/洗脑/好记
-- 字数约 100-150 字
-- 分成 2-3 段，每段 4-6 行
+- 歌词有节奏感，押韵自然
+- ${ctx.dialect === 'cantonese' ? '使用粤语俚语，港式风格' : '接地气'}
+- 自然融入产品卖点
+- 约100-150字
 
-直接输出歌词内容，不要包含其他说明。`
+【重要】只输出歌词，不要任何解释、说明或分析。`
 }
 
 /**
  * 构建搞笑洗脑场景 Prompt
  */
 function buildFunnyPrompt(ctx: PromptContext): string {
-  // 使用专门的东北话 Prompt
-  if (ctx.dialect === 'dongbei') {
-    return buildDongbeiFunnyPrompt({
-      theme: ctx.theme || '日常生活',
-      keywords: ctx.keywords || [],
-    })
-  }
-
-  // 使用专门的四川话 Prompt
-  if (ctx.dialect === 'sichuan') {
-    return buildSichuanFunnyPrompt({
-      theme: ctx.theme || '日常生活',
-      keywords: ctx.keywords || [],
-    })
-  }
-
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
-  const theme = ctx.theme || '日常生活'
-  const keywords = ctx.keywords?.join('、') || ''
+  const theme = ctx.theme || 'Daily Life'
+  const keywords = ctx.keywords?.join(', ') || ''
 
-  return `你是一位专业的 Rap 歌词创作专家。请根据以下信息创作一段 30 秒的搞笑 Rap 歌词：
+  if (ctx.dialect === 'english') {
+    return `You are a professional Rap lyricist.
+
+【Task】Create a 30-second funny/viral Rap lyrics
+
+Language: English
+Theme: ${theme}
+Keywords: ${keywords}
+
+Requirements:
+- Viral, catchy, humorous
+- Use internet memes/slang if appropriate
+- Exaggerated and entertaining
+- About 80-120 words
+
+【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
+  }
+
+  return `你是专业的Rap歌词创作专家。
+
+【任务】创作30秒搞笑Rap歌词
 
 场景: 搞笑洗脑
-方言: ${dialectDesc}
+语言: ${dialectDesc}
 主题: ${theme}
 关键词: ${keywords}
 
 要求:
-- 歌词要有节奏感，魔性洗脑，押韵自然
-- ${ctx.dialect === 'cantonese' ? '使用粤语俚语和表达方式，港式幽默' : '接地气，有网络梗'}
-- 夸张、幽默、让人听了会笑
-- 字数约 100-150 字
-- 分成 2-3 段，每段 4-6 行
+- 魔性洗脑，押韵自然
+- ${ctx.dialect === 'cantonese' ? '粤语俚语，港式幽默' : '接地气，有网络梗'}
+- 夸张幽默
+- 约100-150字
 
-直接输出歌词内容，不要包含其他说明。`
+【重要】只输出歌词，不要任何解释、说明或分析。`
 }
 
 /**
  * 构建 IP 混剪场景 Prompt
  */
 function buildIPPrompt(ctx: PromptContext): string {
-  // 使用专门的东北话 Prompt
-  if (ctx.dialect === 'dongbei') {
-    return buildDongbeiIPPrompt({
-      ipName: ctx.ipName || 'IP',
-      coreElements: ctx.coreElements || [],
-      mood: ctx.mood || '酷炫',
-    })
-  }
-
-  // 使用专门的四川话 Prompt
-  if (ctx.dialect === 'sichuan') {
-    return buildSichuanIPPrompt({
-      ipName: ctx.ipName || 'IP',
-      coreElements: ctx.coreElements || [],
-      mood: ctx.mood || '酷炫',
-    })
-  }
-
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const ipName = ctx.ipName || 'IP'
-  const coreElements = ctx.coreElements?.join('、') || ''
-  const mood = ctx.mood || '酷炫'
+  const coreElements = ctx.coreElements?.join(', ') || ''
+  const mood = ctx.mood || 'Epic'
 
-  return `你是一位专业的 Rap 歌词创作专家。请根据以下信息创作一段 30 秒的 Rap 歌词：
+  if (ctx.dialect === 'english') {
+    return `You are a professional Rap lyricist.
+
+【Task】Create a 30-second Rap lyrics for IP/Brand mashup
+
+Language: English
+IP/Brand: ${ipName}
+Core Elements: ${coreElements}
+Mood: ${mood}
+
+Requirements:
+- ${mood} and powerful
+- Resonate with fans
+- Stay true to the IP's essence
+- About 80-120 words
+
+【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
+  }
+
+  return `你是专业的Rap歌词创作专家。
+
+【任务】创作30秒Rap歌词用于IP混剪
 
 场景: IP混剪
-方言: ${dialectDesc}
+语言: ${dialectDesc}
 IP名称: ${ipName}
 核心元素: ${coreElements}
 风格: ${mood}
 
 要求:
-- 歌词要有节奏感，${mood}燃炸，押韵自然
-- ${ctx.dialect === 'cantonese' ? '使用粤语表达，港式风格' : ''}
-- 符合 IP 调性，有粉丝共鸣感
-- 情感真挚或热血
-- 字数约 100-150 字
-- 分成 2-3 段，每段 4-6 行
+- ${mood}燃炸，押韵自然
+- ${ctx.dialect === 'cantonese' ? '港式风格' : ''}
+- 符合IP调性，有粉丝共鸣
+- 约100-150字
 
-直接输出歌词内容，不要包含其他说明。`
+【重要】只输出歌词，不要任何解释、说明或分析。`
 }
 
 /**
  * 构建日常 Vlog 场景 Prompt
  */
 function buildVlogPrompt(ctx: PromptContext): string {
-  // 使用专门的东北话 Prompt
-  if (ctx.dialect === 'dongbei') {
-    return buildDongbeiVlogPrompt({
-      activities: ctx.activities || ['日常生活'],
-      location: ctx.location || '',
-      mood: ctx.mood || '轻松',
-    })
-  }
-
-  // 使用专门的四川话 Prompt
-  if (ctx.dialect === 'sichuan') {
-    return buildSichuanVlogPrompt({
-      activities: ctx.activities || ['日常生活'],
-      location: ctx.location || '',
-      mood: ctx.mood || '轻松',
-    })
-  }
-
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
-  const activities = ctx.activities?.join('、') || '日常生活'
+  const activities = ctx.activities?.join(', ') || ''
   const location = ctx.location || ''
-  const mood = ctx.mood || '轻松'
+  const mood = ctx.mood || 'Chill'
 
-  return `你是一位专业的 Rap 歌词创作专家。请根据以下信息创作一段 30 秒的 Rap 歌词：
+  if (ctx.dialect === 'english') {
+    return `You are a professional Rap lyricist.
+
+【Task】Create a 30-second Rap lyrics for daily vlog
+
+Language: English
+Activities: ${activities}
+Location: ${location || 'Unknown'}
+Mood: ${mood}
+
+Requirements:
+- Lifestyle-focused, relatable
+- ${mood} and casual vibe
+- Authentic and personal
+- About 80-120 words
+
+【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
+  }
+
+  return `你是专业的Rap歌词创作专家。
+
+【任务】创作30秒Rap歌词用于日常Vlog
 
 场景: 日常Vlog
-方言: ${dialectDesc}
+语言: ${dialectDesc}
 活动: ${activities}
 地点: ${location}
 心情: ${mood}
 
 要求:
-- 歌词要有节奏感，生活化，押韵自然
-- ${ctx.dialect === 'cantonese' ? '使用粤语俚语，港式日常表达' : '真实、接地气'}
-- 轻松愉快，有代入感
-- 字数约 100-150 字
-- 分成 2-3 段，每段 4-6 行
+- 生活化，押韵自然
+- ${ctx.dialect === 'cantonese' ? '粤语日常表达' : '真实接地气'}
+- 轻松愉快
+- 约100-150字
 
-直接输出歌词内容，不要包含其他说明。`
+【重要】只输出歌词，不要任何解释、说明或分析。`
 }
 
 /**

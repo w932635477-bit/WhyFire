@@ -180,10 +180,14 @@ export function MusicGenerator({
 
     setStatus('generating')
     setProgress(5)
-    setCurrentStage('创建任务...')
+    setCurrentStage('AI 正在创作音乐...')
     setErrorMessage(null)
 
     try {
+      // 创建 AbortController 用于超时控制（180 秒超时）
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 180000)
+
       // 调用生成 API
       const response = await fetch('/api/music/generate', {
         method: 'POST',
@@ -194,7 +198,10 @@ export function MusicGenerator({
           style,
           duration: 30,
         }),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       const result = await response.json()
 
@@ -202,6 +209,17 @@ export function MusicGenerator({
         throw new Error(result.message || '创建音乐生成任务失败')
       }
 
+      // 检查是否直接返回了音频 URL（同步模式）
+      if (result.data.audioUrl) {
+        setProgress(100)
+        setCurrentStage('完成')
+        setStatus('completed')
+        setAudioUrl(result.data.audioUrl)
+        onMusicGenerated(result.data.audioUrl, result.data.taskId)
+        return
+      }
+
+      // 如果是异步模式，开始轮询
       const newTaskId = result.data.taskId
       setTaskId(newTaskId)
       setProgress(10)
@@ -214,7 +232,7 @@ export function MusicGenerator({
       setStatus('failed')
       setProgress(0)
       const err = error instanceof Error ? error : new Error('未知错误')
-      setErrorMessage(err.message)
+      setErrorMessage(err.name === 'AbortError' ? '请求超时，请重试' : err.message)
       onError(err)
     }
   }
@@ -298,7 +316,7 @@ export function MusicGenerator({
 
           {/* 提示信息 */}
           <p className="text-gray-500 text-sm text-center">
-            音乐生成通常需要 1-3 分钟,请耐心等待...
+            音乐生成通常需要 1-2 分钟，AI 正在为你创作独特旋律...
           </p>
 
           {/* 任务 ID */}

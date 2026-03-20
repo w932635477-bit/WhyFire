@@ -44,3 +44,12 @@ coverage/
 !.coordination/task-queue.json
 !.coordination/*-status.json
 !.coordination/review-feedback.json
+
+# Playwright CLI 临时文件
+.playwright-cli/
+
+# 生成的音频文件
+public/audio/music-*.mp3
+
+# 测试结果
+test-results/

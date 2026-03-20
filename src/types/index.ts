@@ -9,8 +9,8 @@ export * from './video'
 // 场景类型
 export type SceneType = 'product' | 'funny' | 'ip' | 'vlog';
 
-// 方言类型
-export type DialectType = 'mandarin' | 'cantonese' | 'dongbei' | 'sichuan';
+// 语言/方言类型
+export type DialectType = 'mandarin' | 'cantonese' | 'english';
 
 // 场景配置
 export interface SceneConfig {

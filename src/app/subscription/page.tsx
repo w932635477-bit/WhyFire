@@ -1,20 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Check } from 'lucide-react'
 import { PlanCard } from '@/components/subscription/plan-card'
 import { SubscriptionModal } from '@/components/subscription/subscription-modal'
 import { SUBSCRIPTION_PLANS, type SubscriptionPlan, type PlanType } from '@/types/subscription'
 
-// 将 Record 转换为数组
 const PLANS_ARRAY = Object.values(SUBSCRIPTION_PLANS).filter(plan => plan.isEnabled)
-
-// 模拟当前用户计划
 const CURRENT_PLAN_ID: PlanType = 'free'
 
-/**
- * 订阅计划页面
- * Subscription Plans Page
- */
 export default function SubscriptionPage() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
   const [showModal, setShowModal] = useState(false)
@@ -35,12 +30,9 @@ export default function SubscriptionPage() {
 
   const handleConfirmSubscription = async () => {
     if (!selectedPlan) return
-
     setIsProcessing(true)
 
     try {
-      // 模拟支付流程
-      // 实际项目中应调用支付 API
       const response = await fetch('/api/subscription/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,12 +40,10 @@ export default function SubscriptionPage() {
       })
 
       if (response.ok) {
-        // 支付成功，更新当前计划
         setCurrentPlanId(selectedPlan.id)
         setShowModal(false)
         setSelectedPlan(null)
       } else {
-        // 如果 API 不存在，模拟成功
         await new Promise((resolve) => setTimeout(resolve, 1500))
         setCurrentPlanId(selectedPlan.id)
         setShowModal(false)
@@ -61,7 +51,6 @@ export default function SubscriptionPage() {
       }
     } catch (error) {
       console.error('订阅失败:', error)
-      // 模拟成功用于演示
       await new Promise((resolve) => setTimeout(resolve, 1500))
       setCurrentPlanId(selectedPlan.id)
       setShowModal(false)
@@ -71,118 +60,93 @@ export default function SubscriptionPage() {
     }
   }
 
+  const features = ['无水印视频', '高清画质', '多种方言']
+
   return (
-    <main className="min-h-screen bg-dark-900 py-12 px-4">
+    <main className="min-h-screen bg-black py-16 px-4">
       <div className="max-w-5xl mx-auto">
         {/* 页面标题 */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">选择订阅计划</h1>
-          <p className="text-gray-400 text-lg">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-semibold mb-4"
+          >
+            <span className="gradient-text-white">选择订阅</span>{' '}
+            <span className="gradient-text">计划</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl text-gray-400"
+          >
             解锁更多功能，释放您的创作潜能
-          </p>
+          </motion.p>
         </div>
 
-        {/* 计划对比提示 */}
-        <div className="flex justify-center gap-6 mb-8 text-sm">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-secondary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="text-gray-400">无水印视频</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-secondary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="text-gray-400">高清画质</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-secondary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="text-gray-400">多种方言</span>
-          </div>
-        </div>
+        {/* 功能提示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex justify-center gap-8 mb-12"
+        >
+          {features.map((feature, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Check className="w-5 h-5 text-green-400" />
+              <span className="text-gray-400">{feature}</span>
+            </div>
+          ))}
+        </motion.div>
 
         {/* 计划卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {PLANS_ARRAY.sort((a, b) => a.sortOrder - b.sortOrder).map((plan) => (
-            <PlanCard
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          {PLANS_ARRAY.sort((a, b) => a.sortOrder - b.sortOrder).map((plan, i) => (
+            <motion.div
               key={plan.id}
-              plan={plan}
-              onSelect={handleSelectPlan}
-              isSelected={selectedPlan?.id === plan.id}
-              isCurrentPlan={currentPlanId === plan.id}
-              isProcessing={isProcessing}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+            >
+              <PlanCard
+                plan={plan}
+                onSelect={handleSelectPlan}
+                isSelected={selectedPlan?.id === plan.id}
+                isCurrentPlan={currentPlanId === plan.id}
+                isProcessing={isProcessing}
+              />
+            </motion.div>
           ))}
         </div>
 
         {/* 常见问题 */}
-        <div className="bg-dark-800 rounded-2xl p-8 border border-dark-600">
-          <h2 className="text-xl font-bold text-white mb-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white/[0.02] rounded-2xl p-8 border border-white/[0.06]"
+        >
+          <h2 className="text-2xl font-semibold text-white mb-8 text-center">
             常见问题
           </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-white font-medium mb-2">积分如何计算?</h3>
-              <p className="text-gray-400 text-sm">
-                每次生成视频消耗约 50 积分。免费用户每天获得 2 积分，付费用户每月获得固定积分。
-              </p>
-            </div>
-            <div>
-              <h3 className="text-white font-medium mb-2">可以随时取消吗?</h3>
-              <p className="text-gray-400 text-sm">
-                是的，您可以随时取消订阅。取消后，您仍可使用当前计费周期内的剩余积分。
-              </p>
-            </div>
-            <div>
-              <h3 className="text-white font-medium mb-2">积分会过期吗?</h3>
-              <p className="text-gray-400 text-sm">
-                购买的积分永久有效，不会过期。每月赠送的积分在当月有效。
-              </p>
-            </div>
-            <div>
-              <h3 className="text-white font-medium mb-2">支持退款吗?</h3>
-              <p className="text-gray-400 text-sm">
-                如有问题请联系客服，我们会根据具体情况处理退款请求。
-              </p>
-            </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              { q: '积分如何计算?', a: '每次生成视频消耗约 50 积分。免费用户每天获得 2 积分，付费用户每月获得固定积分。' },
+              { q: '可以随时取消吗?', a: '是的，您可以随时取消订阅。取消后，您仍可使用当前计费周期内的剩余积分。' },
+              { q: '积分会过期吗?', a: '购买的积分永久有效，不会过期。每月赠送的积分在当月有效。' },
+              { q: '支持退款吗?', a: '如有问题请联系客服，我们会根据具体情况处理退款请求。' },
+            ].map((faq, i) => (
+              <div key={i}>
+                <h3 className="text-white font-medium mb-2">{faq.q}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* 底部说明 */}
-        <div className="text-center mt-8 text-gray-500 text-sm">
+        <div className="text-center mt-10 text-gray-600 text-sm">
           <p>如有疑问，请联系客服 support@whyfire.ai</p>
         </div>
       </div>

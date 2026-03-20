@@ -124,7 +124,7 @@ async function extractVideoMetadata(file: File): Promise<{
  */
 export function VideoUploadZone({
   onUpload,
-  maxSize = 100 * 1024 * 1024, // 默认 100MB
+  maxSize = 200 * 1024 * 1024, // 默认 200MB
   acceptFormats = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'],
   disabled = false,
   className = '',
@@ -356,6 +356,9 @@ export function VideoUploadZone({
                     </p>
                     <p className="text-zinc-600 text-xs mt-2">
                       支持 MP4, MOV, WebM • 最大 {formatFileSize(maxSize)} • 最长 5 分钟
+                    </p>
+                    <p className="text-zinc-600 text-xs mt-1">
+                      💡 原视频音频将被替换为生成的 Rap 音乐
                     </p>
                   </>
                 )}

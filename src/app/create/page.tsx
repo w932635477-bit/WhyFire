@@ -10,6 +10,9 @@ import type { MiniMaxDialect } from '@/lib/minimax/types'
 import { VideoUploadZone, type VideoFileInfo } from '@/components/features/creation/video-upload-zone'
 import type { LyricLine } from '@/lib/subtitle/subtitle-styles'
 import { VideoSynthesizer, type SynthesisProgress } from '@/lib/ffmpeg/video-synthesizer'
+// 特效系统
+import { type UserEffectsConfig, DEFAULT_USER_EFFECTS_CONFIG, getAllEffectPresets, EFFECT_PRESETS } from '@/lib/effects'
+import { EffectSelector } from '@/components/features/effects'
 
 /**
  * 将歌词文本转换为带时间戳的 LyricLine 数组
@@ -62,6 +65,22 @@ export default function CreatePage() {
   const [synthesisStage, setSynthesisStage] = useState('')
   const [outputVideoUrl, setOutputVideoUrl] = useState<string | null>(null)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+
+  // 特效配置状态 - 初始化时展开默认预设的属性
+  const [effectsConfig, setEffectsConfig] = useState<Partial<UserEffectsConfig>>(() => {
+    const defaultPreset = EFFECT_PRESETS['old-school']
+    return {
+      preset: 'old-school',
+      subtitleEffect: defaultPreset.subtitleEffect,
+      videoFilter: defaultPreset.videoFilter,
+      additionalFilters: defaultPreset.additionalFilters,
+      subtitleConfig: {
+        ...DEFAULT_USER_EFFECTS_CONFIG.subtitleConfig,
+        ...defaultPreset.subtitleConfig,
+      },
+    }
+  })
+  const [showEffectsSelector, setShowEffectsSelector] = useState(false)
 
   const credits = 28
 
@@ -149,13 +168,27 @@ export default function CreatePage() {
 
       const startSynthesis = async () => {
         try {
+          console.log('[CreatePage] Starting video synthesis with:', {
+            videoFileSize: videoFile.file.size,
+            audioBlobSize: audioBlob?.size,
+            lyricsCount: lyricLines.length,
+            effectsConfig,
+          })
           const result = await synthesizer.synthesize({
             videoFile: videoFile.file,
             audioFile: audioBlob,
             lyrics: lyricLines,
+            effectsConfig, // 传入特效配置
             onProgress: (info: SynthesisProgress) => {
               setSynthesisProgress(info.overallProgress * 100)
             },
+          })
+
+          console.log('[CreatePage] Synthesis result:', {
+            blobSize: result.blob.size,
+            url: result.url,
+            filename: result.filename,
+            duration: result.duration,
           })
 
           setOutputVideoUrl(result.url)
@@ -746,13 +779,21 @@ export default function CreatePage() {
                     </div>
                   </div>
 
+                  {/* 特效选择器 */}
+                  <EffectSelector
+                    config={effectsConfig}
+                    onConfigChange={setEffectsConfig}
+                    showPresets={true}
+                    className="bg-white/[0.02] border border-white/5"
+                  />
+
                   {/* 视频上传区域 */}
                   <VideoUploadZone
                     onUpload={(info) => {
                       setVideoFile(info)
                       setPhase('creating-video')
                     }}
-                    maxSize={100 * 1024 * 1024}
+                    maxSize={200 * 1024 * 1024}
                   />
 
                   {/* 返回按钮 */}

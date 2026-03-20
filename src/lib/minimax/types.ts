@@ -3,28 +3,18 @@
  * 音乐生成相关类型
  */
 
-// 支持的方言类型
-// 注意: MiniMax API 目前只直接支持 mandarin 和 cantonese
-// dongbei 和 sichuan 需要映射到 mandarin，但歌词内容保持方言特色
-export type MiniMaxDialect = 'mandarin' | 'cantonese' | 'dongbei' | 'sichuan'
+// 支持的方言/语言类型
+// MiniMax Music API 通过歌词内容自动识别语言，无需显式指定
+// 支持的语言：普通话、粤语、英语
+export type MiniMaxDialect = 'mandarin' | 'cantonese' | 'english'
 
 /**
- * 方言映射到 MiniMax API 支持的类型
- * dongbei 和 sichuan 方言的歌词使用方言特色词汇，
- * 但音乐生成时映射到 mandarin
+ * 方言显示名称
  */
-export const DIALECT_TO_MINIMAX_MAPPING: Record<string, 'mandarin' | 'cantonese'> = {
-  mandarin: 'mandarin',
-  cantonese: 'cantonese',
-  dongbei: 'mandarin', // 东北话映射到普通话，歌词保持东北话特色
-  sichuan: 'mandarin', // 四川话映射到普通话，歌词保持四川话特色
-}
-
-/**
- * 获取 MiniMax API 支持的方言类型
- */
-export function getMiniMaxDialect(dialect: MiniMaxDialect): 'mandarin' | 'cantonese' {
-  return DIALECT_TO_MINIMAX_MAPPING[dialect] || 'mandarin'
+export const DIALECT_LABELS: Record<MiniMaxDialect, string> = {
+  mandarin: '普通话',
+  cantonese: '粤语',
+  english: 'English',
 }
 
 // 支持的音乐风格

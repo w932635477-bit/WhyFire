@@ -3,23 +3,28 @@
  * 用于音乐生成
  */
 
+import { writeFileSync, existsSync, mkdirSync } from 'fs'
+import { join } from 'path'
 import {
   MiniMaxClientConfig,
   MiniMaxDialect,
-  MiniMaxMusicRequest,
   MiniMaxMusicStyle,
-  MiniMaxTaskResponse,
-  MiniMaxTaskStatusResponse,
   MusicGenerationParams,
   MusicGenerationResult,
   MiniMaxError,
 } from './types'
 
 // 默认配置
-const DEFAULT_BASE_URL = 'https://api.minimax.chat/v1'
-const DEFAULT_TIMEOUT = 60000 // 60 秒
-const DEFAULT_MAX_RETRIES = 3
-const RETRY_DELAY = 1000 // 1 秒
+const DEFAULT_BASE_URL = 'https://api.minimaxi.com/v1'
+const DEFAULT_TIMEOUT = 180000 // 180 秒（音乐生成需要较长时间）
+const DEFAULT_MODEL = 'music-2.5+'
+
+// 风格映射
+const STYLE_TO_PROMPT: Record<MiniMaxMusicStyle, string> = {
+  rap: 'Rap,嘻哈,节奏感强,动感,现代',
+  pop: '流行音乐,轻快,朗朗上口,现代',
+  electronic: '电子音乐,节奏感强,动感,合成器,现代',
+}
 
 /**
  * MiniMax API 客户端类
@@ -29,152 +34,55 @@ export class MiniMaxClient {
   private groupId: string
   private baseUrl: string
   private timeout: number
-  private maxRetries: number
 
   constructor(config: MiniMaxClientConfig) {
     this.apiKey = config.apiKey
     this.groupId = config.groupId
     this.baseUrl = config.baseUrl || DEFAULT_BASE_URL
     this.timeout = config.timeout || DEFAULT_TIMEOUT
-    this.maxRetries = config.maxRetries || DEFAULT_MAX_RETRIES
   }
 
   /**
-   * 创建音乐生成任务
-   * @param params 音乐生成参数
-   * @returns 任务 ID
+   * 生成音乐
+   *
+   * 注意：MiniMax API 没有 language 参数，方言是通过歌词内容自动识别的：
+   * - 写粤语歌词 → 模型会用粤语发音演唱
+   * - 写普通话歌词（带方言词汇）→ 模型会用普通话发音演唱方言词汇
    */
   async generateMusic(params: MusicGenerationParams): Promise<string> {
-    const { lyrics, dialect, style, duration = 30 } = params
+    const { lyrics, dialect, style = 'rap', duration = 30 } = params
 
-    // 验证参数
-    this.validateParams(lyrics, dialect, style)
-
-    // 构建请求体
-    const requestBody: MiniMaxMusicRequest = {
-      lyrics,
-      language: dialect,
-      style,
-      audio_length: duration,
+    if (!lyrics || lyrics.trim().length === 0) {
+      throw new MiniMaxError('歌词内容不能为空', 400)
     }
 
-    // 调用 API (带重试)
-    const response = await this.requestWithRetry<MiniMaxTaskResponse>(
-      `${this.baseUrl}/music_generation`,
-      {
+    const stylePrompt = STYLE_TO_PROMPT[style] || STYLE_TO_PROMPT.rap
+
+    // 构建提示词，包含风格和时长
+    // 注意：MiniMax API 没有 language 参数，方言由歌词内容决定
+    const prompt = `${stylePrompt},时长约${Math.round(duration)}秒`
+
+    const requestBody = {
+      model: DEFAULT_MODEL,
+      prompt,
+      lyrics: this.formatLyrics(lyrics),
+      audio_setting: {
+        sample_rate: 44100,
+        bitrate: 256000,
+        format: 'mp3',
+      },
+    }
+
+    console.log(`[MiniMax] 开始生成音乐...`)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
+    try {
+      const response = await fetch(`${this.baseUrl}/music_generation`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(requestBody),
-      }
-    )
-
-    // 检查响应
-    if (response.base_resp.status_code !== 0) {
-      throw new MiniMaxError(
-        response.base_resp.status_msg || '音乐生成任务创建失败',
-        response.base_resp.status_code
-      )
-    }
-
-    const taskId = response.data?.task_id
-    if (!taskId) {
-      throw new MiniMaxError('未返回任务 ID', -1)
-    }
-
-    console.log(`[MiniMax] 音乐生成任务已创建: ${taskId}`)
-    return taskId
-  }
-
-  /**
-   * 查询任务状态
-   * @param taskId 任务 ID
-   * @returns 任务状态和结果
-   */
-  async getTaskStatus(taskId: string): Promise<MusicGenerationResult> {
-    const url = `${this.baseUrl}/music_generation/query?task_id=${taskId}`
-
-    const response = await this.requestWithRetry<MiniMaxTaskStatusResponse>(url, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    })
-
-    // 检查响应
-    if (response.base_resp.status_code !== 0) {
-      throw new MiniMaxError(
-        response.base_resp.status_msg || '任务状态查询失败',
-        response.base_resp.status_code,
-        taskId
-      )
-    }
-
-    const data = response.data
-    const result: MusicGenerationResult = {
-      taskId: data.task_id,
-      status: data.status,
-    }
-
-    // 如果任务完成,添加音频信息
-    if (data.status === 'completed' && data.audio_file) {
-      result.audioUrl = data.audio_file.download_url
-      result.duration = data.audio_file.duration
-    }
-
-    // 如果任务失败,添加错误信息
-    if (data.status === 'failed' && data.error) {
-      result.error = data.error
-    }
-
-    return result
-  }
-
-  /**
-   * 轮询等待任务完成
-   * @param taskId 任务 ID
-   * @param interval 轮询间隔(毫秒), 默认 3000
-   * @param maxWait 最大等待时间(毫秒), 默认 300000 (5分钟)
-   * @returns 任务结果
-   */
-  async waitForCompletion(
-    taskId: string,
-    interval: number = 3000,
-    maxWait: number = 300000
-  ): Promise<MusicGenerationResult> {
-    const startTime = Date.now()
-
-    while (Date.now() - startTime < maxWait) {
-      const status = await this.getTaskStatus(taskId)
-
-      if (status.status === 'completed') {
-        console.log(`[MiniMax] 任务 ${taskId} 已完成`)
-        return status
-      }
-
-      if (status.status === 'failed') {
-        console.error(`[MiniMax] 任务 ${taskId} 失败:`, status.error)
-        return status
-      }
-
-      // 等待一段时间后继续轮询
-      await this.sleep(interval)
-    }
-
-    throw new MiniMaxError('任务超时', -1, taskId)
-  }
-
-  /**
-   * 发送带重试的请求
-   */
-  private async requestWithRetry<T>(
-    url: string,
-    options: RequestInit,
-    retryCount: number = 0
-  ): Promise<T> {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout)
-
-      const response = await fetch(url, {
-        ...options,
         signal: controller.signal,
       })
 
@@ -182,47 +90,88 @@ export class MiniMaxClient {
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new MiniMaxError(
-          `HTTP 错误: ${response.status} - ${errorText}`,
-          response.status
-        )
+        throw new MiniMaxError(`HTTP 错误: ${response.status} - ${errorText}`, response.status)
       }
 
       const data = await response.json()
-      return data as T
-    } catch (error) {
-      // 判断是否需要重试
-      if (this.shouldRetry(error, retryCount)) {
-        console.warn(
-          `[MiniMax] 请求失败,正在重试 (${retryCount + 1}/${this.maxRetries})...`,
-          error instanceof Error ? error.message : String(error)
+
+      if (data.base_resp?.status_code !== 0) {
+        throw new MiniMaxError(
+          data.base_resp?.status_msg || '音乐生成失败',
+          data.base_resp?.status_code || -1
         )
-        await this.sleep(RETRY_DELAY * (retryCount + 1)) // 指数退避
-        return this.requestWithRetry<T>(url, options, retryCount + 1)
       }
 
-      throw error
+      if (data.data?.audio) {
+        const audioHex = data.data.audio
+        const audioBuffer = Buffer.from(audioHex, 'hex')
+
+        // 生成文件名
+        const fileName = `music-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`
+
+        // 确保目录存在
+        const audioDir = join(process.cwd(), 'public', 'audio')
+        if (!existsSync(audioDir)) {
+          mkdirSync(audioDir, { recursive: true })
+        }
+
+        // 保存文件
+        const filePath = join(audioDir, fileName)
+        writeFileSync(filePath, audioBuffer)
+
+        const audioUrl = `/audio/${fileName}`
+        console.log(`[MiniMax] 音乐生成成功: ${audioUrl}`)
+
+        return audioUrl
+      }
+
+      throw new MiniMaxError('未返回音频数据', -1)
+    } catch (error) {
+      clearTimeout(timeoutId)
+
+      // 处理超时错误
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new MiniMaxError(
+          '音乐生成超时，请稍后重试。音乐生成通常需要 1-2 分钟，请耐心等待。',
+          408
+        )
+      }
+
+      if (error instanceof MiniMaxError) {
+        throw error
+      }
+      throw new MiniMaxError(
+        error instanceof Error ? error.message : '未知错误',
+        -1
+      )
     }
   }
 
   /**
-   * 判断是否应该重试
+   * 格式化歌词
    */
-  private shouldRetry(error: unknown, retryCount: number): boolean {
-    if (retryCount >= this.maxRetries) {
-      return false
+  private formatLyrics(lyrics: string): string {
+    if (lyrics.includes('[verse]') || lyrics.includes('[Verse]')) {
+      return lyrics
     }
 
-    // 网络错误或 5xx 错误可以重试
-    if (error instanceof TypeError) {
-      return true // 网络错误
+    const paragraphs = lyrics.split(/\n\n+/).filter(p => p.trim())
+    if (paragraphs.length <= 1) {
+      return `[Verse]\n${lyrics}`
     }
 
-    if (error instanceof MiniMaxError) {
-      return error.statusCode >= 500 || error.statusCode === 429 // 服务器错误或限流
-    }
+    return paragraphs.map((p, i) => {
+      if (i === 0) return `[Verse]\n${p}`
+      if (i === paragraphs.length - 1) return `[Chorus]\n${p}`
+      return `[Verse]\n${p}`
+    }).join('\n\n')
+  }
 
-    return false
+  /**
+   * 查询任务状态
+   */
+  async getTaskStatus(taskId: string): Promise<MusicGenerationResult> {
+    return { taskId, status: 'completed' }
   }
 
   /**
@@ -232,44 +181,7 @@ export class MiniMaxClient {
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${this.apiKey}`,
-      'X-Group-Id': this.groupId,
     }
-  }
-
-  /**
-   * 验证参数
-   */
-  private validateParams(
-    lyrics: string,
-    dialect: MiniMaxDialect,
-    style: MiniMaxMusicStyle
-  ): void {
-    if (!lyrics || lyrics.trim().length === 0) {
-      throw new MiniMaxError('歌词内容不能为空', 400)
-    }
-
-    const validDialects: MiniMaxDialect[] = ['mandarin', 'cantonese']
-    if (!validDialects.includes(dialect)) {
-      throw new MiniMaxError(
-        `不支持的方言: ${dialect}, 支持的方言: ${validDialects.join(', ')}`,
-        400
-      )
-    }
-
-    const validStyles: MiniMaxMusicStyle[] = ['pop', 'rap', 'electronic']
-    if (!validStyles.includes(style)) {
-      throw new MiniMaxError(
-        `不支持的音乐风格: ${style}, 支持的风格: ${validStyles.join(', ')}`,
-        400
-      )
-    }
-  }
-
-  /**
-   * 延时函数
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 
@@ -292,25 +204,10 @@ export function getMiniMaxClient(): MiniMaxClient {
       throw new Error('MINIMAX_GROUP_ID 环境变量未配置')
     }
 
-    minimaxClient = new MiniMaxClient({
-      apiKey,
-      groupId,
-    })
+    minimaxClient = new MiniMaxClient({ apiKey, groupId })
   }
 
   return minimaxClient
 }
 
-/**
- * 便捷函数: 生成音乐并等待完成
- */
-export async function generateMusicWithWait(
-  params: MusicGenerationParams
-): Promise<MusicGenerationResult> {
-  const client = getMiniMaxClient()
-  const taskId = await client.generateMusic(params)
-  return client.waitForCompletion(taskId)
-}
-
-// 默认导出
 export default MiniMaxClient

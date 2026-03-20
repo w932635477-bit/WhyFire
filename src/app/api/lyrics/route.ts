@@ -1,9 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+const EVOLINK_BASE_URL = 'https://api.evolink.ai/v1'
+const DEFAULT_MODEL = 'claude-sonnet-4-20250514'
+
+// 使用 EvoLink 国内代理访问 Claude API
+async function generateLyrics(prompt: string): Promise<string> {
+  const apiKey = process.env.EVOLINK_API_KEY
+  if (!apiKey) {
+    throw new Error('EVOLINK_API_KEY 环境变量未配置')
+  }
+
+  const response = await fetch(`${EVOLINK_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: DEFAULT_MODEL,
+      max_tokens: 1024,
+      temperature: 0.8,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`API 调用失败: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data.choices[0]?.message?.content || ''
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,18 +83,7 @@ ${JSON.stringify(inputs, null, 2)}
 
     const prompt = scenePrompts[scene] || scenePrompts.vlog
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    })
-
-    const lyrics = message.content[0].type === 'text' ? message.content[0].text : ''
+    const lyrics = await generateLyrics(prompt)
 
     return NextResponse.json({ lyrics })
   } catch (error) {

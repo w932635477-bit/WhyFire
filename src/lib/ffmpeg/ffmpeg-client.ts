@@ -139,12 +139,19 @@ export class FFmpegClient {
       // 创建 FFmpeg 实例
       this.ffmpeg = new FFmpeg()
 
-      // 设置日志回调
-      if (onLog) {
-        this.ffmpeg.on('log', ({ type, message }: { type: string; message: string }) => {
+      // 始终设置日志回调，捕获 FFmpeg 输出用于调试
+      this.ffmpeg.on('log', ({ type, message }: { type: string; message: string }) => {
+        // 始终打印 FFmpeg 日志到控制台
+        if (type === 'fferr') {
+          console.error(`[FFmpeg stderr] ${message}`)
+        } else {
+          console.log(`[FFmpeg ${type}] ${message}`)
+        }
+        // 如果提供了自定义回调，也调用它
+        if (onLog) {
           onLog({ type, message })
-        })
-      }
+        }
+      })
 
       // 设置进度回调
       this.ffmpeg.on('progress', ({ progress, time }: { progress: number; time: number }) => {
@@ -243,15 +250,33 @@ export class FFmpegClient {
 
     if (typeof data === 'string') {
       fileData = new TextEncoder().encode(data)
+      console.log(`[FFmpeg] Writing string data, length: ${data.length} chars -> ${fileData.length} bytes`)
     } else if (data instanceof Blob) {
-      const { fetchFile } = await loadFFmpegModule()
-      fileData = await fetchFile(data)
+      console.log(`[FFmpeg] Writing Blob, size: ${data.size} bytes, type: ${data.type}`)
+      // 使用 Blob.arrayBuffer() 代替 fetchFile，更可靠
+      const arrayBuffer = await data.arrayBuffer()
+      fileData = new Uint8Array(arrayBuffer)
+      console.log(`[FFmpeg] Blob converted to Uint8Array: ${fileData.length} bytes`)
     } else {
+      console.log(`[FFmpeg] Writing Uint8Array, length: ${data.length} bytes`)
       fileData = data
     }
 
     await this.ffmpeg.writeFile(filename, fileData)
     console.log(`[FFmpeg] 文件 ${filename} 写入完成，大小: ${fileData.length} bytes`)
+
+    // 验证写入是否成功
+    try {
+      const written = await this.ffmpeg.readFile(filename)
+      const writtenSize = written instanceof Uint8Array ? written.length : new TextEncoder().encode(written).length
+      if (writtenSize !== fileData.length) {
+        console.error(`[FFmpeg] ⚠️ 写入验证失败！期望 ${fileData.length} bytes，实际 ${writtenSize} bytes`)
+      } else {
+        console.log(`[FFmpeg] ✅ 写入验证成功: ${writtenSize} bytes`)
+      }
+    } catch (e) {
+      console.error(`[FFmpeg] ⚠️ 无法验证写入:`, e)
+    }
   }
 
   /**

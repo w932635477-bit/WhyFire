@@ -1,10 +1,13 @@
 /**
  * 音乐生成 API
  * POST /api/music/generate
- * 集成 MiniMax API 生成音乐
+ * 集成 MiniMax API 生成音乐（同步返回）
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
+// 增加路由超时时间（Next.js 15 支持）
+export const maxDuration = 180 // 180 秒
 import { getMiniMaxClient } from '@/lib/minimax/client'
 import type {
   MiniMaxDialect,
@@ -17,17 +20,17 @@ import { MiniMaxError } from '@/lib/minimax/types'
 interface MusicGenerateRequest {
   /** 歌词内容 */
   lyrics: string
-  /** 方言: mandarin(普通话) | cantonese(粤语) */
+  /** 方言 */
   dialect: MiniMaxDialect
-  /** 音乐风格: pop | rap | electronic */
+  /** 音乐风格 */
   style: MiniMaxMusicStyle
-  /** 音频时长(秒), 可选, 默认 30 秒 */
+  /** 音频时长(秒), 可选 */
   duration?: number
 }
 
 /**
  * POST /api/music/generate
- * 创建音乐生成任务
+ * 创建音乐生成任务（同步返回音频 URL）
  */
 export async function POST(
   request: NextRequest
@@ -60,62 +63,29 @@ export async function POST(
       )
     }
 
-    if (!style) {
-      return NextResponse.json(
-        {
-          code: 400,
-          data: { taskId: '', status: 'failed' },
-          message: '缺少必填字段: style',
-        },
-        { status: 400 }
-      )
-    }
-
-    // 验证方言类型
-    const validDialects: MiniMaxDialect[] = ['mandarin', 'cantonese']
-    if (!validDialects.includes(dialect)) {
-      return NextResponse.json(
-        {
-          code: 400,
-          data: { taskId: '', status: 'failed' },
-          message: `不支持的方言: ${dialect}, 支持的方言: ${validDialects.join(', ')}`,
-        },
-        { status: 400 }
-      )
-    }
-
-    // 验证音乐风格
-    const validStyles: MiniMaxMusicStyle[] = ['pop', 'rap', 'electronic']
-    if (!validStyles.includes(style)) {
-      return NextResponse.json(
-        {
-          code: 400,
-          data: { taskId: '', status: 'failed' },
-          message: `不支持的音乐风格: ${style}, 支持的风格: ${validStyles.join(', ')}`,
-        },
-        { status: 400 }
-      )
-    }
-
     // 获取 MiniMax 客户端
     const client = getMiniMaxClient()
 
-    // 创建音乐生成任务
-    const taskId = await client.generateMusic({
+    // 生成音乐（同步返回音频 URL）
+    const audioUrl = await client.generateMusic({
       lyrics,
       dialect,
-      style,
+      style: style || 'rap',
       duration: duration || 30,
     })
 
-    console.log(`[API] 音乐生成任务已创建: taskId=${taskId}, dialect=${dialect}, style=${style}`)
+    // 生成一个临时任务 ID
+    const taskId = `music-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
-    // 返回成功响应
+    console.log(`[API] 音乐生成成功: taskId=${taskId}`)
+
+    // 返回成功响应（直接返回完成的任务）
     return NextResponse.json({
       code: 0,
       data: {
         taskId,
-        status: 'pending',
+        status: 'completed',
+        audioUrl,
       },
     })
   } catch (error) {
