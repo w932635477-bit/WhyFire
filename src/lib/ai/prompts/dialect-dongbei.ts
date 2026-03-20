@@ -3,6 +3,7 @@
  */
 
 import type { DialectType } from '@/types'
+import { getSceneHumorGuide, getSceneExample } from './humor-techniques'
 
 /**
  * 东北话 Rap 歌词创作专用 Prompt
@@ -15,6 +16,13 @@ export const DONGBEI_DIALECT_PROMPT = `你是东北话Rap歌词创作专家。
 - 语气词：呗、嗷、呀
 
 风格：直爽豪迈、幽默诙谐、接地气
+
+【搞笑技巧】
+东北话天生自带幽默感，创作时要充分利用：
+- 夸张：东北人说话就爱夸张，"贼好"、"老带劲了"
+- 反差：一本正经地胡说八道
+- 吐槽：东北人的嘴，吐槽的鬼
+- 热梗：适度融入网络流行语
 
 【重要】输出规则：
 - 只输出歌词内容，不要任何解释、说明或描述
@@ -60,6 +68,7 @@ export interface VlogInfo {
  * 构建产品推广场景的东北话 Prompt
  */
 export function buildDongbeiProductPrompt(productInfo: ProductInfo): string {
+  const example = getSceneExample('product', 'chinese')
   return `${DONGBEI_DIALECT_PROMPT}
 
 【任务】为以下产品创作30秒东北话Rap歌词
@@ -67,10 +76,15 @@ export function buildDongbeiProductPrompt(productInfo: ProductInfo): string {
 产品：${productInfo.name}
 卖点：${productInfo.sellingPoints.join('、')}
 
-要求：
+【质量要求】
+- 至少使用2-3种搞笑技巧（夸张、反转、吐槽等）
+- 有1-2个"金句"（可单独传播的句子）
 - 突出产品特点，融入东北话特色词汇
 - 押韵自然，节奏感强，魔性洗脑
 - 约100-150字
+
+【示例参考】
+${example}
 
 只输出歌词，不要任何其他文字：`
 }
@@ -80,6 +94,7 @@ export function buildDongbeiProductPrompt(productInfo: ProductInfo): string {
  */
 export function buildDongbeiFunnyPrompt(themeInfo: ThemeInfo): string {
   const keywords = themeInfo.keywords?.join('、') || ''
+  const example = getSceneExample('funny', 'chinese')
   return `${DONGBEI_DIALECT_PROMPT}
 
 【任务】创作30秒搞笑东北话Rap歌词
@@ -87,9 +102,15 @@ export function buildDongbeiFunnyPrompt(themeInfo: ThemeInfo): string {
 主题：${themeInfo.theme}
 关键词：${keywords}
 
-要求：
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
 - 搞笑魔性，夸张幽默
+- 东北味儿拉满
 - 约100-150字
+
+【示例参考】
+${example}
 
 只输出歌词，不要任何其他文字：`
 }
@@ -99,6 +120,7 @@ export function buildDongbeiFunnyPrompt(themeInfo: ThemeInfo): string {
  */
 export function buildDongbeiIPPrompt(ipInfo: IPInfo): string {
   const mood = ipInfo.mood || '酷炫'
+  const example = getSceneExample('ip', 'chinese')
   return `${DONGBEI_DIALECT_PROMPT}
 
 【任务】创作30秒东北话Rap歌词用于IP混剪
@@ -107,9 +129,15 @@ IP：${ipInfo.ipName}
 核心元素：${ipInfo.coreElements.join('、')}
 风格：${mood}
 
-要求：
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
 - 符合IP调性，有粉丝共鸣
+- ${mood}燃炸
 - 约100-150字
+
+【示例参考】
+${example}
 
 只输出歌词，不要任何其他文字：`
 }
@@ -119,6 +147,7 @@ IP：${ipInfo.ipName}
  */
 export function buildDongbeiVlogPrompt(vlogInfo: VlogInfo): string {
   const mood = vlogInfo.mood || '轻松'
+  const example = getSceneExample('vlog', 'chinese')
   return `${DONGBEI_DIALECT_PROMPT}
 
 【任务】创作30秒东北话Rap歌词用于日常Vlog
@@ -127,9 +156,15 @@ export function buildDongbeiVlogPrompt(vlogInfo: VlogInfo): string {
 地点：${vlogInfo.location || '未知'}
 心情：${mood}
 
-要求：
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
 - 真实接地气，记录生活
+- 东北人的生活智慧
 - 约100-150字
+
+【示例参考】
+${example}
 
 只输出歌词，不要任何其他文字：`
 }
