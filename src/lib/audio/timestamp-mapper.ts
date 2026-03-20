@@ -1,0 +1,178 @@
+// src/lib/audio/timestamp-mapper.ts
+
+import { BeatAnalysisResult, TimestampMappingConfig } from './types'
+import { LyricLineWithWords, LyricWord } from '@/lib/effects/types'
+
+/**
+ * 默认配置
+ */
+const DEFAULT_CONFIG: TimestampMappingConfig = {
+  alignToBeats: true,
+  minWordDuration: 100, // 每个词最小时长 100ms
+  generateWords: true,
+}
+
+/**
+ * 时间戳映射器
+ * 将纯文本歌词映射到节拍点，生成带时间戳的歌词结构
+ */
+export class TimestampMapper {
+  private config: TimestampMappingConfig
+
+  constructor(config: Partial<TimestampMappingConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config }
+  }
+
+  /**
+   * 将纯文本歌词映射到节拍
+   * @param plainText 纯文本歌词
+   * @param beatInfo 节拍信息 (offset 单位: 秒)
+   * @param audioDuration 音频总时长 (ms)
+   * @returns 带时间戳的歌词数组
+   */
+  mapLyricsToBeats(
+    plainText: string,
+    beatInfo: BeatAnalysisResult,
+    audioDuration: number
+  ): LyricLineWithWords[] {
+    // 解析歌词行
+    const lines = this.parseLines(plainText)
+
+    if (lines.length === 0) {
+      return []
+    }
+
+    // 将 offset 从秒转换为毫秒
+    const offsetMs = beatInfo.offset * 1000
+
+    // 计算每行的时长
+    const lineDurations = this.calculateLineDurations(lines, beatInfo, audioDuration)
+
+    // 为每行生成时间戳和 words 数组
+    const results: LyricLineWithWords[] = []
+    let currentTime = offsetMs // 从偏移量开始
+
+    lines.forEach((line, index) => {
+      const duration = lineDurations[index]
+      const startTime = this.alignToBeat(currentTime, beatInfo.beatInterval)
+      const endTime = startTime + duration
+
+      // 生成 words 数组
+      const words = this.config.generateWords
+        ? this.generateWords(line, startTime, duration)
+        : undefined
+
+      results.push({
+        id: `line-${index}`,
+        text: line,
+        startTime,
+        endTime,
+        words,
+      })
+
+      currentTime = endTime
+    })
+
+    return results
+  }
+
+  /**
+   * 解析歌词行
+   */
+  private parseLines(text: string): string[] {
+    return text
+      .split(/\n+/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+  }
+
+  /**
+   * 计算每行的时长
+   */
+  private calculateLineDurations(
+    lines: string[],
+    beatInfo: BeatAnalysisResult,
+    totalDuration: number
+  ): number[] {
+    // 可用于歌词的时间（排除偏移）
+    const offsetMs = beatInfo.offset * 1000
+    const availableDuration = totalDuration - offsetMs
+
+    // 计算每行的字符数权重
+    const charCounts = lines.map(line => line.length)
+    const totalChars = charCounts.reduce((sum, count) => sum + count, 0)
+
+    // 按字符数分配时间，但确保至少2拍
+    const minDuration = beatInfo.beatInterval * 2
+
+    return charCounts.map(charCount => {
+      const proportionalDuration = (charCount / totalChars) * availableDuration
+      return Math.max(minDuration, proportionalDuration)
+    })
+  }
+
+  /**
+   * 将时间对齐到最近的节拍点
+   */
+  private alignToBeat(time: number, beatInterval: number): number {
+    if (!this.config.alignToBeats) {
+      return time
+    }
+
+    const nearestBeat = Math.round(time / beatInterval) * beatInterval
+    return nearestBeat
+  }
+
+  /**
+   * 为一行歌词生成 words 数组
+   */
+  private generateWords(
+    line: string,
+    startTime: number,
+    duration: number
+  ): LyricWord[] {
+    const words: LyricWord[] = []
+
+    // 中文按字符分割，英文按空格分割
+    const segments = this.splitIntoWords(line)
+    const wordDuration = Math.max(this.config.minWordDuration, duration / segments.length)
+
+    segments.forEach((segment, index) => {
+      words.push({
+        text: segment,
+        startTime: startTime + index * wordDuration,
+        endTime: startTime + (index + 1) * wordDuration,
+      })
+    })
+
+    // 确保最后一个 word 的 endTime 等于行的 endTime
+    if (words.length > 0) {
+      words[words.length - 1].endTime = startTime + duration
+    }
+
+    return words
+  }
+
+  /**
+   * 将文本分割为词/字符
+   */
+  private splitIntoWords(text: string): string[] {
+    // 检测是否包含中文
+    const hasChinese = /[\u4e00-\u9fa5]/.test(text)
+
+    if (hasChinese) {
+      // 中文：每个字符作为一个 word
+      return text.split('')
+    } else {
+      // 英文：按空格分割
+      return text.split(/\s+/).filter(w => w.length > 0)
+    }
+  }
+}
+
+/**
+ * 创建时间戳映射器实例
+ */
+export function createTimestampMapper(config?: Partial<TimestampMappingConfig>): TimestampMapper {
+  return new TimestampMapper(config)
+}
