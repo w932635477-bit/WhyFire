@@ -345,8 +345,8 @@ export class VideoSynthesizer {
           const detector = new BeatDetector({ debug: false })
           const beatInfo = await detector.analyze(audioBuffer)
 
-          // Map lyrics to timestamps
-          syncedLyrics = this.mapLyricsToTimestamps(plainTextLyrics, beatInfo, audioDuration)
+          // Map lyrics to timestamps (convert duration from seconds to milliseconds)
+          syncedLyrics = this.mapLyricsToTimestamps(plainTextLyrics, beatInfo, audioDuration * 1000)
 
           console.log(`[VideoSynthesizer] 节拍同步完成: ${syncedLyrics.length} 行歌词, BPM=${beatInfo.bpm}`)
         } catch (error) {

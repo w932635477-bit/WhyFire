@@ -322,7 +322,7 @@ export function generateASSSubtitle(
   const shadow = config.shadowEnabled ? 2 : 0
   const fontName = config.fontFamily.split(',')[0].trim().replace(/['"]/g, '')
 
-  sections.push(`Style: Default,${fontName},${config.fontSize},${primaryColor},${secondaryColor},${outlineColor},&H00000000,-1,0,0,0,100,100,0,0,1,${config.outlineWidth},${shadow},2,10,10,50,1`)
+  sections.push(`Style: Default,${fontName},${config.fontSize},${primaryColor},${secondaryColor},${outlineColor},&H00000000,-1,0,0,0,100,100,0,0,1,${config.outlineWidth},${shadow},5,10,10,100,1`)
   sections.push('')
 
   // Events
