@@ -13,6 +13,8 @@ import { VideoSynthesizer, type SynthesisProgress } from '@/lib/ffmpeg/video-syn
 // 特效系统
 import { type UserEffectsConfig, DEFAULT_USER_EFFECTS_CONFIG, getAllEffectPresets, EFFECT_PRESETS } from '@/lib/effects'
 import { EffectSelector } from '@/components/features/effects'
+// Store
+import { useVideoCreationStore } from '@/stores/video-creation-store'
 
 /**
  * 将歌词文本转换为带时间戳的 LyricLine 数组
@@ -38,6 +40,43 @@ const DIALECTS: { id: MiniMaxDialect; label: string; flag: string }[] = [
   { id: 'cantonese', label: '粤语', flag: '🇭🇰' },
   { id: 'english', label: 'English', flag: '🇺🇸' },
 ]
+
+/**
+ * Beat Analysis Progress Component
+ */
+function BeatAnalysisProgress() {
+  const { isAnalyzingBeat, beatInfo } = useVideoCreationStore()
+
+  if (!isAnalyzingBeat && !beatInfo) return null
+
+  return (
+    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+      {isAnalyzingBeat && (
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+          <span className="text-sm text-violet-300 animate-pulse">正在分析音乐节拍...</span>
+        </div>
+      )}
+      {beatInfo && !isAnalyzingBeat && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🎵</span>
+            <div>
+              <p className="text-sm font-medium text-white">节拍分析完成</p>
+              <p className="text-xs text-zinc-500">
+                BPM: {beatInfo.bpm} | 置信度: {(beatInfo.confidence! * 100).toFixed(0)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // Mock history data
 const MOCK_HISTORY = [
@@ -815,6 +854,9 @@ export default function CreatePage() {
                   exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
+                  {/* Beat Analysis Progress */}
+                  <BeatAnalysisProgress />
+
                   {/* Header */}
                   <div className="text-center py-4">
                     <motion.div
