@@ -35,6 +35,17 @@ export class TimestampMapper {
     beatInfo: BeatAnalysisResult,
     audioDuration: number
   ): LyricLineWithWords[] {
+    // 输入验证
+    if (audioDuration <= 0) {
+      console.warn('[TimestampMapper] audioDuration 必须大于 0')
+      return []
+    }
+
+    if (beatInfo.beatInterval <= 0) {
+      console.warn('[TimestampMapper] beatInterval 必须大于 0')
+      return []
+    }
+
     // 解析歌词行
     const lines = this.parseLines(plainText)
 
@@ -94,21 +105,39 @@ export class TimestampMapper {
     beatInfo: BeatAnalysisResult,
     totalDuration: number
   ): number[] {
-    // 可用于歌词的时间（排除偏移）
     const offsetMs = beatInfo.offset * 1000
     const availableDuration = totalDuration - offsetMs
 
-    // 计算每行的字符数权重
+    // 防止负数或零
+    if (availableDuration <= 0) {
+      console.warn('[TimestampMapper] 可用时长不足')
+      // 每行分配相同时间（2拍）
+      return lines.map(() => beatInfo.beatInterval * 2)
+    }
+
     const charCounts = lines.map(line => line.length)
     const totalChars = charCounts.reduce((sum, count) => sum + count, 0)
 
-    // 按字符数分配时间，但确保至少2拍
-    const minDuration = beatInfo.beatInterval * 2
+    // 防止除零
+    if (totalChars === 0) {
+      return lines.map(() => availableDuration / lines.length)
+    }
 
-    return charCounts.map(charCount => {
+    // 计算每行时长
+    const minDuration = beatInfo.beatInterval * 2
+    const rawDurations = charCounts.map(charCount => {
       const proportionalDuration = (charCount / totalChars) * availableDuration
       return Math.max(minDuration, proportionalDuration)
     })
+
+    // 检查是否超出可用时长，需要按比例缩放
+    const totalRawDuration = rawDurations.reduce((sum, d) => sum + d, 0)
+    if (totalRawDuration > availableDuration) {
+      const scale = availableDuration / totalRawDuration
+      return rawDurations.map(d => d * scale)
+    }
+
+    return rawDurations
   }
 
   /**

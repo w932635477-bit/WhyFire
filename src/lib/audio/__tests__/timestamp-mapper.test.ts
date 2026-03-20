@@ -94,5 +94,74 @@ describe('TimestampMapper', () => {
       // 第一句应该从 offset 开始或之后
       expect(result[0].startTime).toBeGreaterThanOrEqual(500)
     })
+
+    it('should return empty array when audioDuration is zero or negative', () => {
+      const lyrics = '测试歌词'
+
+      const resultZero = mapper.mapLyricsToBeats(lyrics, beatInfo, 0)
+      expect(resultZero).toHaveLength(0)
+
+      const resultNegative = mapper.mapLyricsToBeats(lyrics, beatInfo, -1000)
+      expect(resultNegative).toHaveLength(0)
+    })
+
+    it('should return empty array when beatInterval is zero or negative', () => {
+      const lyrics = '测试歌词'
+      const duration = 5000
+
+      const invalidBeatInfo: BeatAnalysisResult = {
+        ...beatInfo,
+        beatInterval: 0,
+      }
+
+      const resultZero = mapper.mapLyricsToBeats(lyrics, invalidBeatInfo, duration)
+      expect(resultZero).toHaveLength(0)
+
+      const negativeBeatInfo: BeatAnalysisResult = {
+        ...beatInfo,
+        beatInterval: -500,
+      }
+
+      const resultNegative = mapper.mapLyricsToBeats(lyrics, negativeBeatInfo, duration)
+      expect(resultNegative).toHaveLength(0)
+    })
+
+    it('should handle duration overflow when minDuration would exceed available duration', () => {
+      // 3行歌词，每行至少2拍 = 1000ms，共3000ms
+      // 但只有2000ms可用时长
+      const lyrics = `短
+短
+短`
+      const shortBeatInfo: BeatAnalysisResult = {
+        bpm: 120,
+        offset: 0,
+        beatInterval: 500, // 2拍 = 1000ms minDuration
+        confidence: 0.9,
+      }
+      const duration = 2000 // 只有2000ms
+
+      const result = mapper.mapLyricsToBeats(lyrics, shortBeatInfo, duration)
+
+      expect(result).toHaveLength(3)
+
+      // 验证总时长不超过音频时长
+      const totalDuration = result[result.length - 1].endTime - result[0].startTime
+      expect(totalDuration).toBeLessThanOrEqual(2000)
+    })
+
+    it('should handle available duration exhaustion due to offset', () => {
+      const beatInfoWithLargeOffset: BeatAnalysisResult = {
+        ...beatInfo,
+        offset: 4.5, // 4.5秒 offset
+      }
+
+      const lyrics = '测试'
+      const duration = 5000 // 5秒，减去4.5秒offset只有500ms可用
+
+      const result = mapper.mapLyricsToBeats(lyrics, beatInfoWithLargeOffset, duration)
+
+      // 应该仍然返回结果（使用默认2拍时长）
+      expect(result.length).toBeGreaterThan(0)
+    })
   })
 })
