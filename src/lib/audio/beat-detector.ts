@@ -1,6 +1,6 @@
 // src/lib/audio/beat-detector.ts
 
-import { analyze } from 'web-audio-beat-detector'
+import { analyze, guess } from 'web-audio-beat-detector'
 import { BeatAnalysisResult, BeatDetectorConfig } from './types'
 
 /**
@@ -39,23 +39,24 @@ export class BeatDetector {
 
       try {
         const decodedBuffer = await audioContext.decodeAudioData(audioBuffer)
-        const result = await analyze(decodedBuffer)
+
+        // 使用 guess 获取 bpm 和 offset（analyze 只返回 tempo 数值）
+        const { bpm: rawBpm, offset } = await guess(decodedBuffer)
 
         // 将 BPM 限制在合理范围内
-        const bpm = this.clampBpm(result.bpm)
+        const bpm = this.clampBpm(rawBpm)
         const beatInterval = 60000 / bpm // 每拍的时长 (ms)
 
         // 计算置信度（基于 BPM 的合理性）
-        const confidence = this.calculateConfidence(result.bpm)
+        const confidence = this.calculateConfidence(bpm)
 
         if (this.config.debug) {
-          console.log(`[BeatDetector] 分析完成: BPM=${bpm}, offset=${result.offset}s, confidence=${confidence}`)
+          console.log(`[BeatDetector] 分析完成: BPM=${bpm}, offset=${offset}s, confidence=${confidence}`)
         }
 
         return {
           bpm,
-          offset: result.offset, // 保持秒单位
-          tempo: result.tempo,
+          offset, // 保持秒单位
           beatInterval,
           confidence,
         }

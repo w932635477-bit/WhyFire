@@ -17,6 +17,12 @@ import {
   LyricLineWithWords,
   DEFAULT_USER_EFFECTS_CONFIG,
 } from '@/lib/effects'
+// 新增：节拍检测系统
+import {
+  BeatDetector,
+  TimestampMapper,
+  BeatAnalysisResult,
+} from '@/lib/audio'
 
 /**
  * 默认字体配置
@@ -88,6 +94,8 @@ export interface VideoSynthesizerOptions {
   audioFile: File | Blob | string
   /** Lyrics with timing information */
   lyrics: LyricLine[]
+  /** 纯文本歌词（用于节拍同步，优先于 lyrics）(新增) */
+  plainTextLyrics?: string
   /** Subtitle configuration (optional, defaults to karaoke style) */
   subtitleConfig?: SubtitleConfig
   /** Output filename (optional, defaults to 'output.mp4') */
@@ -257,6 +265,7 @@ export class VideoSynthesizer {
       videoFile,
       audioFile,
       lyrics,
+      plainTextLyrics,
       subtitleConfig,
       outputFilename = FILE_NAMES.OUTPUT_VIDEO,
       onProgress,
@@ -275,6 +284,7 @@ export class VideoSynthesizer {
       videoFileType: videoFile instanceof Blob ? videoFile.type : typeof videoFile,
       audioFileSize: audioFile instanceof Blob ? audioFile.size : typeof audioFile,
       lyricsCount: lyrics.length,
+      hasPlainTextLyrics: !!plainTextLyrics,
     })
 
     // 验证视频文件不为空
@@ -313,6 +323,28 @@ export class VideoSynthesizer {
       }
       this.updateProgress('writing-audio', 1, 'Audio file written')
 
+      // Stage 3.1: Beat detection and lyrics sync (if plain text lyrics provided)
+      let syncedLyrics: LyricLineWithWords[] | null = null
+      if (plainTextLyrics && typeof audioFile === 'string') {
+        this.updateProgress('writing-audio', 0.95, 'Analyzing audio beats...')
+
+        try {
+          // Get audio duration
+          const audioDuration = await this.getAudioDuration(audioFile)
+
+          // Analyze beats
+          const beatInfo = await this.analyzeBeat(audioFile)
+
+          // Map lyrics to timestamps
+          syncedLyrics = this.mapLyricsToTimestamps(plainTextLyrics, beatInfo, audioDuration)
+
+          console.log(`[VideoSynthesizer] 节拍同步完成: ${syncedLyrics.length} 行歌词`)
+        } catch (error) {
+          console.error('[VideoSynthesizer] 节拍同步失败，将使用原始歌词:', error)
+          syncedLyrics = null
+        }
+      }
+
       // Stage 3.5: Load and write font file for subtitle rendering
       // FFmpeg.wasm needs fonts to be available in its virtual filesystem
       // 这是关键步骤：必须将字体写入 /tmp 目录，然后通过 fontsdir 参数引用
@@ -337,9 +369,24 @@ export class VideoSynthesizer {
       console.log('[VideoSynthesizer] First 3 lyrics:', lyrics.slice(0, 3))
       console.log('[VideoSynthesizer] Effects config:', effectsConfig)
       console.log('[VideoSynthesizer] Using font:', loadedFontName)
+      console.log('[VideoSynthesizer] Synced lyrics available:', !!syncedLyrics)
 
       // 使用特效引擎生成字幕（如果提供了特效配置）
       let subtitleContent: string
+
+      // 决定使用哪种歌词：节拍同步歌词 > 原始歌词
+      const finalLyrics: LyricLineWithWords[] = syncedLyrics
+        ? syncedLyrics
+        : lyrics.map(line => ({
+            id: line.id,
+            text: line.text,
+            startTime: line.startTime,
+            endTime: line.endTime,
+            words: line.words || [],
+          }))
+
+      console.log('[VideoSynthesizer] Final lyrics count:', finalLyrics.length)
+      console.log('[VideoSynthesizer] Final lyrics sample:', finalLyrics.slice(0, 2))
 
       if (effectsConfig) {
         // 合并字体配置到 effectsConfig
@@ -371,19 +418,10 @@ export class VideoSynthesizer {
         const appliedConfig = this.effectsEngine.getConfig()
         console.log('[VideoSynthesizer] Applied effects config:', appliedConfig)
 
-        // 转换歌词格式 - 如果没有 words，自动生成
-        const lyricsWithWords: LyricLineWithWords[] = lyrics.map(line => ({
-          id: line.id,
-          text: line.text,
-          startTime: line.startTime,
-          endTime: line.endTime,
-          words: line.words || [], // 确保有 words 数组
-        }))
-
-        console.log('[VideoSynthesizer] Lyrics with words:', lyricsWithWords.slice(0, 2))
+        console.log('[VideoSynthesizer] Lyrics with words:', finalLyrics.slice(0, 2))
 
         // 使用特效引擎渲染
-        const rendered = this.effectsEngine.render(lyricsWithWords, FILE_NAMES.SUBTITLE_FILE)
+        const rendered = this.effectsEngine.render(finalLyrics, FILE_NAMES.SUBTITLE_FILE)
         subtitleContent = rendered.assContent
 
         console.log('[VideoSynthesizer] Generated subtitle content length:', subtitleContent.length)
@@ -603,6 +641,84 @@ export class VideoSynthesizer {
    */
   getEffectsEngine(): EffectsConfigEngine {
     return this.effectsEngine
+  }
+
+  /**
+   * 分析音频节拍
+   */
+  private async analyzeBeat(audioUrl: string): Promise<BeatAnalysisResult> {
+    console.log('[VideoSynthesizer] 开始分析音频节拍...')
+
+    try {
+      // 获取音频数据
+      const response = await fetch(audioUrl)
+      const arrayBuffer = await response.arrayBuffer()
+
+      // 使用节拍检测器分析
+      const detector = new BeatDetector({ debug: false })
+      const beatInfo = await detector.analyze(arrayBuffer)
+
+      console.log(`[VideoSynthesizer] 节拍分析完成: BPM=${beatInfo.bpm}, offset=${beatInfo.offset}s`)
+
+      return beatInfo
+    } catch (error) {
+      console.error('[VideoSynthesizer] 节拍分析失败:', error)
+      // 返回默认值，确保流程继续
+      return {
+        bpm: 120,
+        offset: 0,
+        beatInterval: 500,
+        confidence: 0.5,
+      }
+    }
+  }
+
+  /**
+   * 将纯文本歌词转换为带时间戳的歌词
+   */
+  private mapLyricsToTimestamps(
+    lyrics: string,
+    beatInfo: BeatAnalysisResult,
+    audioDuration: number
+  ): LyricLineWithWords[] {
+    const mapper = new TimestampMapper({
+      alignToBeats: true,
+      generateWords: true,
+      minWordDuration: 100,
+    })
+
+    return mapper.mapLyricsToBeats(lyrics, beatInfo, audioDuration)
+  }
+
+  /**
+   * 获取音频时长
+   */
+  private async getAudioDuration(audioSource: File | Blob | string): Promise<number> {
+    // 创建 AudioContext 来获取音频时长
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+    try {
+      let audioBuffer: ArrayBuffer
+
+      if (typeof audioSource === 'string') {
+        // 从 URL 获取音频
+        const response = await fetch(audioSource)
+        audioBuffer = await response.arrayBuffer()
+      } else {
+        // 从 Blob/File 获取音频
+        audioBuffer = await audioSource.arrayBuffer()
+      }
+
+      // 解码音频数据
+      const decodedData = await audioContext.decodeAudioData(audioBuffer)
+      const duration = decodedData.duration
+
+      console.log(`[VideoSynthesizer] 音频时长: ${duration.toFixed(2)}s`)
+
+      return duration
+    } finally {
+      await audioContext.close()
+    }
   }
 }
 

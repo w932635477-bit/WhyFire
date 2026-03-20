@@ -6,6 +6,7 @@ import { BeatDetector } from '../beat-detector'
 // Mock web-audio-beat-detector
 vi.mock('web-audio-beat-detector', () => ({
   analyze: vi.fn(),
+  guess: vi.fn(),
 }))
 
 describe('BeatDetector', () => {
@@ -22,11 +23,10 @@ describe('BeatDetector', () => {
       const mockResult = {
         bpm: 120,
         offset: 0.5,
-        tempo: 120.5,
       }
 
       const webAudioBeatDetector = await import('web-audio-beat-detector')
-      vi.mocked(webAudioBeatDetector.analyze).mockResolvedValue(mockResult)
+      vi.mocked(webAudioBeatDetector.guess).mockResolvedValue(mockResult)
 
       // Mock AudioContext
       const mockDecodeAudioData = vi.fn().mockResolvedValue({})
@@ -55,11 +55,10 @@ describe('BeatDetector', () => {
       const mockResult = {
         bpm: 300, // 超出正常范围
         offset: 0.5,
-        tempo: 300.5,
       }
 
       const webAudioBeatDetector = await import('web-audio-beat-detector')
-      vi.mocked(webAudioBeatDetector.analyze).mockResolvedValue(mockResult)
+      vi.mocked(webAudioBeatDetector.guess).mockResolvedValue(mockResult)
 
       // Mock AudioContext
       const mockDecodeAudioData = vi.fn().mockResolvedValue({})
@@ -85,7 +84,7 @@ describe('BeatDetector', () => {
       const mockAudioBuffer = new ArrayBuffer(1024)
 
       const webAudioBeatDetector = await import('web-audio-beat-detector')
-      vi.mocked(webAudioBeatDetector.analyze).mockRejectedValue(new Error('Analysis failed'))
+      vi.mocked(webAudioBeatDetector.guess).mockRejectedValue(new Error('Analysis failed'))
 
       // Mock AudioContext
       const mockDecodeAudioData = vi.fn().mockResolvedValue({})
