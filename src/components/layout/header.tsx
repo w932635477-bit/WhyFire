@@ -34,7 +34,7 @@ export function Header({ user, onLogin, onLogout, className }: HeaderProps) {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-black/80 backdrop-blur-xl">
+    <header className={`sticky top-0 z-50 w-full border-b border-white/5 bg-black/80 backdrop-blur-xl ${className || ''}`}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">

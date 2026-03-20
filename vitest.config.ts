@@ -8,6 +8,12 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/test/setup.ts",
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      ".claude/worktrees/**",
+      "**/*.spec.ts", // Exclude Playwright e2e tests
+    ],
   },
   resolve: {
     alias: {

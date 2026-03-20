@@ -26,14 +26,16 @@ describe("Header", () => {
 
   it("renders navigation links", () => {
     render(<Header />)
-    expect(screen.getByText("创作视频")).toBeInTheDocument()
+    expect(screen.getByText("模板库")).toBeInTheDocument()
+    expect(screen.getByText("我的作品")).toBeInTheDocument()
     expect(screen.getByText("定价")).toBeInTheDocument()
   })
 
   it("navigation links have correct hrefs", () => {
     render(<Header />)
-    expect(screen.getByText("创作视频").closest("a")).toHaveAttribute("href", "/create")
-    expect(screen.getByText("定价"). closest("a")).toHaveAttribute("href", "/pricing")
+    expect(screen.getByText("模板库").closest("a")).toHaveAttribute("href", "/templates")
+    expect(screen.getByText("我的作品").closest("a")).toHaveAttribute("href", "/my-videos")
+    expect(screen.getByText("定价").closest("a")).toHaveAttribute("href", "/subscription")
   })
 
   it("shows login button when user is not logged in", () => {
@@ -60,14 +62,16 @@ describe("Header", () => {
   it("shows user icon when user is logged in without avatar", () => {
     const userWithoutAvatar = { ...mockUser, avatar: undefined }
     render(<Header user={userWithoutAvatar} />)
-    const userButton = screen.getByLabelText("User menu")
-    expect(userButton).toBeInTheDocument()
+    // User icon is shown in a div with User2 lucide icon
+    const userIcon = document.querySelector(".w-8.h-8.rounded-full.bg-white\\/10")
+    expect(userIcon).toBeInTheDocument()
   })
 
   it("shows dropdown when avatar is clicked", () => {
     render(<Header user={mockUser} />)
-    const userButton = screen.getByLabelText("User menu")
-    fireEvent.click(userButton)
+    // Click the user avatar button
+    const avatarButton = screen.getByAltText(mockUser.name).closest("button")
+    fireEvent.click(avatarButton!)
 
     expect(screen.getByText(mockUser.name)).toBeInTheDocument()
     expect(screen.getByText(mockUser.email)).toBeInTheDocument()
@@ -78,8 +82,8 @@ describe("Header", () => {
     const onLogout = vi.fn()
     render(<Header user={mockUser} onLogout={onLogout} />)
 
-    const userButton = screen.getByLabelText("User menu")
-    fireEvent.click(userButton)
+    const avatarButton = screen.getByAltText(mockUser.name).closest("button")
+    fireEvent.click(avatarButton!)
 
     const logoutButton = screen.getByText("退出登录")
     fireEvent.click(logoutButton)
@@ -90,8 +94,8 @@ describe("Header", () => {
   it("closes dropdown when clicking outside", () => {
     render(<Header user={mockUser} />)
 
-    const userButton = screen.getByLabelText("User menu")
-    fireEvent.click(userButton)
+    const avatarButton = screen.getByAltText(mockUser.name).closest("button")
+    fireEvent.click(avatarButton!)
     expect(screen.getByText("退出登录")).toBeInTheDocument()
 
     // Click outside
@@ -111,8 +115,8 @@ describe("Header", () => {
   it("applies semi-transparent background", () => {
     render(<Header />)
     const header = screen.getByRole("banner")
-    expect(header).toHaveClass("backdrop-blur-md")
-    expect(header).toHaveClass("bg-background/80")
+    expect(header).toHaveClass("backdrop-blur-xl")
+    expect(header).toHaveClass("bg-black/80")
   })
 
   it("applies custom className", () => {
@@ -123,7 +127,7 @@ describe("Header", () => {
 
   it("hides navigation on mobile (md breakpoint)", () => {
     render(<Header />)
-    const nav = screen.getByText("创作视频").closest("nav")
+    const nav = screen.getByText("模板库").closest("nav")
     expect(nav).toHaveClass("hidden")
     expect(nav).toHaveClass("md:flex")
   })

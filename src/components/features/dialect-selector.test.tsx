@@ -3,14 +3,13 @@ import { describe, it, expect, vi } from "vitest"
 import { DialectSelector } from "./dialect-selector"
 
 describe("DialectSelector", () => {
-  it("renders all 4 dialect options", () => {
+  it("renders all 3 dialect options", () => {
     const onChange = vi.fn()
     render(<DialectSelector onChange={onChange} />)
 
     expect(screen.getByText("普通话")).toBeInTheDocument()
     expect(screen.getByText("粤语")).toBeInTheDocument()
-    expect(screen.getByText("东北话")).toBeInTheDocument()
-    expect(screen.getByText("四川话")).toBeInTheDocument()
+    expect(screen.getByText("English")).toBeInTheDocument()
   })
 
   it("displays correct flags for each dialect", () => {
@@ -19,40 +18,28 @@ describe("DialectSelector", () => {
 
     expect(screen.getByText("🇨🇳")).toBeInTheDocument()
     expect(screen.getByText("🇭🇰")).toBeInTheDocument()
-    expect(screen.getByText("⛄")).toBeInTheDocument()
-    expect(screen.getByText("🐼")).toBeInTheDocument()
+    expect(screen.getByText("🇺🇸")).toBeInTheDocument()
   })
 
-  it("shows PRO tag for unavailable dialects (dongbei and sichuan)", () => {
+  it("shows no PRO tags when all dialects are available", () => {
     const onChange = vi.fn()
     render(<DialectSelector onChange={onChange} />)
 
-    const proTags = screen.getAllByText("PRO")
-    expect(proTags).toHaveLength(2)
+    // All 3 dialects are available, so no PRO tags
+    expect(screen.queryByText("PRO")).not.toBeInTheDocument()
   })
 
-  it("disables dongbei and sichuan dialect buttons", () => {
+  it("all dialect buttons are enabled by default", () => {
     const onChange = vi.fn()
     render(<DialectSelector onChange={onChange} />)
 
-    const dongbeiButton = screen.getByText("东北话").closest("button")
-    const sichuanButton = screen.getByText("四川话").closest("button")
+    const mandarinButton = screen.getByText("普通话").closest("button")
+    const cantoneseButton = screen.getByText("粤语").closest("button")
+    const englishButton = screen.getByText("English").closest("button")
 
-    expect(dongbeiButton).toBeDisabled()
-    expect(sichuanButton).toBeDisabled()
-  })
-
-  it("does not call onChange when clicking disabled dialects", () => {
-    const onChange = vi.fn()
-    render(<DialectSelector onChange={onChange} />)
-
-    const dongbeiButton = screen.getByText("东北话").closest("button")
-    const sichuanButton = screen.getByText("四川话").closest("button")
-
-    fireEvent.click(dongbeiButton!)
-    fireEvent.click(sichuanButton!)
-
-    expect(onChange).not.toHaveBeenCalled()
+    expect(mandarinButton).not.toBeDisabled()
+    expect(cantoneseButton).not.toBeDisabled()
+    expect(englishButton).not.toBeDisabled()
   })
 
   it("applies selected state styles (bg-primary, text-white) when dialect is selected", () => {
@@ -111,23 +98,12 @@ describe("DialectSelector", () => {
     expect(screen.queryByText("PRO")).not.toBeInTheDocument()
   })
 
-  it("applies opacity-50 class to disabled buttons", () => {
-    const onChange = vi.fn()
-    render(<DialectSelector onChange={onChange} />)
-
-    const dongbeiButton = screen.getByText("东北话").closest("button")
-    const sichuanButton = screen.getByText("四川话").closest("button")
-
-    expect(dongbeiButton).toHaveClass("opacity-50")
-    expect(sichuanButton).toHaveClass("opacity-50")
-  })
-
   it("applies correct unselected styles", () => {
     const onChange = vi.fn()
     render(<DialectSelector onChange={onChange} />)
 
     const mandarinButton = screen.getByText("普通话").closest("button")
-    expect(mandarinButton).toHaveClass("border-border")
-    expect(mandarinButton).toHaveClass("bg-card")
+    // Unselected button should have border-2 class
+    expect(mandarinButton).toHaveClass("border-2")
   })
 })

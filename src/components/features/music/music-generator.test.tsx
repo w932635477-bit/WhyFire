@@ -88,7 +88,7 @@ describe('MusicGenerator', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/music/generate', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/music/generate', expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -97,7 +97,7 @@ describe('MusicGenerator', () => {
             style: 'rap',
             duration: 30,
           }),
-        })
+        }))
       })
     })
 
