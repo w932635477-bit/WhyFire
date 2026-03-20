@@ -103,5 +103,28 @@ describe('BeatDetector', () => {
       // Restore
       global.AudioContext = OriginalAudioContext
     })
+
+    it('should handle decodeAudioData failure and close AudioContext', async () => {
+      const mockAudioBuffer = new ArrayBuffer(1024)
+
+      // Mock AudioContext
+      const mockClose = vi.fn().mockResolvedValue(undefined)
+      const mockDecodeAudioData = vi.fn().mockRejectedValue(new Error('Invalid audio format'))
+
+      const OriginalAudioContext = global.AudioContext
+      // @ts-ignore
+      global.AudioContext = class MockAudioContext {
+        decodeAudioData = mockDecodeAudioData
+        close = mockClose
+      }
+
+      await expect(detector.analyze(mockAudioBuffer)).rejects.toThrow('节拍分析失败')
+
+      // 确保 AudioContext 被关闭，即使在 decodeAudioData 失败时
+      expect(mockClose).toHaveBeenCalled()
+
+      // Restore
+      global.AudioContext = OriginalAudioContext
+    })
   })
 })

@@ -36,31 +36,32 @@ export class BeatDetector {
 
       // 解码音频数据
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-      const decodedBuffer = await audioContext.decodeAudioData(audioBuffer)
 
-      // 分析节拍 (analyze 返回 { bpm, offset, tempo })
-      const result = await analyze(decodedBuffer)
+      try {
+        const decodedBuffer = await audioContext.decodeAudioData(audioBuffer)
+        const result = await analyze(decodedBuffer)
 
-      // 关闭 AudioContext
-      await audioContext.close()
+        // 将 BPM 限制在合理范围内
+        const bpm = this.clampBpm(result.bpm)
+        const beatInterval = 60000 / bpm // 每拍的时长 (ms)
 
-      // 将 BPM 限制在合理范围内
-      const bpm = this.clampBpm(result.bpm)
-      const beatInterval = 60000 / bpm // 每拍的时长 (ms)
+        // 计算置信度（基于 BPM 的合理性）
+        const confidence = this.calculateConfidence(result.bpm)
 
-      // 计算置信度（基于 BPM 的合理性）
-      const confidence = this.calculateConfidence(result.bpm)
+        if (this.config.debug) {
+          console.log(`[BeatDetector] 分析完成: BPM=${bpm}, offset=${result.offset}s, confidence=${confidence}`)
+        }
 
-      if (this.config.debug) {
-        console.log(`[BeatDetector] 分析完成: BPM=${bpm}, offset=${result.offset}s, confidence=${confidence}`)
-      }
-
-      return {
-        bpm,
-        offset: result.offset, // 保持秒单位
-        tempo: result.tempo,
-        beatInterval,
-        confidence,
+        return {
+          bpm,
+          offset: result.offset, // 保持秒单位
+          tempo: result.tempo,
+          beatInterval,
+          confidence,
+        }
+      } finally {
+        // 确保 AudioContext 始终被关闭
+        await audioContext.close()
       }
     } catch (error) {
       console.error('[BeatDetector] 分析失败:', error)
