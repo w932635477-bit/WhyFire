@@ -1,12 +1,15 @@
 /**
  * 特效预设系统
  * 一键应用适合不同 Rap 风格的特效组合
+ *
+ * 注意：滤镜系统已简化，所有预设都使用默认滤镜
  */
 
-import { EffectPresetType, EffectPreset, SubtitleEffectType, VideoFilterType, SubtitleEffectConfig } from './types'
+import { EffectPresetType, EffectPreset, SubtitleEffectType, SubtitleEffectConfig } from './types'
 
 /**
  * 特效预设配置
+ * 所有预设都使用默认滤镜 eq=contrast=1.1:saturation=1.1
  */
 export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
   'trap-king': {
@@ -15,8 +18,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '硬核 Trap 风格，冲击力强',
     icon: '👑',
     subtitleEffect: 'punch',
-    videoFilter: 'glitch',
-    additionalFilters: ['shake'],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#FFFFFF',
       secondaryColor: '#FFD700',
@@ -32,8 +34,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '轻松 Lofi 风格，怀旧温暖',
     icon: '🎧',
     subtitleEffect: 'wave',
-    videoFilter: 'vhs',
-    additionalFilters: ['film'],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#FFF5E6',
       secondaryColor: '#FFB347',
@@ -49,8 +50,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '赛博朋克夜景风格',
     icon: '🌙',
     subtitleEffect: 'neon-pulse',
-    videoFilter: 'cyberpunk',
-    additionalFilters: ['rgb-shift'],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#00FFFF',
       secondaryColor: '#FF00FF',
@@ -66,8 +66,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '经典 Hip-Hop 老派风格',
     icon: '🎤',
     subtitleEffect: 'karaoke-plus',
-    videoFilter: 'vhs',
-    additionalFilters: ['vintage'],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#FFFFFF',
       secondaryColor: '#FFA500',
@@ -82,8 +81,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '极限硬核风格，爆炸冲击',
     icon: '💣',
     subtitleEffect: 'explosion',
-    videoFilter: 'dramatic',
-    additionalFilters: ['shake', 'glitch'],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#FF0000',
       secondaryColor: '#FFFF00',
@@ -99,8 +97,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '旋律流动，柔和优美',
     icon: '🌊',
     subtitleEffect: 'bounce-3d',
-    videoFilter: 'cool',
-    additionalFilters: [],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#E0E7FF',
       secondaryColor: '#818CF8',
@@ -116,8 +113,7 @@ export const EFFECT_PRESETS: Record<EffectPresetType, EffectPreset> = {
     description: '地下暗黑风格',
     icon: '🖤',
     subtitleEffect: 'glitch-text',
-    videoFilter: 'noir',
-    additionalFilters: ['dramatic'],
+    videoFilter: 'default',
     subtitleConfig: {
       primaryColor: '#CCCCCC',
       secondaryColor: '#333333',

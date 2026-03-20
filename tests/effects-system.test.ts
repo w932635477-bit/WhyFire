@@ -1,5 +1,5 @@
 /**
- * 特效系统验证测试
+ * 特效系统验证测试（简化版）
  */
 
 import { describe, it, expect } from 'vitest'
@@ -10,7 +10,9 @@ import {
   getAllSubtitleEffects,
 } from '../src/lib/effects/subtitle-effects'
 import {
-  VIDEO_FILTERS,
+  DEFAULT_VIDEO_FILTER,
+  DEFAULT_VIDEO_FILTER_CONFIG,
+  getDefaultVideoFilter,
   getAllVideoFilters,
   combineFilters,
 } from '../src/lib/effects/video-filters'
@@ -92,37 +94,35 @@ describe('字幕特效系统', () => {
   })
 })
 
-describe('视频滤镜系统', () => {
-  it('应该有17种视频滤镜', () => {
+describe('视频滤镜系统（简化版）', () => {
+  it('应该只有一个默认滤镜', () => {
     const filters = getAllVideoFilters()
-    expect(filters.length).toBe(17)
+    expect(filters.length).toBe(1)
+    expect(filters[0].id).toBe('default')
   })
 
-  it('所有滤镜都应有必要的属性', () => {
-    const filters = getAllVideoFilters()
-    filters.forEach(filter => {
-      expect(filter.id).toBeDefined()
-      expect(filter.name).toBeDefined()
-      expect(filter.description).toBeDefined()
-      expect(filter.icon).toBeDefined()
-    })
+  it('默认滤镜应该是安全的 eq 滤镜', () => {
+    const filter = getDefaultVideoFilter()
+    expect(filter).toContain('eq=')
+    expect(filter).toContain('contrast=')
+    expect(filter).toContain('saturation=')
+    // 确保没有特殊字符
+    expect(filter).not.toContain('mod(')
+    expect(filter).not.toContain('if(')
   })
 
-  it('应该正确组合多个滤镜', () => {
-    const filterChain = combineFilters(['glitch', 'shake'])
-    expect(filterChain.length).toBeGreaterThan(0)
-    expect(filterChain).toContain('rgbashift')
-    expect(filterChain).toContain('crop')
+  it('combineFilters 应该返回默认滤镜', () => {
+    const filterChain = combineFilters()
+    expect(filterChain).toBe(DEFAULT_VIDEO_FILTER)
   })
 
-  it('none 滤镜应该返回空字符串', () => {
-    const filterChain = combineFilters(['none'])
-    expect(filterChain).toBe('')
-  })
-
-  it('glitch 滤镜应该包含 RGB 偏移', () => {
-    const glitchFilter = VIDEO_FILTERS['glitch']
-    expect(glitchFilter.ffmpegFilter).toContain('rgbashift')
+  it('默认滤镜配置应该有必要的属性', () => {
+    const config = DEFAULT_VIDEO_FILTER_CONFIG
+    expect(config.id).toBe('default')
+    expect(config.name).toBeDefined()
+    expect(config.description).toBeDefined()
+    expect(config.icon).toBeDefined()
+    expect(config.ffmpegFilter).toBeDefined()
   })
 })
 
@@ -142,10 +142,17 @@ describe('特效预设系统', () => {
     })
   })
 
+  it('所有预设都应该使用默认滤镜', () => {
+    const presets = getAllEffectPresets()
+    presets.forEach(preset => {
+      expect(preset.videoFilter).toBe('default')
+    })
+  })
+
   it('trap-king 预设应该使用 punch 字幕特效', () => {
     const preset = EFFECT_PRESETS['trap-king']
     expect(preset.subtitleEffect).toBe('punch')
-    expect(preset.videoFilter).toBe('glitch')
+    expect(preset.videoFilter).toBe('default')
   })
 })
 
@@ -162,7 +169,7 @@ describe('特效配置引擎', () => {
     const config = engine.getConfig()
     expect(config.preset).toBe('cyber-night')
     expect(config.subtitleEffect).toBe('neon-pulse')
-    expect(config.videoFilter).toBe('cyberpunk')
+    expect(config.videoFilter).toBe('default') // 简化后始终为 default
   })
 
   it('应该正确渲染特效配置', () => {
@@ -171,7 +178,7 @@ describe('特效配置引擎', () => {
 
     expect(rendered.assContent.length).toBeGreaterThan(0)
     expect(rendered.assContent).toContain('[Script Info]')
-    expect(rendered.ffmpegFilterChain.length).toBeGreaterThan(0)
+    expect(rendered.ffmpegFilterChain).toBe(DEFAULT_VIDEO_FILTER)
   })
 
   it('应该正确验证配置', () => {
@@ -188,6 +195,6 @@ describe('特效配置引擎', () => {
 
     expect(preview.presetName).toBe('Lofi Vibes')
     expect(preview.subtitleEffectName).toBeDefined()
-    expect(preview.videoFilterName).toBeDefined()
+    expect(preview.videoFilterName).toBe('默认增强')
   })
 })

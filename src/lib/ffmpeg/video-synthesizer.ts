@@ -269,12 +269,18 @@ export class VideoSynthesizer {
     const startTime = Date.now()
 
     // Debug: Log input file sizes
+    const videoSize = videoFile instanceof Blob ? videoFile.size : (videoFile as Uint8Array).length
     console.log('[VideoSynthesizer] Input files:', {
-      videoFileSize: videoFile instanceof Blob ? videoFile.size : 'not a blob',
+      videoFileSize: videoSize,
       videoFileType: videoFile instanceof Blob ? videoFile.type : typeof videoFile,
       audioFileSize: audioFile instanceof Blob ? audioFile.size : typeof audioFile,
       lyricsCount: lyrics.length,
     })
+
+    // 验证视频文件不为空
+    if (videoSize === 0) {
+      throw new Error('视频文件为空 (0 bytes)，请重新上传视频文件')
+    }
 
     try {
       // Stage 1: Load FFmpeg

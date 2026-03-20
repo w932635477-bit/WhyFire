@@ -80,37 +80,20 @@ export interface LyricWord {
 }
 
 // ============================================
-// 视频滤镜类型
+// 视频滤镜类型（简化版）
 // ============================================
 
 /**
- * 视频滤镜类型（扩展现有）
+ * 视频滤镜类型
+ * 只有一个默认选项
  */
-export type VideoFilterType =
-  | 'none'
-  | 'vintage'
-  | 'noir'
-  | 'warm'
-  | 'cool'
-  | 'vivid'
-  | 'dramatic'
-  | 'retro'
-  | 'cyberpunk'
-  | 'film'
-  // 新增滤镜
-  | 'vhs'
-  | 'glitch'
-  | 'shake'
-  | 'rgb-shift'
-  | 'neon-glow'
-  | 'pixelate'
-  | 'mirror'
+export type VideoFilterType = 'default'
 
 /**
- * 视频滤镜配置
+ * 视频滤镜配置（简化版）
  */
 export interface VideoFilter {
-  id: VideoFilterType
+  id: 'default'
   name: string
   description: string
   icon: string

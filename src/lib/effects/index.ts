@@ -15,8 +15,13 @@ export {
   generateASSSubtitle,
 } from './subtitle-effects'
 
-// Video Filters
+// Video Filters (简化版)
 export {
+  DEFAULT_VIDEO_FILTER,
+  DEFAULT_VIDEO_FILTER_CONFIG,
+  getDefaultVideoFilter,
+  getDefaultVideoFilterConfig,
+  // 向后兼容（已废弃）
   VIDEO_FILTERS,
   getVideoFilter,
   getAllVideoFilters,

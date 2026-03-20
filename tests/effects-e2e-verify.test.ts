@@ -1,9 +1,9 @@
 /**
- * 端到端特效系统验证
+ * 端到端特效系统验证（简化版）
  *
  * 这个脚本验证：
  * 1. 特效配置引擎能正确生成 ASS 字幕
- * 2. 特效配置引擎能正确生成 FFmpeg 滤镜链
+ * 2. 特效配置引擎能正确生成安全的 FFmpeg 滤镜
  * 3. VideoSynthesizer 能接受特效配置
  */
 
@@ -14,6 +14,7 @@ import {
   getAllSubtitleEffects,
   getAllVideoFilters,
   getAllEffectPresets,
+  DEFAULT_VIDEO_FILTER,
 } from '../src/lib/effects'
 
 // 模拟歌词数据
@@ -62,9 +63,9 @@ describe('端到端特效系统验证', () => {
     const videoFilters = getAllVideoFilters()
     const presets = getAllEffectPresets()
 
-    console.log('\n📊 特效系统统计:')
+    console.log('\n📊 特效系统统计（简化版）:')
     console.log(`  - 字幕特效: ${subtitleEffects.length} 种`)
-    console.log(`  - 视频滤镜: ${videoFilters.length} 种`)
+    console.log(`  - 视频滤镜: ${videoFilters.length} 种（已简化为默认滤镜）`)
     console.log(`  - 特效预设: ${presets.length} 种`)
 
     // 验证字幕特效
@@ -73,10 +74,11 @@ describe('端到端特效系统验证', () => {
       console.log(`  ${effect.icon} ${effect.name} - ${effect.description}`)
     })
 
-    // 验证视频滤镜
-    console.log('\n🎬 视频滤镜列表:')
+    // 验证视频滤镜（只有默认滤镜）
+    console.log('\n🎬 视频滤镜:')
     videoFilters.forEach(filter => {
       console.log(`  ${filter.icon} ${filter.name} - ${filter.description}`)
+      console.log(`    FFmpeg 滤镜: ${filter.ffmpegFilter}`)
     })
 
     // 验证预设
@@ -86,7 +88,7 @@ describe('端到端特效系统验证', () => {
     })
 
     expect(subtitleEffects.length).toBeGreaterThanOrEqual(7)
-    expect(videoFilters.length).toBeGreaterThanOrEqual(17)
+    expect(videoFilters.length).toBe(1) // 简化后只有 1 个默认滤镜
     expect(presets.length).toBeGreaterThanOrEqual(7)
   })
 
@@ -105,11 +107,14 @@ describe('端到端特效系统验证', () => {
 
       console.log(`  ${preset.icon} ${preset.name}:`)
       console.log(`    - ASS 内容长度: ${rendered.assContent.length} 字符`)
-      console.log(`    - FFmpeg 滤镜: ${rendered.ffmpegFilterChain.substring(0, 50)}...`)
+      console.log(`    - FFmpeg 滤镜: ${rendered.ffmpegFilterChain}`)
 
       expect(hasScriptInfo).toBe(true)
       expect(hasStyles).toBe(true)
       expect(hasEvents).toBe(true)
+
+      // 验证滤镜始终是安全的默认滤镜
+      expect(rendered.ffmpegFilterChain).toBe(DEFAULT_VIDEO_FILTER)
     })
   })
 
@@ -130,28 +135,25 @@ describe('端到端特效系统验证', () => {
     })
   })
 
-  it('应该正确组合多个视频滤镜', () => {
-    const filterCombinations = [
-      ['glitch', 'shake'],
-      ['vhs', 'film'],
-      ['cyberpunk', 'rgb-shift'],
-      ['dramatic', 'noise'],
-    ]
+  it('默认滤镜应该是安全的 FFmpeg 语法', () => {
+    const engine = createEffectsEngine()
+    const rendered = engine.render(mockLyrics as any)
 
-    console.log('\n🔧 视频滤镜组合验证:')
+    console.log('\n🎬 FFmpeg 默认滤镜验证:')
+    console.log(`  滤镜链: ${rendered.ffmpegFilterChain}`)
 
-    filterCombinations.forEach(filters => {
-      const engine = createEffectsEngine({
-        videoFilter: filters[0] as any,
-        additionalFilters: filters.slice(1) as any,
-      })
-      const rendered = engine.render(mockLyrics as any)
+    // 验证滤镜链不包含可能导致问题的特殊字符
+    expect(rendered.ffmpegFilterChain).not.toContain('mod(')
+    expect(rendered.ffmpegFilterChain).not.toContain('if(eq')
+    expect(rendered.ffmpegFilterChain).not.toContain('translate')
 
-      console.log(`  组合 [${filters.join(', ')}]:`)
-      console.log(`    - 滤镜链: ${rendered.ffmpegFilterChain.substring(0, 60)}...`)
+    // 验证是安全的 eq 滤镜
+    expect(rendered.ffmpegFilterChain).toContain('eq=')
+    expect(rendered.ffmpegFilterChain).toContain('contrast=')
+    expect(rendered.ffmpegFilterChain).toContain('saturation=')
 
-      expect(rendered.ffmpegFilterChain.length).toBeGreaterThan(0)
-    })
+    // 验证滤镜链格式正确
+    expect(rendered.ffmpegFilterChain).toBe(DEFAULT_VIDEO_FILTER)
   })
 
   it('应该正确验证用户配置', () => {
@@ -166,24 +168,14 @@ describe('端到端特效系统验证', () => {
     expect(validation.errors.length).toBe(0)
   })
 
-  it('应该生成符合 FFmpeg 标准的滤镜语法', () => {
-    const engine = createEffectsEngine({ preset: 'cyber-night' })
-    const rendered = engine.render(mockLyrics as any)
+  it('所有预设都应该使用默认滤镜', () => {
+    const presets = getAllEffectPresets()
 
-    console.log('\n🎬 FFmpeg 滤镜语法验证:')
-    console.log(`  完整滤镜链: ${rendered.ffmpegFilterChain}`)
+    console.log('\n🎯 预设滤镜验证:')
 
-    // 验证滤镜链不包含非法字符（FFmpeg 滤镜参数使用冒号分隔，是合法的）
-    const hasInvalidChars = /[<>|?*]/.test(rendered.ffmpegFilterChain)
-    expect(hasInvalidChars).toBe(false)
-
-    // 验证滤镜链格式正确
-    if (rendered.ffmpegFilterChain.length > 0) {
-      const filters = rendered.ffmpegFilterChain.split(',')
-      console.log(`  滤镜数量: ${filters.length}`)
-      filters.forEach((f, i) => {
-        console.log(`    ${i + 1}. ${f.substring(0, 40)}...`)
-      })
-    }
+    presets.forEach(preset => {
+      expect(preset.videoFilter).toBe('default')
+      console.log(`  ✅ ${preset.name}: 使用默认滤镜`)
+    })
   })
 })

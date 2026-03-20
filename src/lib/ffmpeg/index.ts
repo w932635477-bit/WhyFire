@@ -38,17 +38,11 @@ export type {
   TransitionType,
   VideoTransition,
 } from './transitions'
+
+// 滤镜系统已简化，重新导出默认滤镜
 export {
-  VIDEO_FILTERS,
-  getAllFilters,
-  getFilter,
-  buildFilterCommand,
-  applyFilter,
-  applyFilters,
-  buildPreviewCommand,
-} from './filters'
-export type {
-  FilterType,
-  VideoFilter,
-  ApplyFilterOptions,
-} from './filters'
+  DEFAULT_VIDEO_FILTER,
+  DEFAULT_VIDEO_FILTER_CONFIG,
+  getDefaultVideoFilter,
+  getDefaultVideoFilterConfig,
+} from '../effects/video-filters'

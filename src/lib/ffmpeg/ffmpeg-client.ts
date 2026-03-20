@@ -253,6 +253,9 @@ export class FFmpegClient {
       console.log(`[FFmpeg] Writing string data, length: ${data.length} chars -> ${fileData.length} bytes`)
     } else if (data instanceof Blob) {
       console.log(`[FFmpeg] Writing Blob, size: ${data.size} bytes, type: ${data.type}`)
+      if (data.size === 0) {
+        console.warn(`[FFmpeg] ⚠️ Blob is empty (0 bytes)! This may indicate a file read issue.`)
+      }
       // 使用 Blob.arrayBuffer() 代替 fetchFile，更可靠
       const arrayBuffer = await data.arrayBuffer()
       fileData = new Uint8Array(arrayBuffer)
@@ -265,17 +268,19 @@ export class FFmpegClient {
     await this.ffmpeg.writeFile(filename, fileData)
     console.log(`[FFmpeg] 文件 ${filename} 写入完成，大小: ${fileData.length} bytes`)
 
-    // 验证写入是否成功
-    try {
-      const written = await this.ffmpeg.readFile(filename)
-      const writtenSize = written instanceof Uint8Array ? written.length : new TextEncoder().encode(written).length
-      if (writtenSize !== fileData.length) {
-        console.error(`[FFmpeg] ⚠️ 写入验证失败！期望 ${fileData.length} bytes，实际 ${writtenSize} bytes`)
-      } else {
-        console.log(`[FFmpeg] ✅ 写入验证成功: ${writtenSize} bytes`)
+    // 验证写入是否成功（仅当写入非空数据时）
+    if (fileData.length > 0) {
+      try {
+        const written = await this.ffmpeg.readFile(filename)
+        const writtenSize = written instanceof Uint8Array ? written.length : new TextEncoder().encode(written).length
+        if (writtenSize !== fileData.length) {
+          console.error(`[FFmpeg] ⚠️ 写入验证失败！期望 ${fileData.length} bytes，实际 ${writtenSize} bytes`)
+        } else {
+          console.log(`[FFmpeg] ✅ 写入验证成功: ${writtenSize} bytes`)
+        }
+      } catch (e) {
+        console.error(`[FFmpeg] ⚠️ 无法验证写入:`, e)
       }
-    } catch (e) {
-      console.error(`[FFmpeg] ⚠️ 无法验证写入:`, e)
     }
   }
 

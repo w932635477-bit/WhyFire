@@ -13,7 +13,7 @@ import {
   SubtitleEffectConfig,
 } from './types'
 import { generateASSSubtitle, DEFAULT_SUBTITLE_CONFIG, SUBTITLE_EFFECTS } from './subtitle-effects'
-import { combineFilters, VIDEO_FILTERS } from './video-filters'
+import { DEFAULT_VIDEO_FILTER, DEFAULT_VIDEO_FILTER_CONFIG } from './video-filters'
 import { EFFECT_PRESETS } from './effect-presets'
 
 /**
@@ -21,7 +21,7 @@ import { EFFECT_PRESETS } from './effect-presets'
  */
 export const DEFAULT_USER_EFFECTS_CONFIG: UserEffectsConfig = {
   subtitleEffect: 'karaoke-plus',
-  videoFilter: 'none',
+  videoFilter: 'default', // 使用默认滤镜
   subtitleConfig: DEFAULT_SUBTITLE_CONFIG,
 }
 
@@ -68,31 +68,28 @@ export class EffectsConfigEngine {
 
   /**
    * 设置视频滤镜
+   * @deprecated 滤镜选择已简化，此方法不再有效果
    */
   setVideoFilter(filter: VideoFilterType): void {
     this.config.preset = undefined // 清除预设
-    this.config.videoFilter = filter
+    // 滤镜设置已简化，始终使用默认滤镜
+    console.log('[EffectsConfigEngine] 滤镜选择已简化，使用默认滤镜')
   }
 
   /**
    * 添加额外滤镜
+   * @deprecated 滤镜组合已不再支持
    */
   addAdditionalFilter(filter: VideoFilterType): void {
-    if (!this.config.additionalFilters) {
-      this.config.additionalFilters = []
-    }
-    if (!this.config.additionalFilters.includes(filter)) {
-      this.config.additionalFilters.push(filter)
-    }
+    console.log('[EffectsConfigEngine] 额外滤镜已不再支持，使用默认滤镜')
   }
 
   /**
    * 移除额外滤镜
+   * @deprecated 滤镜组合已不再支持
    */
   removeAdditionalFilter(filter: VideoFilterType): void {
-    if (this.config.additionalFilters) {
-      this.config.additionalFilters = this.config.additionalFilters.filter((f) => f !== filter)
-    }
+    console.log('[EffectsConfigEngine] 额外滤镜已不再支持，使用默认滤镜')
   }
 
   /**
@@ -123,13 +120,8 @@ export class EffectsConfigEngine {
       this.config.subtitleConfig
     )
 
-    // 生成 FFmpeg 滤镜链
-    const allFilters: VideoFilterType[] = [
-      this.config.videoFilter,
-      ...(this.config.additionalFilters || []),
-    ].filter((f) => f !== 'none')
-
-    const ffmpegFilterChain = combineFilters(allFilters)
+    // 使用默认滤镜（不再支持滤镜选择）
+    const ffmpegFilterChain = DEFAULT_VIDEO_FILTER
 
     return {
       assContent,
@@ -147,12 +139,11 @@ export class EffectsConfigEngine {
     presetName?: string
   } {
     const subtitleEffect = SUBTITLE_EFFECTS[this.config.subtitleEffect]
-    const videoFilter = VIDEO_FILTERS[this.config.videoFilter]
     const preset = this.config.preset ? EFFECT_PRESETS[this.config.preset] : undefined
 
     return {
       subtitleEffectName: subtitleEffect.name,
-      videoFilterName: videoFilter.name,
+      videoFilterName: DEFAULT_VIDEO_FILTER_CONFIG.name,
       presetName: preset?.name,
     }
   }
@@ -168,19 +159,7 @@ export class EffectsConfigEngine {
       errors.push(`无效的字幕特效: ${this.config.subtitleEffect}`)
     }
 
-    // 验证视频滤镜
-    if (!VIDEO_FILTERS[this.config.videoFilter]) {
-      errors.push(`无效的视频滤镜: ${this.config.videoFilter}`)
-    }
-
-    // 验证额外滤镜
-    if (this.config.additionalFilters) {
-      for (const filter of this.config.additionalFilters) {
-        if (!VIDEO_FILTERS[filter]) {
-          errors.push(`无效的额外滤镜: ${filter}`)
-        }
-      }
-    }
+    // 滤镜验证已简化，始终使用默认滤镜
 
     return {
       valid: errors.length === 0,
