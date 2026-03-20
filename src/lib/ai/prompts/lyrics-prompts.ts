@@ -3,6 +3,11 @@
  */
 
 import type { SceneType, DialectType } from '@/types'
+import {
+  getSceneHumorGuide,
+  getSceneHumorGuideEnglish,
+  getSceneExample,
+} from './humor-techniques'
 
 interface PromptContext {
   scene: SceneType
@@ -44,9 +49,12 @@ function buildProductPrompt(ctx: PromptContext): string {
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const productName = ctx.productName || 'Product'
   const sellingPoints = ctx.sellingPoints?.join(', ') || ''
+  const humorGuide = getSceneHumorGuide('product')
+  const example = getSceneExample('product', ctx.dialect === 'english' ? 'english' : 'chinese')
 
   if (ctx.dialect === 'english') {
-    return `You are a professional Rap lyricist.
+    const humorGuideEn = getSceneHumorGuideEnglish('product')
+    return `You are a professional Rap lyricist specializing in humorous, catchy product promotion.
 
 【Task】Create a 30-second Rap lyrics for product promotion
 
@@ -54,16 +62,23 @@ Language: English
 Product: ${productName}
 Selling Points: ${sellingPoints}
 
-Requirements:
-- Catchy rhythm, natural rhyming
-- Naturally incorporate product selling points
-- Marketing appeal, memorable
+【Humor Techniques to Use】
+${humorGuideEn}
+
+【Quality Requirements】
+- Use at least 2-3 humor techniques from above
+- Include 1-2 "golden lines" (memorable, shareable quotes)
+- Natural rhythm and rhyming
+- Naturally incorporate selling points without feeling like a hard ad
 - About 80-120 words
+
+【Example for Reference】
+${example}
 
 【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
   }
 
-  return `你是专业的Rap歌词创作专家。
+  return `你是专业的Rap歌词创作专家，擅长用幽默搞笑的方式做产品推广。
 
 【任务】创作30秒Rap歌词
 
@@ -72,11 +87,18 @@ Requirements:
 产品: ${productName}
 卖点: ${sellingPoints}
 
-要求:
-- 歌词有节奏感，押韵自然
-- ${ctx.dialect === 'cantonese' ? '使用粤语俚语，港式风格' : '接地气'}
-- 自然融入产品卖点
+【搞笑技巧指南】
+${humorGuide}
+
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
+- 押韵自然，节奏感强
+- 自然融入产品卖点，不要让广告感太重
 - 约100-150字
+
+【示例参考】
+${example}
 
 【重要】只输出歌词，不要任何解释、说明或分析。`
 }
@@ -88,9 +110,12 @@ function buildFunnyPrompt(ctx: PromptContext): string {
   const dialectDesc = DIALECT_DESCRIPTIONS[ctx.dialect]
   const theme = ctx.theme || 'Daily Life'
   const keywords = ctx.keywords?.join(', ') || ''
+  const humorGuide = getSceneHumorGuide('funny')
+  const example = getSceneExample('funny', ctx.dialect === 'english' ? 'english' : 'chinese')
 
   if (ctx.dialect === 'english') {
-    return `You are a professional Rap lyricist.
+    const humorGuideEn = getSceneHumorGuideEnglish('funny')
+    return `You are a professional Rap lyricist specializing in viral, comedic content.
 
 【Task】Create a 30-second funny/viral Rap lyrics
 
@@ -98,16 +123,24 @@ Language: English
 Theme: ${theme}
 Keywords: ${keywords}
 
-Requirements:
-- Viral, catchy, humorous
+【Humor Techniques to Use】
+${humorGuideEn}
+
+【Quality Requirements】
+- Use at least 2-3 humor techniques from above
+- Include 1-2 "golden lines" (memorable, shareable quotes)
+- Viral potential, catchy, humorous
 - Use internet memes/slang if appropriate
 - Exaggerated and entertaining
 - About 80-120 words
 
+【Example for Reference】
+${example}
+
 【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
   }
 
-  return `你是专业的Rap歌词创作专家。
+  return `你是专业的Rap歌词创作专家，擅长创作魔性洗脑、病毒传播的搞笑内容。
 
 【任务】创作30秒搞笑Rap歌词
 
@@ -116,11 +149,19 @@ Requirements:
 主题: ${theme}
 关键词: ${keywords}
 
-要求:
-- 魔性洗脑，押韵自然
-- ${ctx.dialect === 'cantonese' ? '粤语俚语，港式幽默' : '接地气，有网络梗'}
-- 夸张幽默
+【搞笑技巧指南】
+${humorGuide}
+
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
+- 魔性洗脑，病毒传播潜力
+- ${ctx.dialect === 'cantonese' ? '使用粤语俚语，港式幽默' : '适度使用网络热梗'}
+- 夸张幽默，娱乐效果拉满
 - 约100-150字
+
+【示例参考】
+${example}
 
 【重要】只输出歌词，不要任何解释、说明或分析。`
 }
@@ -133,9 +174,12 @@ function buildIPPrompt(ctx: PromptContext): string {
   const ipName = ctx.ipName || 'IP'
   const coreElements = ctx.coreElements?.join(', ') || ''
   const mood = ctx.mood || 'Epic'
+  const humorGuide = getSceneHumorGuide('ip')
+  const example = getSceneExample('ip', ctx.dialect === 'english' ? 'english' : 'chinese')
 
   if (ctx.dialect === 'english') {
-    return `You are a professional Rap lyricist.
+    const humorGuideEn = getSceneHumorGuideEnglish('ip')
+    return `You are a professional Rap lyricist specializing in IP/Brand mashup content.
 
 【Task】Create a 30-second Rap lyrics for IP/Brand mashup
 
@@ -144,16 +188,23 @@ IP/Brand: ${ipName}
 Core Elements: ${coreElements}
 Mood: ${mood}
 
-Requirements:
-- ${mood} and powerful
-- Resonate with fans
+【Humor Techniques to Use】
+${humorGuideEn}
+
+【Quality Requirements】
+- Use at least 2-3 humor techniques from above
+- Include 1-2 "golden lines" (memorable, shareable quotes)
+- ${mood} and powerful, resonate with fans
 - Stay true to the IP's essence
 - About 80-120 words
+
+【Example for Reference】
+${example}
 
 【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
   }
 
-  return `你是专业的Rap歌词创作专家。
+  return `你是专业的Rap歌词创作专家，擅长为IP/品牌混剪创作燃炸的歌词。
 
 【任务】创作30秒Rap歌词用于IP混剪
 
@@ -163,11 +214,19 @@ IP名称: ${ipName}
 核心元素: ${coreElements}
 风格: ${mood}
 
-要求:
-- ${mood}燃炸，押韵自然
+【搞笑技巧指南】
+${humorGuide}
+
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
+- ${mood}燃炸，符合IP调性
+- 有粉丝共鸣，玩梗要精准
 - ${ctx.dialect === 'cantonese' ? '港式风格' : ''}
-- 符合IP调性，有粉丝共鸣
 - 约100-150字
+
+【示例参考】
+${example}
 
 【重要】只输出歌词，不要任何解释、说明或分析。`
 }
@@ -180,9 +239,12 @@ function buildVlogPrompt(ctx: PromptContext): string {
   const activities = ctx.activities?.join(', ') || ''
   const location = ctx.location || ''
   const mood = ctx.mood || 'Chill'
+  const humorGuide = getSceneHumorGuide('vlog')
+  const example = getSceneExample('vlog', ctx.dialect === 'english' ? 'english' : 'chinese')
 
   if (ctx.dialect === 'english') {
-    return `You are a professional Rap lyricist.
+    const humorGuideEn = getSceneHumorGuideEnglish('vlog')
+    return `You are a professional Rap lyricist specializing in relatable, authentic daily life content.
 
 【Task】Create a 30-second Rap lyrics for daily vlog
 
@@ -191,16 +253,24 @@ Activities: ${activities}
 Location: ${location || 'Unknown'}
 Mood: ${mood}
 
-Requirements:
+【Humor Techniques to Use】
+${humorGuideEn}
+
+【Quality Requirements】
+- Use at least 2-3 humor techniques from above
+- Include 1-2 "golden lines" (memorable, shareable quotes)
 - Lifestyle-focused, relatable
 - ${mood} and casual vibe
 - Authentic and personal
 - About 80-120 words
 
+【Example for Reference】
+${example}
+
 【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
   }
 
-  return `你是专业的Rap歌词创作专家。
+  return `你是专业的Rap歌词创作专家，擅长创作真实接地气、引发共情的日常内容。
 
 【任务】创作30秒Rap歌词用于日常Vlog
 
@@ -210,11 +280,19 @@ Requirements:
 地点: ${location}
 心情: ${mood}
 
-要求:
-- 生活化，押韵自然
-- ${ctx.dialect === 'cantonese' ? '粤语日常表达' : '真实接地气'}
-- 轻松愉快
+【搞笑技巧指南】
+${humorGuide}
+
+【质量要求】
+- 至少使用2-3种搞笑技巧
+- 有1-2个"金句"（可单独传播的句子）
+- 生活化，真实接地气
+- ${ctx.dialect === 'cantonese' ? '粤语日常表达' : '引发共情，让人会心一笑'}
+- ${mood}轻松愉快
 - 约100-150字
+
+【示例参考】
+${example}
 
 【重要】只输出歌词，不要任何解释、说明或分析。`
 }
