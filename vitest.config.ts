@@ -14,15 +14,6 @@ export default defineConfig({
       ".claude/worktrees/**",
       "**/*.spec.ts", // Exclude Playwright e2e tests
     ],
-    deps: {
-      // 将 web-audio-beat-detector 标记为外部依赖，由 vitest 模拟
-      external: [/web-audio-beat-detector/],
-    },
-    server: {
-      deps: {
-        inline: [],
-      },
-    },
   },
   resolve: {
     alias: {
