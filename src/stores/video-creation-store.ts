@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SceneType, DialectType } from '@/types'
 import type { MiniMaxMusicStyle } from '@/lib/minimax/types'
+import type { BeatAnalysisResult } from '@/lib/audio/types'
 
 export type StepType = 'scene' | 'dialect' | 'lyrics' | 'music' | 'video'
 
@@ -40,6 +41,10 @@ interface VideoCreationState {
   // 音乐风格
   musicStyle: MiniMaxMusicStyle
 
+  // 新增：节拍信息
+  beatInfo: BeatAnalysisResult | null
+  isAnalyzingBeat: boolean
+
   // Actions
   setStep: (step: StepType) => void
   setScene: (scene: SceneType | null) => void
@@ -52,6 +57,9 @@ interface VideoCreationState {
   setMusicStatus: (status: MusicState['status']) => void
   setMusicError: (error: string | null) => void
   setMusicStyle: (style: MiniMaxMusicStyle) => void
+  // 新增：节拍分析方法
+  setBeatInfo: (beatInfo: BeatAnalysisResult | null) => void
+  setIsAnalyzingBeat: (isAnalyzing: boolean) => void
   reset: () => void
   nextStep: () => void
   prevStep: () => void
@@ -77,6 +85,9 @@ const initialState = {
     error: null,
   },
   musicStyle: 'rap' as MiniMaxMusicStyle,
+  // 新增
+  beatInfo: null,
+  isAnalyzingBeat: false,
 }
 
 export const useVideoCreationStore = create<VideoCreationState>()(
@@ -117,6 +128,10 @@ export const useVideoCreationStore = create<VideoCreationState>()(
         })),
 
       setMusicStyle: (musicStyle) => set({ musicStyle }),
+
+      // 新增
+      setBeatInfo: (beatInfo) => set({ beatInfo }),
+      setIsAnalyzingBeat: (isAnalyzingBeat) => set({ isAnalyzingBeat }),
 
       reset: () => set(initialState),
 
