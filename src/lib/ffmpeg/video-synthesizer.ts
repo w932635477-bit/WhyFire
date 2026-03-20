@@ -325,20 +325,30 @@ export class VideoSynthesizer {
 
       // Stage 3.1: Beat detection and lyrics sync (if plain text lyrics provided)
       let syncedLyrics: LyricLineWithWords[] | null = null
-      if (plainTextLyrics && typeof audioFile === 'string') {
+      if (plainTextLyrics) {
         this.updateProgress('writing-audio', 0.95, 'Analyzing audio beats...')
 
         try {
+          // Get audio data as ArrayBuffer for beat detection
+          let audioBuffer: ArrayBuffer
+          if (typeof audioFile === 'string') {
+            const response = await fetch(audioFile)
+            audioBuffer = await response.arrayBuffer()
+          } else {
+            audioBuffer = await (audioFile as Blob).arrayBuffer()
+          }
+
           // Get audio duration
           const audioDuration = await this.getAudioDuration(audioFile)
 
-          // Analyze beats
-          const beatInfo = await this.analyzeBeat(audioFile)
+          // Analyze beats using ArrayBuffer
+          const detector = new BeatDetector({ debug: false })
+          const beatInfo = await detector.analyze(audioBuffer)
 
           // Map lyrics to timestamps
           syncedLyrics = this.mapLyricsToTimestamps(plainTextLyrics, beatInfo, audioDuration)
 
-          console.log(`[VideoSynthesizer] 节拍同步完成: ${syncedLyrics.length} 行歌词`)
+          console.log(`[VideoSynthesizer] 节拍同步完成: ${syncedLyrics.length} 行歌词, BPM=${beatInfo.bpm}`)
         } catch (error) {
           console.error('[VideoSynthesizer] 节拍同步失败，将使用原始歌词:', error)
           syncedLyrics = null
@@ -644,26 +654,18 @@ export class VideoSynthesizer {
   }
 
   /**
-   * 分析音频节拍
+   * 分析音频节拍 (从 ArrayBuffer)
    */
-  private async analyzeBeat(audioUrl: string): Promise<BeatAnalysisResult> {
+  private async analyzeBeatFromBuffer(audioBuffer: ArrayBuffer): Promise<BeatAnalysisResult> {
     console.log('[VideoSynthesizer] 开始分析音频节拍...')
 
     try {
-      // 获取音频数据
-      const response = await fetch(audioUrl)
-      const arrayBuffer = await response.arrayBuffer()
-
-      // 使用节拍检测器分析
       const detector = new BeatDetector({ debug: false })
-      const beatInfo = await detector.analyze(arrayBuffer)
-
+      const beatInfo = await detector.analyze(audioBuffer)
       console.log(`[VideoSynthesizer] 节拍分析完成: BPM=${beatInfo.bpm}, offset=${beatInfo.offset}s`)
-
       return beatInfo
     } catch (error) {
       console.error('[VideoSynthesizer] 节拍分析失败:', error)
-      // 返回默认值，确保流程继续
       return {
         bpm: 120,
         offset: 0,

@@ -217,7 +217,8 @@ export default function CreatePage() {
             videoFile: videoFile.file,
             audioFile: audioBlob,
             lyrics: lyricLines,
-            effectsConfig, // 传入特效配置
+            plainTextLyrics: lyrics, // 新增：传递纯文本歌词用于节拍同步
+            effectsConfig,
             onProgress: (info: SynthesisProgress) => {
               setSynthesisProgress(info.overallProgress * 100)
             },
