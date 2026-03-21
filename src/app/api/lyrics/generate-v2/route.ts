@@ -1,0 +1,314 @@
+/**
+ * 增强版歌词生成 API
+ * POST /api/lyrics/generate-v2
+ * 支持节日 + 热点 + 网络热梗融合
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
+import { generateWithClaude } from '@/lib/ai/claude-client'
+import { buildEnhancedLyricsPrompt, countWords, estimateDuration } from '@/lib/ai/prompts/enhanced-lyrics-prompts'
+import { getTimeContext, getTrendingService } from '@/lib/ai/context'
+import type { SceneType } from '@/types'
+import type { DialectCode } from '@/types/dialect'
+
+/**
+ * 清理歌词内容，移除可能的说明文字
+ */
+function cleanLyrics(rawContent: string): string {
+  let content = rawContent
+
+  // 移除常见的前缀说明
+  content = content.replace(/^以下是[^：]*：?\s*/i, '')
+  content = content.replace(/^这是[^：]*：?\s*/i, '')
+  content = content.replace(/^歌词[是为][^：]*：?\s*/i, '')
+  content = content.replace(/^好的[，,]?\s*/i, '')
+  content = content.replace(/^好的，这是[^：]*：?\s*/i, '')
+
+  // 移除列表式说明
+  content = content.replace(/^[\-\•\*]\s*[^。\n]{5,50}\n/gm, '')
+
+  // 移除时间戳前缀 [00:00] 等
+  content = content.replace(/^\[\d{2}:\d{2}\]\s*/gm, '')
+
+  // 移除末尾的分析说明
+  const analysisPatterns = [
+    /\n\n[（(]?注[意释][^）)]*[）)]?[\s\S]*$/i,
+    /\n\n[（(]?说明[^）)]*[）)]?[\s\S]*$/i,
+    /\n\n[（(]?特点[^）)]*[）)]?[\s\S]*$/i,
+    /\n\n[（(]?押韵[^）)]*[）)]?[\s\S]*$/i,
+    /\n\n[（(]?风格[^）)]*[）)]?[\s\S]*$/i,
+    /\n\n---+[\s\S]*$/i,
+    /\n\n\*{3,}[\s\S]*$/i,
+  ]
+
+  for (const pattern of analysisPatterns) {
+    content = content.replace(pattern, '')
+  }
+
+  // 移除空行过多的情况
+  content = content.replace(/\n{3,}/g, '\n\n')
+
+  // 去除首尾空白
+  content = content.trim()
+
+  return content
+}
+
+// 请求类型
+interface LyricsGenerateV2Request {
+  scene: SceneType
+  dialect: DialectCode
+  productInfo?: {
+    name: string
+    sellingPoints: string[]
+  }
+  funnyInfo?: {
+    theme: string
+    keywords?: string[]
+  }
+  ipInfo?: {
+    name: string
+    coreElements: string[]
+    mood?: string
+  }
+  vlogInfo?: {
+    activities: string[]
+    location?: string
+    mood?: string
+  }
+  // 时效性选项
+  timeOptions?: {
+    includeFestival?: boolean
+    includeTrending?: boolean
+    includeMemes?: boolean
+  }
+}
+
+// 响应类型
+interface LyricsGenerateV2Response {
+  code: number
+  data: {
+    lyricsId: string
+    content: string
+    wordCount: number
+    estimatedDuration: number
+    meta: {
+      festival?: {
+        id: string
+        name: string
+      }
+      trendingTopics?: string[]
+      memes?: string[]
+    }
+  }
+  message?: string
+}
+
+/**
+ * POST /api/lyrics/generate-v2
+ * 生成 Rap 歌词（增强版）
+ */
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<LyricsGenerateV2Response>> {
+  try {
+    // 解析请求体
+    const body: LyricsGenerateV2Request = await request.json()
+    const {
+      scene,
+      dialect,
+      productInfo,
+      funnyInfo,
+      ipInfo,
+      vlogInfo,
+      timeOptions = {}
+    } = body
+
+    // 验证必填字段
+    if (!scene || !dialect) {
+      return NextResponse.json(
+        {
+          code: 400,
+          data: {
+            lyricsId: '',
+            content: '',
+            wordCount: 0,
+            estimatedDuration: 0,
+            meta: {},
+          },
+          message: '缺少必填字段: scene 或 dialect',
+        },
+        { status: 400 }
+      )
+    }
+
+    // 验证场景类型
+    const validScenes: SceneType[] = ['product', 'funny', 'ip', 'vlog']
+    if (!validScenes.includes(scene)) {
+      return NextResponse.json(
+        {
+          code: 400,
+          data: {
+            lyricsId: '',
+            content: '',
+            wordCount: 0,
+            estimatedDuration: 0,
+            meta: {},
+          },
+          message: `无效的场景类型: ${scene}`,
+        },
+        { status: 400 }
+      )
+    }
+
+    // 根据场景提取输入参数
+    const inputs = extractInputs(scene, productInfo, funnyInfo, ipInfo, vlogInfo)
+
+    // 获取时效性上下文
+    const includeFestival = timeOptions.includeFestival !== false
+    const includeTrending = timeOptions.includeTrending !== false
+    const includeMemes = timeOptions.includeMemes !== false
+
+    const timeContext = includeFestival ? getTimeContext() : undefined
+    const trendingService = getTrendingService()
+
+    // 获取热点和热梗
+    let trendingTopics = undefined
+    let memes = undefined
+
+    if (includeTrending) {
+      try {
+        trendingTopics = await trendingService.getTrendingTopics({ limit: 3 })
+      } catch (e) {
+        console.warn('[LyricsAPI] Failed to get trending topics:', e)
+      }
+    }
+
+    if (includeMemes) {
+      try {
+        memes = await trendingService.getInternetMemes()
+      } catch (e) {
+        console.warn('[LyricsAPI] Failed to get memes:', e)
+      }
+    }
+
+    // 构建增强 Prompt
+    const prompt = buildEnhancedLyricsPrompt(
+      scene,
+      dialect,
+      inputs,
+      {
+        timeContext,
+        trendingTopics,
+        memes,
+      }
+    )
+
+    // 调用 Claude API 生成歌词
+    const rawContent = await generateWithClaude(prompt, {
+      maxTokens: 1024,
+      temperature: 0.8,
+    })
+
+    // 清理歌词内容
+    const content = cleanLyrics(rawContent)
+
+    // 计算字数和估算时长
+    const wordCount = countWords(content)
+    const estimatedDuration = estimateDuration(wordCount)
+
+    // 生成歌词 ID
+    const lyricsId = randomUUID()
+
+    // 构建元信息
+    const meta: LyricsGenerateV2Response['data']['meta'] = {}
+
+    if (timeContext?.currentFestival) {
+      meta.festival = {
+        id: timeContext.currentFestival.id,
+        name: timeContext.currentFestival.name,
+      }
+    }
+
+    if (trendingTopics?.length) {
+      meta.trendingTopics = trendingTopics.map(t => t.title)
+    }
+
+    if (memes?.length) {
+      meta.memes = memes.slice(0, 5).map(m => m.text)
+    }
+
+    // 返回成功响应
+    return NextResponse.json({
+      code: 0,
+      data: {
+        lyricsId,
+        content,
+        wordCount,
+        estimatedDuration,
+        meta,
+      },
+    })
+  } catch (error) {
+    console.error('歌词生成失败:', error)
+
+    const errorMessage =
+      error instanceof Error && error.message.includes('EVOLINK_API_KEY')
+        ? '服务配置错误: EVOLINK_API_KEY 未配置'
+        : '歌词生成失败，请稍后重试'
+
+    return NextResponse.json(
+      {
+        code: 500,
+        data: {
+          lyricsId: '',
+          content: '',
+          wordCount: 0,
+          estimatedDuration: 0,
+          meta: {},
+        },
+        message: errorMessage,
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * 根据场景类型提取输入参数
+ */
+function extractInputs(
+  scene: SceneType,
+  productInfo?: LyricsGenerateV2Request['productInfo'],
+  funnyInfo?: LyricsGenerateV2Request['funnyInfo'],
+  ipInfo?: LyricsGenerateV2Request['ipInfo'],
+  vlogInfo?: LyricsGenerateV2Request['vlogInfo']
+) {
+  switch (scene) {
+    case 'product':
+      return {
+        productName: productInfo?.name || '',
+        sellingPoints: productInfo?.sellingPoints || [],
+      }
+    case 'funny':
+      return {
+        theme: funnyInfo?.theme || '',
+        keywords: funnyInfo?.keywords || [],
+      }
+    case 'ip':
+      return {
+        ipName: ipInfo?.name || '',
+        coreElements: ipInfo?.coreElements || [],
+        mood: ipInfo?.mood,
+      }
+    case 'vlog':
+      return {
+        activities: vlogInfo?.activities || [],
+        location: vlogInfo?.location,
+        mood: vlogInfo?.mood,
+      }
+    default:
+      return {}
+  }
+}
