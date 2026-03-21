@@ -1,23 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { cacheGet, cacheSet, cacheDelete, cacheIncr, cacheExists } from '@/lib/cache'
 
 // Maximum verification attempts before lockout
 const MAX_ATTEMPTS = 5
-// Lockout duration after max attempts (15 minutes)
-const LOCKOUT_DURATION = 15 * 60 * 1000
+// Lockout duration after max attempts (15 minutes in seconds)
+const LOCKOUT_DURATION = 15 * 60
+// Verification code expiry (5 minutes in seconds)
+const CODE_EXPIRY = 5 * 60
+// Rate limit cooldown (50 seconds)
+const RATE_LIMIT_COOLDOWN = 50
+
+// Cache prefix for verification codes
+const CACHE_PREFIX = 'sms'
+// Cache prefix for rate limiting
+const RATE_PREFIX = 'sms-rate'
 
 interface StoredVerification {
   code: string
-  expiresAt: number
   attempts: number
   createdAt: number
 }
-
-// Mock SMS service - In production, replace with actual SMS provider (e.g., Twilio, AWS SNS)
-// Store verification codes in memory (in production, use Redis or database)
-// SECURITY NOTE: Memory storage is not suitable for production multi-instance deployments
-// TODO: Replace with Redis or database storage before production
-const verificationCodes = new Map<string, StoredVerification>()
 
 /**
  * Generate cryptographically secure random 6-digit code
@@ -73,13 +76,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check rate limiting (in production, use Redis)
-    const existing = verificationCodes.get(cleanPhone)
-    if (existing && existing.expiresAt > Date.now()) {
-      const timeLeft = Math.ceil((existing.expiresAt - Date.now()) / 1000)
-      if (timeLeft > 50) { // Less than 10 seconds passed
+    // Check rate limiting using cache
+    const rateKey = `${RATE_PREFIX}:${cleanPhone}`
+    const existingRate = await cacheGet<{ sentAt: number }>(rateKey)
+
+    if (existingRate) {
+      const timeSinceLastSent = Math.floor((Date.now() - existingRate.sentAt) / 1000)
+      if (timeSinceLastSent < RATE_LIMIT_COOLDOWN) {
         return NextResponse.json(
-          { error: 'Please wait before requesting a new code' },
+          { error: 'Please wait before requesting a new code', retryAfter: RATE_LIMIT_COOLDOWN - timeSinceLastSent },
           { status: 429 }
         )
       }
@@ -87,20 +92,27 @@ export async function POST(request: NextRequest) {
 
     // Generate new code
     const code = generateCode()
-    const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes expiry
 
-    // Store code with attempt counter
-    verificationCodes.set(cleanPhone, {
+    // Store code with attempt counter using cache
+    const codeKey = `${CACHE_PREFIX}:${cleanPhone}`
+    const storedData: StoredVerification = {
       code,
-      expiresAt,
       attempts: 0,
       createdAt: Date.now(),
-    })
+    }
+
+    await cacheSet(codeKey, storedData, CODE_EXPIRY)
+
+    // Set rate limit
+    await cacheSet(rateKey, { sentAt: Date.now() }, RATE_LIMIT_COOLDOWN)
 
     // Send SMS
     const sent = await sendSMS(cleanPhone, code)
 
     if (!sent) {
+      // Clean up on failure
+      await cacheDelete(codeKey)
+      await cacheDelete(rateKey)
       return NextResponse.json(
         { error: 'Failed to send verification code' },
         { status: 500 }
@@ -143,8 +155,9 @@ export async function GET(request: NextRequest) {
     // Clean phone number
     const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '')
 
-    // Get stored code
-    const stored = verificationCodes.get(cleanPhone)
+    // Get stored code from cache
+    const codeKey = `${CACHE_PREFIX}:${cleanPhone}`
+    const stored = await cacheGet<StoredVerification>(codeKey)
 
     if (!stored) {
       return NextResponse.json(
@@ -155,35 +168,27 @@ export async function GET(request: NextRequest) {
 
     // Check if account is locked due to too many attempts
     if (stored.attempts >= MAX_ATTEMPTS) {
-      const lockoutRemaining = LOCKOUT_DURATION - (Date.now() - stored.createdAt)
+      const lockoutRemaining = LOCKOUT_DURATION - Math.floor((Date.now() - stored.createdAt) / 1000)
       if (lockoutRemaining > 0) {
         return NextResponse.json(
           {
             error: 'Too many failed attempts. Please try again later.',
-            retryAfter: Math.ceil(lockoutRemaining / 1000)
+            retryAfter: lockoutRemaining
           },
           { status: 429 }
         )
       } else {
         // Lockout expired, reset attempts
         stored.attempts = 0
+        await cacheSet(codeKey, stored, CODE_EXPIRY)
       }
-    }
-
-    // Check if expired
-    if (stored.expiresAt < Date.now()) {
-      verificationCodes.delete(cleanPhone)
-      return NextResponse.json(
-        { error: 'Verification code has expired. Please request a new code.' },
-        { status: 400 }
-      )
     }
 
     // Verify code
     if (stored.code !== code) {
       // Increment attempt counter
       stored.attempts += 1
-      verificationCodes.set(cleanPhone, stored)
+      await cacheSet(codeKey, stored, CODE_EXPIRY)
 
       const attemptsRemaining = MAX_ATTEMPTS - stored.attempts
       if (attemptsRemaining > 0) {
@@ -203,7 +208,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Code is valid - remove it to prevent reuse
-    verificationCodes.delete(cleanPhone)
+    await cacheDelete(codeKey)
 
     // In production, create or get user from database
     // Return user session/token

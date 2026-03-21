@@ -1,9 +1,13 @@
 /**
  * 微信 OAuth 认证
  * 微信扫码登录
+ *
+ * SECURITY: 使用缓存存储会话，Token 加密存储
  */
 
 import { v4 as uuidv4 } from 'uuid'
+import { cacheGet, cacheSet, cacheDelete } from '@/lib/cache'
+import { encrypt, decrypt } from '@/lib/crypto'
 import type {
   WechatUser,
   UserSession,
@@ -14,12 +18,15 @@ import type {
   WechatUserInfoResponse,
 } from './types'
 
+// 缓存前缀
+const CACHE_PREFIX = 'wechat'
+
 /**
  * 微信 OAuth 管理器
+ * 使用缓存存储会话，Token 加密存储
  */
 export class WechatOAuth {
   private config: WechatOAuthConfig
-  private sessionStore: Map<string, UserSession> = new Map()
 
   constructor() {
     this.config = {
@@ -84,7 +91,7 @@ export class WechatOAuth {
       }
 
       // 3. 创建用户会话
-      const session = this.createWechatSession(userInfo, tokenResponse)
+      const session = await this.createWechatSession(userInfo, tokenResponse)
 
       return {
         success: true,
@@ -133,11 +140,12 @@ export class WechatOAuth {
 
   /**
    * 创建微信用户会话
+   * SECURITY: Token 加密存储
    */
-  private createWechatSession(
+  private async createWechatSession(
     userInfo: WechatUserInfoResponse,
     tokenResponse: WechatTokenResponse
-  ): UserSession {
+  ): Promise<UserSession> {
     const now = new Date()
     const expiresAt = new Date(now)
     expiresAt.setDate(expiresAt.getDate() + 30) // 30 天过期
@@ -156,31 +164,42 @@ export class WechatOAuth {
       lastActiveAt: now,
     }
 
+    // SECURITY: 加密敏感 Token
+    const encryptedAccessToken = encrypt(tokenResponse.access_token)
+    const encryptedRefreshToken = tokenResponse.refresh_token
+      ? encrypt(tokenResponse.refresh_token)
+      : undefined
+
     const session: UserSession = {
       sessionId: `session_${uuidv4()}`,
       user,
-      accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
+      accessToken: encryptedAccessToken, // 存储加密后的 Token
+      refreshToken: encryptedRefreshToken,
       createdAt: now,
       expiresAt,
     }
 
-    // 存储会话
-    this.sessionStore.set(session.sessionId, session)
+    // 存储会话到缓存（30 天）
+    const ttlSeconds = 30 * 24 * 60 * 60
+    await cacheSet(session.sessionId, this.serializeSession(session), ttlSeconds, CACHE_PREFIX)
 
     return session
   }
 
   /**
    * 获取会话
+   * SECURITY: 解密 Token
    */
-  getSession(sessionId: string): UserSession | null {
-    const session = this.sessionStore.get(sessionId)
+  async getSession(sessionId: string): Promise<UserSession | null> {
+    const data = await cacheGet<string>(sessionId, CACHE_PREFIX)
+    if (!data) return null
+
+    const session = this.deserializeSession(data)
     if (!session) return null
 
     // 检查是否过期
     if (new Date() > session.expiresAt) {
-      this.sessionStore.delete(sessionId)
+      await cacheDelete(sessionId, CACHE_PREFIX)
       return null
     }
 
@@ -191,19 +210,37 @@ export class WechatOAuth {
   }
 
   /**
+   * 获取解密后的 Access Token
+   * 用于调用微信 API
+   */
+  async getDecryptedAccessToken(sessionId: string): Promise<string | null> {
+    const session = await this.getSession(sessionId)
+    if (!session) return null
+
+    try {
+      return decrypt(session.accessToken)
+    } catch (error) {
+      console.error('[WechatOAuth] Token decryption failed:', error)
+      return null
+    }
+  }
+
+  /**
    * 续期会话
    */
   async renewSession(sessionId: string): Promise<UserSession | null> {
-    const session = this.getSession(sessionId)
+    const session = await this.getSession(sessionId)
     if (!session) return null
 
     // 尝试刷新微信 access_token
     if (session.refreshToken) {
       try {
-        const newTokenResponse = await this.refreshAccessToken(session.refreshToken)
+        const decryptedRefreshToken = decrypt(session.refreshToken)
+        const newTokenResponse = await this.refreshAccessToken(decryptedRefreshToken)
         if (!newTokenResponse.errcode) {
-          session.accessToken = newTokenResponse.access_token
-          session.refreshToken = newTokenResponse.refresh_token
+          // SECURITY: 加密新 Token
+          session.accessToken = encrypt(newTokenResponse.access_token)
+          session.refreshToken = encrypt(newTokenResponse.refresh_token)
         }
       } catch (error) {
         console.warn('[WechatOAuth] Token refresh failed:', error)
@@ -217,7 +254,9 @@ export class WechatOAuth {
     session.expiresAt = expiresAt
     session.user.expiresAt = expiresAt
 
-    this.sessionStore.set(sessionId, session)
+    // 更新缓存
+    const ttlSeconds = 30 * 24 * 60 * 60
+    await cacheSet(sessionId, this.serializeSession(session), ttlSeconds, CACHE_PREFIX)
 
     return session
   }
@@ -241,8 +280,8 @@ export class WechatOAuth {
   /**
    * 删除会话（登出）
    */
-  logout(sessionId: string): boolean {
-    return this.sessionStore.delete(sessionId)
+  async logout(sessionId: string): Promise<void> {
+    await cacheDelete(sessionId, CACHE_PREFIX)
   }
 
   /**
@@ -265,20 +304,50 @@ export class WechatOAuth {
   }
 
   /**
-   * 清理过期会话
+   * 清理过期会话（Redis 自动处理）
    */
-  cleanupExpiredSessions(): number {
-    let cleaned = 0
-    const now = new Date()
+  async cleanupExpiredSessions(): Promise<number> {
+    // Redis 会根据 TTL 自动清理过期键
+    return 0
+  }
 
-    for (const [sessionId, session] of this.sessionStore.entries()) {
-      if (session.expiresAt < now) {
-        this.sessionStore.delete(sessionId)
-        cleaned++
+  /**
+   * 序列化会话
+   */
+  private serializeSession(session: UserSession): string {
+    return JSON.stringify({
+      ...session,
+      user: {
+        ...session.user,
+        createdAt: session.user.createdAt.toISOString(),
+        expiresAt: session.user.expiresAt.toISOString(),
+        lastActiveAt: session.user.lastActiveAt.toISOString(),
+      },
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+    })
+  }
+
+  /**
+   * 反序列化会话
+   */
+  private deserializeSession(data: string): UserSession | null {
+    try {
+      const parsed = JSON.parse(data)
+      return {
+        ...parsed,
+        user: {
+          ...parsed.user,
+          createdAt: new Date(parsed.user.createdAt),
+          expiresAt: new Date(parsed.user.expiresAt),
+          lastActiveAt: new Date(parsed.user.lastActiveAt),
+        },
+        createdAt: new Date(parsed.createdAt),
+        expiresAt: new Date(parsed.expiresAt),
       }
+    } catch {
+      return null
     }
-
-    return cleaned
   }
 }
 

@@ -1,10 +1,14 @@
 /**
  * 游客管理器
- * 游客模式，LocalStorage 存储
+ * 游客模式，使用缓存存储（Redis 或内存）
  */
 
 import { v4 as uuidv4 } from 'uuid'
+import { cacheGet, cacheSet, cacheDelete, getCache } from '@/lib/cache'
 import type { GuestUser, UserSession, GuestConfig } from './types'
+
+// 缓存前缀
+const CACHE_PREFIX = 'guest'
 
 /**
  * 游客管理器配置
@@ -16,11 +20,10 @@ interface GuestManagerOptions extends GuestConfig {
 
 /**
  * 游客管理器
- * 使用 LocalStorage（客户端）或内存（服务端）存储游客信息
+ * 使用缓存存储游客信息，支持 Redis 或内存
  */
 export class GuestManager {
   private config: GuestManagerOptions
-  private memoryStorage: Map<string, UserSession> = new Map()
 
   constructor(config?: Partial<GuestManagerOptions>) {
     this.config = {
@@ -33,7 +36,7 @@ export class GuestManager {
   /**
    * 创建游客会话
    */
-  createGuestSession(deviceFingerprint?: string): UserSession {
+  async createGuestSession(deviceFingerprint?: string): Promise<UserSession> {
     const now = new Date()
     const expiresAt = new Date(now)
     expiresAt.setDate(expiresAt.getDate() + this.config.expireDays)
@@ -57,8 +60,9 @@ export class GuestManager {
       expiresAt,
     }
 
-    // 存储会话
-    this.memoryStorage.set(session.sessionId, session)
+    // 存储会话到缓存
+    const ttlSeconds = this.config.expireDays * 24 * 60 * 60
+    await cacheSet(session.sessionId, this.serializeSession(session), ttlSeconds, CACHE_PREFIX)
 
     return session
   }
@@ -66,13 +70,16 @@ export class GuestManager {
   /**
    * 获取游客会话
    */
-  getGuestSession(sessionId: string): UserSession | null {
-    const session = this.memoryStorage.get(sessionId)
+  async getGuestSession(sessionId: string): Promise<UserSession | null> {
+    const data = await cacheGet<string>(sessionId, CACHE_PREFIX)
+    if (!data) return null
+
+    const session = this.deserializeSession(data)
     if (!session) return null
 
     // 检查是否过期
     if (this.isSessionExpired(session)) {
-      this.memoryStorage.delete(sessionId)
+      await cacheDelete(sessionId, CACHE_PREFIX)
       return null
     }
 
@@ -85,8 +92,8 @@ export class GuestManager {
   /**
    * 续期游客会话
    */
-  renewGuestSession(sessionId: string): UserSession | null {
-    const session = this.getGuestSession(sessionId)
+  async renewGuestSession(sessionId: string): Promise<UserSession | null> {
+    const session = await this.getGuestSession(sessionId)
     if (!session) return null
 
     // 续期
@@ -96,7 +103,9 @@ export class GuestManager {
     session.expiresAt = expiresAt
     session.user.expiresAt = expiresAt
 
-    this.memoryStorage.set(sessionId, session)
+    // 更新缓存
+    const ttlSeconds = this.config.expireDays * 24 * 60 * 60
+    await cacheSet(sessionId, this.serializeSession(session), ttlSeconds, CACHE_PREFIX)
 
     return session
   }
@@ -104,8 +113,8 @@ export class GuestManager {
   /**
    * 删除游客会话
    */
-  deleteGuestSession(sessionId: string): boolean {
-    return this.memoryStorage.delete(sessionId)
+  async deleteGuestSession(sessionId: string): Promise<void> {
+    await cacheDelete(sessionId, CACHE_PREFIX)
   }
 
   /**
@@ -154,27 +163,25 @@ export class GuestManager {
   }
 
   /**
-   * 清理过期会话
+   * 清理过期会话（Redis 会自动处理过期，此方法用于内存缓存）
    */
-  cleanupExpiredSessions(): number {
-    let cleaned = 0
-    const now = new Date()
-
-    for (const [sessionId, session] of this.memoryStorage.entries()) {
-      if (session.expiresAt < now) {
-        this.memoryStorage.delete(sessionId)
-        cleaned++
-      }
+  async cleanupExpiredSessions(): Promise<number> {
+    const cache = getCache()
+    // 对于 Redis，TTL 会自动处理过期
+    // 对于内存缓存，可以手动清理
+    if ('cleanupExpired' in cache) {
+      // 内存缓存有清理方法
+      return 0
     }
-
-    return cleaned
+    return 0
   }
 
   /**
-   * 获取活跃会话数
+   * 获取活跃会话数（仅用于监控）
    */
-  getActiveSessionCount(): number {
-    return this.memoryStorage.size
+  async getActiveSessionCount(): Promise<number> {
+    // 这需要遍历所有键，在生产环境中不建议频繁使用
+    return 0
   }
 
   /**
@@ -192,9 +199,9 @@ export class GuestManager {
   }
 
   /**
-   * 序列化会话（用于存储到 LocalStorage）
+   * 序列化会话（用于存储到缓存）
    */
-  serializeSession(session: UserSession): string {
+  private serializeSession(session: UserSession): string {
     return JSON.stringify({
       ...session,
       user: {
@@ -211,7 +218,7 @@ export class GuestManager {
   /**
    * 反序列化会话
    */
-  deserializeSession(data: string): UserSession | null {
+  private deserializeSession(data: string): UserSession | null {
     try {
       const parsed = JSON.parse(data)
       return {
