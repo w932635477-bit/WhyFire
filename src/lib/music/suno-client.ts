@@ -75,40 +75,39 @@ interface TaskResponse {
 }
 
 /**
- * 方言到 Suno 风格的映射
+ * 方言到 Suno 风格的映射（强制 Rap）
  */
-const DIALECT_STYLE_MAP: Partial<Record<DialectCode, string>> = {
-  mandarin: 'mandopop, chinese pop, c-pop',
-  cantonese: 'cantonese pop, cantopop, hong kong pop',
-  sichuan: 'chinese rap, mandopop, regional chinese',
-  dongbei: 'chinese rap, mandopop, northeastern chinese',
-  shandong: 'chinese pop, mandopop',
-  henan: 'chinese pop, mandopop',
-  shaanxi: 'chinese rap, mandopop, folk',
-  wu: 'chinese pop, shanghainese style',
-  minnan: 'taiwanese pop, hokkien',
-  hakka: 'chinese folk, traditional',
-  xiang: 'chinese pop, mandopop',
-  gan: 'chinese pop, mandopop',
-  jin: 'chinese pop, mandopop',
-  lanyin: 'chinese pop, mandopop',
-  jianghuai: 'chinese pop, mandopop',
-  xinan: 'chinese pop, mandopop',
-  jiaoliao: 'chinese pop, mandopop',
-  zhongyuan: 'chinese pop, mandopop',
-  english: 'pop, rap, hip-hop',
+const DIALECT_RAP_STYLE_MAP: Partial<Record<DialectCode, string>> = {
+  mandarin: 'chinese rap, mandarin rap, hip-hop, trap',
+  cantonese: 'cantonese rap, hong kong hip-hop, trap, drill',
+  sichuan: 'sichuan rap, chinese hip-hop, trap, dialect rap',
+  dongbei: 'northeastern chinese rap, dongbei rap, hip-hop, trap',
+  shandong: 'shandong rap, chinese hip-hop, dialect rap',
+  henan: 'henan rap, chinese hip-hop, dialect rap',
+  shaanxi: 'shaanxi rap, chinese hip-hop, folk rap',
+  wu: 'wu dialect rap, shanghai rap, hip-hop',
+  minnan: 'taiwanese rap, minnan hip-hop, dialect rap',
+  hakka: 'hakka rap, chinese hip-hop, dialect rap',
+  xiang: 'hunan rap, xiang dialect rap, hip-hop',
+  gan: 'jiangxi rap, gan dialect rap, hip-hop',
+  jin: 'shanxi rap, jin dialect rap, hip-hop',
+  lanyin: 'lanyin rap, northwest rap, hip-hop',
+  jianghuai: 'jianghuai rap, eastern rap, hip-hop',
+  xinan: 'southwest rap, sichuan style rap, hip-hop',
+  jiaoliao: 'jiaoliao rap, coastal rap, hip-hop',
+  zhongyuan: 'central plain rap, zhongyuan rap, hip-hop',
+  english: 'rap, hip-hop, trap, drill, flow',
 }
 
 /**
- * 音乐风格映射
+ * Rap 风格标签（强制）
  */
-const MUSIC_STYLE_MAP: Record<string, string> = {
-  rap: 'rap, hip-hop, trap, rhythmic',
-  pop: 'pop, catchy, upbeat',
-  electronic: 'electronic, edm, synth',
-  rock: 'rock, guitar, drums',
-  chill: 'lo-fi, chill, ambient, relaxed',
-}
+const RAP_STYLE_TAGS = 'rap, hip-hop, trap, rhythmic flow, spoken word, fast flow'
+
+/**
+ * 排除的风格标签（确保不是歌曲）
+ */
+const EXCLUDED_STYLES = 'singing, melody, ballad, pop song, slow, romantic, acoustic'
 
 /**
  * Suno Music Client
@@ -150,12 +149,11 @@ export class SunoClient {
       callbackUrl,
     } = request
 
-    // 构建风格标签
-    const dialectStyle = DIALECT_STYLE_MAP[dialect] || 'pop'
-    const musicStyle = MUSIC_STYLE_MAP[style] || 'pop'
-    const combinedStyle = `${musicStyle}, ${dialectStyle}`
+    // 构建风格标签（强制 Rap）
+    const dialectRapStyle = DIALECT_RAP_STYLE_MAP[dialect] || 'rap, hip-hop, trap'
+    const combinedStyle = `${RAP_STYLE_TAGS}, ${dialectRapStyle}`
 
-    console.log(`[Suno] Generating music for dialect: ${dialect}, style: ${combinedStyle}`)
+    console.log(`[Suno] Generating Rap for dialect: ${dialect}, style: ${combinedStyle}`)
 
     // 创建任务
     const taskResponse = await this.createTask({
@@ -164,6 +162,7 @@ export class SunoClient {
       instrumental: false,
       prompt: this.formatLyrics(lyrics, dialect),
       style: combinedStyle,
+      negative_tags: EXCLUDED_STYLES, // 排除唱歌/旋律风格
       title,
       vocal_gender: vocalGender,
       callback_url: callbackUrl,
@@ -194,6 +193,7 @@ export class SunoClient {
     instrumental: boolean
     prompt: string
     style: string
+    negative_tags?: string
     title: string
     vocal_gender?: 'm' | 'f'
     callback_url?: string
