@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
+
+// Maximum verification attempts before lockout
+const MAX_ATTEMPTS = 5
+// Lockout duration after max attempts (15 minutes)
+const LOCKOUT_DURATION = 15 * 60 * 1000
+
+interface StoredVerification {
+  code: string
+  expiresAt: number
+  attempts: number
+  createdAt: number
+}
 
 // Mock SMS service - In production, replace with actual SMS provider (e.g., Twilio, AWS SNS)
 // Store verification codes in memory (in production, use Redis or database)
-const verificationCodes = new Map<string, { code: string; expiresAt: number }>()
+// SECURITY NOTE: Memory storage is not suitable for production multi-instance deployments
+// TODO: Replace with Redis or database storage before production
+const verificationCodes = new Map<string, StoredVerification>()
 
-// Generate random 6-digit code
+/**
+ * Generate cryptographically secure random 6-digit code
+ * Uses crypto.randomInt instead of Math.random for security
+ */
 function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  // crypto.randomInt generates cryptographically secure random integers
+  // Range: 100000 to 999999 (inclusive)
+  return crypto.randomInt(100000, 1000000).toString()
 }
 
 // Mock send SMS function
@@ -69,8 +89,13 @@ export async function POST(request: NextRequest) {
     const code = generateCode()
     const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes expiry
 
-    // Store code
-    verificationCodes.set(cleanPhone, { code, expiresAt })
+    // Store code with attempt counter
+    verificationCodes.set(cleanPhone, {
+      code,
+      expiresAt,
+      attempts: 0,
+      createdAt: Date.now(),
+    })
 
     // Send SMS
     const sent = await sendSMS(cleanPhone, code)
@@ -82,11 +107,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // SECURITY FIX: Use separate environment variable instead of NODE_ENV
+    // to prevent accidental code exposure in misconfigured production
+    const shouldReturnCode = process.env.VERIFICATION_DEBUG_MODE === 'true'
+
     return NextResponse.json({
       success: true,
       message: 'Verification code sent successfully',
-      // In development, return the code for testing (remove in production!)
-      ...(process.env.NODE_ENV === 'development' && { code })
+      // Only return code if explicitly enabled via VERIFICATION_DEBUG_MODE
+      ...(shouldReturnCode && { code })
     })
   } catch (error) {
     console.error('SMS send error:', error)
@@ -124,6 +153,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Check if account is locked due to too many attempts
+    if (stored.attempts >= MAX_ATTEMPTS) {
+      const lockoutRemaining = LOCKOUT_DURATION - (Date.now() - stored.createdAt)
+      if (lockoutRemaining > 0) {
+        return NextResponse.json(
+          {
+            error: 'Too many failed attempts. Please try again later.',
+            retryAfter: Math.ceil(lockoutRemaining / 1000)
+          },
+          { status: 429 }
+        )
+      } else {
+        // Lockout expired, reset attempts
+        stored.attempts = 0
+      }
+    }
+
     // Check if expired
     if (stored.expiresAt < Date.now()) {
       verificationCodes.delete(cleanPhone)
@@ -135,10 +181,25 @@ export async function GET(request: NextRequest) {
 
     // Verify code
     if (stored.code !== code) {
-      return NextResponse.json(
-        { error: 'Invalid verification code' },
-        { status: 400 }
-      )
+      // Increment attempt counter
+      stored.attempts += 1
+      verificationCodes.set(cleanPhone, stored)
+
+      const attemptsRemaining = MAX_ATTEMPTS - stored.attempts
+      if (attemptsRemaining > 0) {
+        return NextResponse.json(
+          {
+            error: 'Invalid verification code',
+            attemptsRemaining
+          },
+          { status: 400 }
+        )
+      } else {
+        return NextResponse.json(
+          { error: 'Too many failed attempts. Please request a new code.' },
+          { status: 429 }
+        )
+      }
     }
 
     // Code is valid - remove it to prevent reuse

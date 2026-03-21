@@ -6,26 +6,33 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { VoiceProfile, VoiceCloneOptions, VoiceConvertOptions } from '../types'
 
-// Mock child_process
-vi.mock('child_process', () => ({
-  execSync: vi.fn((cmd: string) => {
-    if (cmd.includes('train_gpt_sovits')) {
-      return JSON.stringify({
-        status: 'success',
-        model_path: '/data/voice-models/test-user/model.pt',
-        duration: 30,
-        quality: 0.85,
-      })
-    }
-    if (cmd.includes('inference_gpt_sovits')) {
-      return JSON.stringify({
-        status: 'success',
-        audio_path: '/output/synthesized.wav',
-      })
-    }
-    return ''
-  }),
-}))
+// Mock child_process with proper default export
+vi.mock('child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('child_process')>()
+  return {
+    ...actual,
+    execSync: vi.fn((cmd: string) => {
+      if (cmd.includes('train_gpt_sovits')) {
+        return JSON.stringify({
+          status: 'success',
+          model_path: '/data/voice-models/test-user/model.pt',
+          duration: 30,
+          quality: 0.85,
+        })
+      }
+      if (cmd.includes('inference_gpt_sovits')) {
+        return JSON.stringify({
+          status: 'success',
+          audio_path: '/output/synthesized.wav',
+        })
+      }
+      return ''
+    }),
+    default: {
+      execSync: vi.fn((cmd: string) => ''),
+    },
+  }
+})
 
 // Mock fs/promises
 vi.mock('fs/promises', () => ({
