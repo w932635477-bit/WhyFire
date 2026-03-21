@@ -1,11 +1,13 @@
 /**
  * 视频处理器
  * 处理上传的视频文件，提取音轨，使用 Demucs 分离人声
+ *
+ * SECURITY: 使用 safeExec 替代 execSync 防止命令注入
  */
 
-import { execSync } from 'child_process'
 import path from 'path'
 import fs from 'fs/promises'
+import { safeExec, safeFfprobe, validatePath } from '../utils/safe-exec'
 import type { VideoProcessResult, AudioQualityResult } from './types'
 
 /**
@@ -26,7 +28,7 @@ export class VideoProcessor {
 
   constructor(config?: Partial<VideoProcessorConfig>) {
     this.config = {
-      tempDir: config?.tempDir || '/tmp/dialect-rap/video',
+      tempDir: config?.tempDir || process.env.VIDEO_TEMP_DIR || '/tmp/dialect-rap/video',
       pythonPath: config?.pythonPath || process.env.PYTHON_PATH || 'python3',
       timeout: config?.timeout || 300000, // 5分钟
     }
@@ -37,6 +39,11 @@ export class VideoProcessor {
    * 流程：提取音轨 → 人声分离 → 质量检测
    */
   async process(videoPath: string): Promise<VideoProcessResult> {
+    // 安全验证
+    if (!validatePath(videoPath)) {
+      throw new Error('Invalid video path')
+    }
+
     const taskId = Date.now().toString()
 
     // 确保临时目录存在
@@ -74,17 +81,28 @@ export class VideoProcessor {
 
   /**
    * 从视频中提取音轨
+   * SECURITY: 使用 spawn 安全执行
    */
   private async extractAudio(videoPath: string, taskId: string): Promise<string> {
     const outputPath = path.join(this.config.tempDir, `${taskId}_audio.wav`)
 
     try {
-      execSync(
-        `ffmpeg -y -i "${videoPath}" ` +
-        `-vn -acodec pcm_s16le -ar 44100 -ac 1 ` +
-        `"${outputPath}"`,
-        { stdio: 'pipe', timeout: 60000 }
-      )
+      const result = await safeExec('ffmpeg', [
+        '-y',
+        '-i', videoPath,
+        '-vn',
+        '-acodec', 'pcm_s16le',
+        '-ar', '44100',
+        '-ac', '1',
+        outputPath,
+      ], {
+        timeout: 60000,
+        throwOnError: true,
+      })
+
+      if (!result.success) {
+        throw new Error(result.stderr)
+      }
     } catch (error) {
       throw new Error(`Failed to extract audio from video: ${error}`)
     }
@@ -97,21 +115,26 @@ export class VideoProcessor {
   /**
    * 人声分离
    * 使用 Demucs（效果更好）或 Spleeter
+   * SECURITY: 使用 spawn 安全执行
    */
   private async separateVocals(audioPath: string, taskId: string): Promise<string> {
     const outputDir = path.join(this.config.tempDir, taskId)
 
     try {
       // 使用 Demucs 进行人声分离
-      // Demucs 会将音频分离为：drums, bass, other, vocals
-      execSync(
-        `${this.config.pythonPath} -m demucs --two-stems=vocals ` +
-        `-o "${outputDir}" "${audioPath}"`,
-        {
-          stdio: 'pipe',
-          timeout: this.config.timeout,
-        }
-      )
+      // SECURITY: 参数作为数组传递，不通过 shell 解释
+      const result = await safeExec(this.config.pythonPath, [
+        '-m', 'demucs',
+        '--two-stems=vocals',
+        '-o', outputDir,
+        audioPath,
+      ], {
+        timeout: this.config.timeout,
+      })
+
+      if (!result.success) {
+        throw new Error(result.stderr)
+      }
     } catch (error) {
       // 如果 Demucs 失败，尝试使用备用方案
       console.warn('[VideoProcessor] Demucs failed, trying fallback...')
@@ -138,17 +161,24 @@ export class VideoProcessor {
   /**
    * 人声分离备用方案
    * 使用 ffmpeg 的 pan 滤镜简单提取中声道（效果较差，但作为备用）
+   * SECURITY: 使用 spawn 安全执行
    */
   private async separateVocalsFallback(audioPath: string, taskId: string): Promise<string> {
     const outputPath = path.join(this.config.tempDir, `${taskId}_vocals_fallback.wav`)
 
-    // 简单的中央声道提取（用于人声）
-    execSync(
-      `ffmpeg -y -i "${audioPath}" ` +
-      `-af "pan=mono|c0=0.5*c0+0.5*c1" ` +
-      `"${outputPath}"`,
-      { stdio: 'pipe', timeout: 60000 }
-    )
+    const result = await safeExec('ffmpeg', [
+      '-y',
+      '-i', audioPath,
+      '-af', 'pan=mono|c0=0.5*c0+0.5*c1',
+      outputPath,
+    ], {
+      timeout: 60000,
+      throwOnError: true,
+    })
+
+    if (!result.success) {
+      throw new Error(`Fallback separation failed: ${result.stderr}`)
+    }
 
     await fs.access(outputPath)
     return outputPath
@@ -156,6 +186,7 @@ export class VideoProcessor {
 
   /**
    * 音频质量检测
+   * SECURITY: 使用 safeFfprobe 替代 execSync
    */
   async validateQuality(audioPath: string): Promise<AudioQualityResult> {
     const issues: string[] = []
@@ -166,14 +197,15 @@ export class VideoProcessor {
     let isSilent = false
 
     try {
-      // 使用 ffprobe 获取音频信息
-      const probeResult = execSync(
-        `ffprobe -v quiet -print_format json -show_format -show_streams "${audioPath}"`,
-        { encoding: 'utf-8' }
-      )
+      // SECURITY: 使用安全的 ffprobe
+      const probeResult = await safeFfprobe(audioPath)
 
-      const info = JSON.parse(probeResult)
-      duration = parseFloat(info.format.duration) || 0
+      if (!probeResult.success) {
+        throw new Error(probeResult.stderr)
+      }
+
+      const info = JSON.parse(probeResult.stdout)
+      duration = parseFloat(info.format?.duration) || 0
 
       // 检查时长
       if (duration < 30) {
@@ -184,13 +216,17 @@ export class VideoProcessor {
         score *= 0.8
       }
 
-      // 检查音量
-      const volumeResult = execSync(
-        `ffmpeg -i "${audioPath}" -af "volumedetect" -f null /dev/null 2>&1 | grep "mean_volume"`,
-        { encoding: 'utf-8' }
-      ).trim()
+      // 检查音量 - 使用安全的 ffmpeg 执行
+      const volumeResult = await safeExec('ffmpeg', [
+        '-i', audioPath,
+        '-af', 'volumedetect',
+        '-f', 'null',
+        '-',
+      ], {
+        timeout: 30000,
+      })
 
-      const volumeMatch = volumeResult.match(/mean_volume: ([-\d.]+)/)
+      const volumeMatch = volumeResult.stderr.match(/mean_volume: ([-\d.]+)/)
       if (volumeMatch) {
         volumeLevel = parseFloat(volumeMatch[1])
         // mean_volume 是负数，越接近 0 越响
@@ -206,7 +242,6 @@ export class VideoProcessor {
       }
 
       // 估算信噪比（简化版）
-      // 实际项目中可以使用更复杂的算法
       snr = volumeLevel ? Math.max(0, 60 + volumeLevel) : undefined
 
     } catch (error) {

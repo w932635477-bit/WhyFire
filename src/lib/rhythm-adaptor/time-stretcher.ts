@@ -1,11 +1,13 @@
 /**
  * 时间拉伸器
  * 高质量时间拉伸，保持音质
+ *
+ * SECURITY: 使用 safeExec 替代 execSync 防止命令注入
  */
 
-import { execSync } from 'child_process'
 import path from 'path'
 import fs from 'fs/promises'
+import { safeExec, validatePath } from '../utils/safe-exec'
 import type { TimeStretchOptions } from './types'
 
 /**
@@ -25,7 +27,7 @@ export class TimeStretcher {
 
   constructor(config?: Partial<TimeStretcherConfig>) {
     this.config = {
-      tempDir: config?.tempDir || '/tmp/dialect-rap/stretch',
+      tempDir: config?.tempDir || process.env.STRETCH_TEMP_DIR || '/tmp/dialect-rap/stretch',
       timeout: config?.timeout || 60000,
     }
   }
@@ -42,6 +44,14 @@ export class TimeStretcher {
       preservePitch = true,
     } = options
 
+    // 安全验证
+    if (!validatePath(inputPath)) {
+      throw new Error('Invalid input path')
+    }
+    if (!validatePath(outputPath)) {
+      throw new Error('Invalid output path')
+    }
+
     // 确保输出目录存在
     await fs.mkdir(path.dirname(outputPath), { recursive: true })
 
@@ -55,6 +65,7 @@ export class TimeStretcher {
   /**
    * 使用 Rubberband 进行高质量拉伸
    * 需要安装 rubberband-cli
+   * SECURITY: 使用 spawn 安全执行
    */
   private async stretchWithRubberband(
     inputPath: string,
@@ -66,21 +77,27 @@ export class TimeStretcher {
       // rubberband 的 --time 参数指定拉伸后的时长比例
       const timeRatio = 1 / ratio // 反转：ratio > 1 表示加速，< 1 表示减速
 
-      const command = [
-        'rubberband',
+      // SECURITY: 使用数组参数，不通过 shell 解释
+      const args = [
         '--time', timeRatio.toString(),
-        preservePitch ? '--pitch-hunting' : '',
         '--fine',  // 使用高质量模式
         '--formant', // 保持共振峰
         '--channels', '1', // 单声道
-        inputPath,
-        outputPath,
-      ].filter(Boolean).join(' ')
+      ]
 
-      execSync(command, {
+      if (preservePitch) {
+        args.push('--pitch-hunting')
+      }
+
+      args.push(inputPath, outputPath)
+
+      const result = await safeExec('rubberband', args, {
         timeout: this.config.timeout,
-        stdio: 'pipe',
       })
+
+      if (!result.success) {
+        throw new Error(result.stderr)
+      }
 
       return outputPath
     } catch (error) {
@@ -92,6 +109,7 @@ export class TimeStretcher {
   /**
    * 使用 ffmpeg atempo 滤镜进行拉伸
    * 作为备用方案，质量较低但更通用
+   * SECURITY: 使用 spawn 安全执行
    */
   private async stretchWithFfmpeg(
     inputPath: string,
@@ -104,18 +122,22 @@ export class TimeStretcher {
     const atempoFilters = this.calculateAtempoFilters(ratio)
     const filterString = atempoFilters.map(r => `atempo=${r}`).join(',')
 
-    const command = [
-      'ffmpeg -y',
-      `-i "${inputPath}"`,
-      preservePitch ? '' : '-af "asetrate=44100"',
-      `-af "${filterString}"`,
-      `"${outputPath}"`,
-    ].filter(Boolean).join(' ')
+    // SECURITY: 使用数组参数
+    const args = ['-y', '-i', inputPath]
 
-    execSync(command, {
+    if (!preservePitch) {
+      args.push('-af', 'asetrate=44100')
+    }
+
+    args.push('-af', filterString, outputPath)
+
+    const result = await safeExec('ffmpeg', args, {
       timeout: this.config.timeout,
-      stdio: 'pipe',
     })
+
+    if (!result.success) {
+      throw new Error(`FFmpeg stretch failed: ${result.stderr}`)
+    }
 
     return outputPath
   }
@@ -168,6 +190,7 @@ export class TimeStretcher {
   /**
    * 拉伸并拼接
    * 将多个音频片段拉伸后按顺序拼接
+   * SECURITY: 使用 spawn 安全执行
    */
   async stretchAndConcat(
     segments: Array<{
@@ -196,27 +219,40 @@ export class TimeStretcher {
 
     // 2. 创建静音基底
     const silentBase = path.join(tempDir, 'silent_base.wav')
-    execSync(
-      `ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t ${totalDuration / 1000} "${silentBase}"`,
-      { stdio: 'pipe' }
-    )
+    await safeExec('ffmpeg', [
+      '-y',
+      '-f', 'lavfi',
+      '-i', 'anullsrc=r=44100:cl=mono',
+      '-t', (totalDuration / 1000).toString(),
+      silentBase,
+    ])
 
     // 3. 将每个片段放到正确位置
-    const filterComplex = stretchedFiles.map((file, i) => {
+    // 这里简化处理，实际项目中需要更复杂的 filter_complex
+    const inputArgs: string[] = ['-i', silentBase]
+    stretchedFiles.forEach(f => {
+      inputArgs.push('-i', f)
+    })
+
+    const filterParts = stretchedFiles.map((_, i) => {
       const startTime = segments[i].startTime / 1000
       return `[${i + 1}:a]adelay=${Math.round(startTime * 1000)}|${Math.round(startTime * 1000)}[a${i}]`
-    }).join(';')
+    })
 
-    const inputArgs = stretchedFiles.map(f => `-i "${f}"`).join(' ')
     const mixInputs = ['[0:a]', ...stretchedFiles.map((_, i) => `[a${i}]`)].join('')
     const mixFilter = `${mixInputs}amix=inputs=${stretchedFiles.length + 1}:duration=first[out]`
 
-    execSync(
-      `ffmpeg -y -i "${silentBase}" ${inputArgs} ` +
-      `-filter_complex "${filterComplex};${mixFilter}" ` +
-      `-map "[out]" "${outputPath}"`,
-      { stdio: 'pipe', timeout: this.config.timeout }
-    )
+    const args = [
+      '-y',
+      ...inputArgs,
+      '-filter_complex', `${filterParts.join(';')};${mixFilter}`,
+      '-map', '[out]',
+      outputPath,
+    ]
+
+    await safeExec('ffmpeg', args, {
+      timeout: this.config.timeout,
+    })
 
     // 4. 清理临时文件
     await fs.rm(tempDir, { recursive: true, force: true })

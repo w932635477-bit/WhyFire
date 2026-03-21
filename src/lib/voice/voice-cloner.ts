@@ -1,11 +1,13 @@
 /**
  * 声音克隆器
  * 使用 GPT-SoVITS 进行声音克隆和音色转换
+ *
+ * SECURITY: 使用 safeExec 替代 execSync 防止命令注入
  */
 
-import { execSync } from 'child_process'
 import path from 'path'
 import fs from 'fs/promises'
+import { safeExec, validatePath, validateUserId } from '../utils/safe-exec'
 import type { VoiceProfile, VoiceCloneOptions, VoiceConvertOptions } from './types'
 
 /**
@@ -26,7 +28,7 @@ export class VoiceCloner {
 
   constructor(config?: Partial<VoiceClonerConfig>) {
     this.config = {
-      modelDir: config?.modelDir || '/data/voice-models',
+      modelDir: config?.modelDir || process.env.VOICE_MODEL_DIR || '/data/voice-models',
       pythonPath: config?.pythonPath || process.env.PYTHON_PATH || 'python3',
       timeout: config?.timeout || 600000, // 10分钟
     }
@@ -38,6 +40,15 @@ export class VoiceCloner {
    */
   async clone(options: VoiceCloneOptions): Promise<VoiceProfile> {
     const { audioPath, userId, text, userType } = options
+
+    // 安全验证
+    if (!validateUserId(userId)) {
+      throw new Error('Invalid user ID format')
+    }
+    if (!validatePath(audioPath)) {
+      throw new Error('Invalid audio path')
+    }
+
     const modelPath = path.join(this.config.modelDir, userId)
 
     console.log(`[VoiceCloner] Training voice model for user ${userId}...`)
@@ -55,20 +66,23 @@ export class VoiceCloner {
     // 调用 GPT-SoVITS 训练脚本
     const scriptPath = path.join(__dirname, 'python', 'train_gpt_sovits.py')
 
-    try {
-      const result = execSync(
-        `${this.config.pythonPath} "${scriptPath}" ` +
-        `--audio "${audioPath}" ` +
-        `--output "${modelPath}" ` +
-        (text ? `--text "${text}"` : ''),
-        {
-          encoding: 'utf-8',
-          timeout: this.config.timeout,
-          maxBuffer: 100 * 1024 * 1024,
-        }
-      )
+    // SECURITY: 使用 spawn 安全执行，参数作为数组传递，不通过 shell 解释
+    const args = [
+      scriptPath,
+      '--audio', audioPath,
+      '--output', modelPath,
+    ]
+    if (text) {
+      args.push('--text', text)
+    }
 
-      const response = JSON.parse(result)
+    try {
+      const result = await safeExec(this.config.pythonPath, args, {
+        timeout: this.config.timeout,
+        throwOnError: true,
+      })
+
+      const response = JSON.parse(result.stdout)
 
       if (response.status !== 'success') {
         throw new Error(`Voice cloning failed: ${response.message}`)
@@ -105,22 +119,35 @@ export class VoiceCloner {
    */
   async synthesize(options: VoiceConvertOptions): Promise<string> {
     const { text, voiceProfile, outputPath, dialect } = options
+
+    // 安全验证
+    if (!validatePath(voiceProfile.modelPath)) {
+      throw new Error('Invalid model path')
+    }
+    if (!validatePath(outputPath)) {
+      throw new Error('Invalid output path')
+    }
+
     const scriptPath = path.join(__dirname, 'python', 'inference_gpt_sovits.py')
 
-    try {
-      const result = execSync(
-        `${this.config.pythonPath} "${scriptPath}" ` +
-        `--model "${voiceProfile.modelPath}" ` +
-        `--text "${text}" ` +
-        `--output "${outputPath}" ` +
-        (dialect ? `--dialect "${dialect}"` : ''),
-        {
-          encoding: 'utf-8',
-          timeout: 120000,
-        }
-      )
+    // SECURITY: 使用 spawn 安全执行
+    const args = [
+      scriptPath,
+      '--model', voiceProfile.modelPath,
+      '--text', text,
+      '--output', outputPath,
+    ]
+    if (dialect) {
+      args.push('--dialect', dialect)
+    }
 
-      const response = JSON.parse(result)
+    try {
+      const result = await safeExec(this.config.pythonPath, args, {
+        timeout: 120000,
+        throwOnError: true,
+      })
+
+      const response = JSON.parse(result.stdout)
 
       if (response.status !== 'success') {
         throw new Error(`Voice synthesis failed: ${response.message}`)
@@ -137,6 +164,10 @@ export class VoiceCloner {
    * 加载现有的声音配置
    */
   async loadProfile(userId: string): Promise<VoiceProfile | null> {
+    if (!validateUserId(userId)) {
+      return null
+    }
+
     const profilePath = path.join(this.config.modelDir, userId, 'profile.json')
 
     try {
@@ -199,6 +230,10 @@ export class VoiceCloner {
    * 删除声音配置
    */
   async deleteProfile(userId: string): Promise<void> {
+    if (!validateUserId(userId)) {
+      throw new Error('Invalid user ID')
+    }
+
     const modelPath = path.join(this.config.modelDir, userId)
     await fs.rm(modelPath, { recursive: true, force: true })
   }

@@ -1,10 +1,12 @@
 /**
  * BPM 检测器
  * 使用 web-audio-beat-detector 或 librosa 检测 BPM
+ *
+ * SECURITY: 使用 safeExec 替代 execSync 防止命令注入
  */
 
-import { execSync } from 'child_process'
 import path from 'path'
+import { safeExec, validatePath } from '../utils/safe-exec'
 import type { BpmDetectResult, BeatTiming } from './types'
 
 /**
@@ -32,6 +34,11 @@ export class BpmDetector {
    * 检测音频 BPM
    */
   async detect(audioPath: string): Promise<BpmDetectResult> {
+    // 安全验证
+    if (!validatePath(audioPath)) {
+      throw new Error('Invalid audio path')
+    }
+
     // 方案 1: 使用 Python librosa（更准确）
     // 方案 2: 使用 ffmpeg（备用）
 
@@ -45,20 +52,22 @@ export class BpmDetector {
 
   /**
    * 使用 librosa 检测 BPM（推荐）
+   * SECURITY: 使用 spawn 安全执行
    */
   private async detectWithLibrosa(audioPath: string): Promise<BpmDetectResult> {
     const scriptPath = path.join(__dirname, 'python', 'detect_bpm.py')
 
     try {
-      const result = execSync(
-        `${this.config.pythonPath} "${scriptPath}" --audio "${audioPath}"`,
-        {
-          encoding: 'utf-8',
-          timeout: this.config.timeout,
-        }
-      )
+      // SECURITY: 使用数组参数，不通过 shell 解释
+      const result = await safeExec(this.config.pythonPath, [
+        scriptPath,
+        '--audio', audioPath,
+      ], {
+        timeout: this.config.timeout,
+        throwOnError: true,
+      })
 
-      return JSON.parse(result)
+      return JSON.parse(result.stdout)
     } catch (error) {
       throw new Error(`Librosa BPM detection failed: ${error}`)
     }
@@ -67,15 +76,19 @@ export class BpmDetector {
   /**
    * 使用 ffmpeg 检测 BPM（备用方案）
    * 准确度较低，但不需要 Python
+   * SECURITY: 使用 spawn 安全执行
    */
   private async detectWithFfmpeg(audioPath: string): Promise<BpmDetectResult> {
     try {
       // 使用 ffmpeg 的 ebur128 滤镜分析音频能量
-      // 这不是真正的 BPM 检测，只是一个粗略的估算
-      const result = execSync(
-        `ffmpeg -i "${audioPath}" -af "ebur128" -f null - 2>&1 | grep -i "I:"`,
-        { encoding: 'utf-8' }
-      )
+      const result = await safeExec('ffmpeg', [
+        '-i', audioPath,
+        '-af', 'ebur128',
+        '-f', 'null',
+        '-',
+      ], {
+        timeout: 30000,
+      })
 
       // 从结果中估算 BPM（简化方案）
       // 实际应该使用更专业的算法
@@ -96,20 +109,26 @@ export class BpmDetector {
 
   /**
    * 检测节拍时间点
+   * SECURITY: 使用 spawn 安全执行
    */
   async detectBeats(audioPath: string): Promise<BeatTiming> {
+    if (!validatePath(audioPath)) {
+      throw new Error('Invalid audio path')
+    }
+
     const scriptPath = path.join(__dirname, 'python', 'detect_beats.py')
 
     try {
-      const result = execSync(
-        `${this.config.pythonPath} "${scriptPath}" --audio "${audioPath}"`,
-        {
-          encoding: 'utf-8',
-          timeout: this.config.timeout,
-        }
-      )
+      // SECURITY: 使用数组参数
+      const result = await safeExec(this.config.pythonPath, [
+        scriptPath,
+        '--audio', audioPath,
+      ], {
+        timeout: this.config.timeout,
+        throwOnError: true,
+      })
 
-      return JSON.parse(result)
+      return JSON.parse(result.stdout)
     } catch (error) {
       // 返回默认值
       const bpmResult = await this.detect(audioPath)
