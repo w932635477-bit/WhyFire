@@ -1,9 +1,9 @@
 # WhyFire 方言 Rap 视频生成平台 - 技术设计方案
 
-> 版本：v2.0
+> 版本：v2.1
 > 日期：2026-03-21
 > 作者：WhyFire Team
-> 更新：基于 MoneyPrinterTurbo 开源项目改造方案
+> 更新：基于 MoneyPrinterTurbo 开源项目改造方案 + 完整工程化规范
 
 ---
 
@@ -1123,6 +1123,1557 @@ Phase 5: 上线与优化 (Week 5)
 
 ---
 
+## 十一、测试策略
+
+### 11.1 测试金字塔
+
+```
+                    ┌─────────┐
+                    │   E2E   │  5%
+                    │  Tests  │
+                ┌───┴─────────┴───┐
+                │  Integration    │  15%
+                │     Tests       │
+            ┌───┴─────────────────┴───┐
+            │       Unit Tests        │  80%
+            │                         │
+            └─────────────────────────┘
+```
+
+### 11.2 测试目录结构
+
+```
+tests/
+├── unit/                              # 单元测试
+│   ├── test_festival_service.py       # 节日识别
+│   ├── test_trending_service.py       # 热点搜索
+│   ├── test_dialect_mapper.py         # 方言映射
+│   ├── test_prompt_builder.py         # Prompt 构建
+│   └── test_subtitle_sync.py          # 字幕同步算法
+│
+├── integration/                       # 集成测试
+│   ├── test_tts_integration.py        # TTS 服务集成
+│   ├── test_video_generation.py       # 视频生成
+│   ├── test_lyrics_pipeline.py        # 歌词生成流水线
+│   └── test_full_pipeline.py          # 完整流水线
+│
+├── e2e/                               # 端到端测试
+│   ├── test_dialect_rap_flow.py       # 方言 Rap 完整流程
+│   └── test_api_endpoints.py          # API 端点测试
+│
+├── fixtures/                          # 测试数据
+│   ├── sample_lyrics.json
+│   ├── sample_audio.wav
+│   └── mock_trending.json
+│
+└── conftest.py                        # Pytest 配置
+```
+
+### 11.3 单元测试示例
+
+```python
+# tests/unit/test_festival_service.py
+
+import pytest
+from datetime import date
+from app.services.festival_service import FestivalService, get_time_context
+
+class TestFestivalService:
+    """节日识别服务测试"""
+
+    @pytest.fixture
+    def service(self):
+        return FestivalService()
+
+    def test_get_spring_festival_2026(self, service):
+        """测试 2026 年春节识别"""
+        # 2026 年春节是 2 月 17 日
+        result = service.get_festival(date(2026, 2, 10))  # 春节前一周
+        assert result is not None
+        assert result['id'] == 'spring_festival'
+
+    def test_no_festival_on_normal_day(self, service):
+        """测试普通日期无节日"""
+        result = service.get_festival(date(2026, 3, 15))
+        assert result is None
+
+    def test_get_seasonal_theme_spring(self, service):
+        """测试春季主题识别"""
+        result = service.get_seasonal_theme(date(2026, 4, 1))
+        assert result == 'spring_outing'
+
+    def test_lunar_new_year_calculation(self, service):
+        """测试农历新年计算"""
+        # 2025 年春节: 1 月 29 日
+        assert service.get_lunar_new_year(2025) == date(2025, 1, 29)
+        # 2026 年春节: 2 月 17 日
+        assert service.get_lunar_new_year(2026) == date(2026, 2, 17)
+
+
+# tests/unit/test_dialect_mapper.py
+
+class TestDialectMapper:
+    """方言映射测试"""
+
+    def test_mandarin_mapping(self):
+        from app.services.dialect_tts_service import map_dialect
+        assert map_dialect('mandarin') == 'zh-cn'
+
+    def test_sichuan_mapping(self):
+        from app.services.dialect_tts_service import map_dialect
+        assert map_dialect('sichuan') == 'sc'
+
+    def test_unknown_dialect_fallback(self):
+        from app.services.dialect_tts_service import map_dialect
+        assert map_dialect('unknown') == 'zh-cn'  # 回退到普通话
+```
+
+### 11.4 集成测试示例
+
+```python
+# tests/integration/test_tts_integration.py
+
+import pytest
+import asyncio
+from app.services.dialect_tts_service import DialectTTSService
+
+@pytest.mark.integration
+class TestTTSIntegration:
+    """TTS 服务集成测试"""
+
+    @pytest.fixture
+    def tts_service(self):
+        return DialectTTSService(base_url="http://localhost:8001")
+
+    @pytest.mark.asyncio
+    async def test_generate_mandarin_speech(self, tts_service):
+        """测试普通话语音生成"""
+        result = await tts_service.generate(
+            text="你好世界",
+            dialect="mandarin"
+        )
+        assert result['audio_url'] is not None
+        assert result['duration'] > 0
+
+    @pytest.mark.asyncio
+    async def test_generate_sichuan_speech(self, tts_service):
+        """测试四川话语音生成"""
+        result = await tts_service.generate(
+            text="你是哪个地方的嘛",
+            dialect="sichuan"
+        )
+        assert result['audio_url'] is not None
+
+    @pytest.mark.asyncio
+    async def test_fallback_on_dialect_failure(self, tts_service):
+        """测试方言生成失败时的降级"""
+        # 模拟方言 TTS 不可用
+        result = await tts_service.generate(
+            text="测试降级",
+            dialect="sichuan",
+            fallback=True
+        )
+        # 应该返回普通话结果
+        assert result['audio_url'] is not None
+        assert result['fallback_used'] == True
+```
+
+### 11.5 E2E 测试示例
+
+```python
+# tests/e2e/test_dialect_rap_flow.py
+
+import pytest
+from test_client import APIClient
+
+@pytest.mark.e2e
+class TestDialectRapFlow:
+    """方言 Rap 完整流程 E2E 测试"""
+
+    @pytest.fixture
+    def client(self):
+        return APIClient(base_url="http://localhost:8000")
+
+    def test_full_flow_sichuan_rap(self, client):
+        """测试四川话 Rap 完整生成流程"""
+        # 1. 生成歌词
+        lyrics_resp = client.post("/api/lyrics/generate", json={
+            "scene": "funny",
+            "dialect": "sichuan",
+            "inputs": {"theme": "火锅"},
+            "timeOptions": {"includeTrending": True}
+        })
+        assert lyrics_resp.status_code == 200
+        lyrics_id = lyrics_resp.json()['data']['lyricsId']
+
+        # 2. 生成音乐
+        music_resp = client.post("/api/music/generate", json={
+            "lyrics": lyrics_resp.json()['data']['content'],
+            "dialect": "sichuan",
+            "style": "rap"
+        })
+        assert music_resp.status_code == 200
+        assert music_resp.json()['data']['audioUrl'] is not None
+
+        # 3. 生成视频
+        video_resp = client.post("/api/video/compose", json={
+            "audioUrl": music_resp.json()['data']['audioUrl'],
+            "lyrics": lyrics_resp.json()['data']['content'],
+            "template": "default",
+            "dialect": "sichuan"
+        })
+        assert video_resp.status_code == 200
+        assert video_resp.json()['data']['videoUrl'] is not None
+
+        # 4. 验证完整流程耗时
+        total_time = video_resp.json()['data']['processingTime']
+        assert total_time < 120  # 应在 2 分钟内完成
+```
+
+### 11.6 测试覆盖率要求
+
+| 模块 | 最低覆盖率 | 目标覆盖率 |
+|------|------------|------------|
+| 核心服务 | 80% | 90% |
+| API 路由 | 70% | 85% |
+| 工具函数 | 90% | 95% |
+| 整体项目 | 75% | 85% |
+
+### 11.7 CI/CD 测试流程
+
+```yaml
+# .github/workflows/test.yml
+
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements-test.txt
+      - name: Run unit tests
+        run: pytest tests/unit -v --cov=app --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run integration tests
+        run: pytest tests/integration -v
+        env:
+          REDIS_URL: redis://localhost:6379
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Run E2E tests
+        run: pytest tests/e2e -v --timeout=300
+```
+
+---
+
+## 十二、数据模型设计
+
+### 12.1 核心实体关系图
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Project   │────<│   Video     │>────│   Audio     │
+│             │     │             │     │             │
+│ id          │     │ id          │     │ id          │
+│ name        │     │ status      │     │ url         │
+│ dialect     │     │ duration    │     │ duration    │
+│ scene       │     │ video_url   │     │ dialect     │
+│ user_id     │     │ thumbnail   │     │ provider    │
+│ created_at  │     │ created_at  │     │ created_at  │
+└─────────────┘     └──────┬──────┘     └─────────────┘
+                          │
+                          │ 1:1
+                          ▼
+                   ┌─────────────┐
+                   │   Lyrics    │
+                   │             │
+                   │ id          │
+                   │ content     │
+                   │ word_count  │
+                   │ festival    │
+                   │ trending    │
+                   │ created_at  │
+                   └─────────────┘
+```
+
+### 12.2 数据表定义
+
+```sql
+-- 项目表
+CREATE TABLE projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    user_id UUID REFERENCES users(id),
+    dialect VARCHAR(50) NOT NULL DEFAULT 'mandarin',
+    scene VARCHAR(50) NOT NULL DEFAULT 'funny',
+    status VARCHAR(50) DEFAULT 'draft',
+    config JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 歌词表
+CREATE TABLE lyrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    word_count INTEGER DEFAULT 0,
+    estimated_duration INTEGER DEFAULT 30,
+    festival VARCHAR(50),
+    trending_topics TEXT[],
+    memes TEXT[],
+    prompt_tokens INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 音频表
+CREATE TABLE audios (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    url VARCHAR(500) NOT NULL,
+    duration DECIMAL(10,2),
+    dialect VARCHAR(50) NOT NULL,
+    provider VARCHAR(50) NOT NULL,
+    voice_id VARCHAR(100),
+    file_size INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 视频表
+CREATE TABLE videos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    lyrics_id UUID REFERENCES lyrics(id),
+    audio_id UUID REFERENCES audios(id),
+    status VARCHAR(50) DEFAULT 'pending',
+    url VARCHAR(500),
+    thumbnail_url VARCHAR(500),
+    duration DECIMAL(10,2),
+    template VARCHAR(100),
+    processing_time INTEGER,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- 热点缓存表
+CREATE TABLE trending_cache (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    query VARCHAR(255) NOT NULL,
+    source VARCHAR(50) NOT NULL,
+    data JSONB NOT NULL,
+    fetched_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(query, source)
+);
+
+-- 索引
+CREATE INDEX idx_projects_user_id ON projects(user_id);
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_videos_status ON videos(status);
+CREATE INDEX idx_trending_cache_expires ON trending_cache(expires_at);
+```
+
+### 12.3 TypeScript 类型定义
+
+```typescript
+// types/models.ts
+
+export interface Project {
+  id: string
+  name: string
+  userId: string
+  dialect: DialectType
+  scene: SceneType
+  status: ProjectStatus
+  config: ProjectConfig
+  createdAt: Date
+  updatedAt: Date
+  lyrics?: Lyrics
+  audio?: Audio
+  video?: Video
+}
+
+export interface Lyrics {
+  id: string
+  projectId: string
+  content: string
+  wordCount: number
+  estimatedDuration: number
+  festival?: Festival
+  trendingTopics?: string[]
+  memes?: string[]
+  createdAt: Date
+}
+
+export interface Audio {
+  id: string
+  projectId: string
+  url: string
+  duration: number
+  dialect: DialectType
+  provider: 'cosyvoice' | 'edge' | 'minimax'
+  voiceId?: string
+  createdAt: Date
+}
+
+export interface Video {
+  id: string
+  projectId: string
+  lyricsId: string
+  audioId: string
+  status: VideoStatus
+  url?: string
+  thumbnailUrl?: string
+  duration?: number
+  template: string
+  processingTime?: number
+  errorMessage?: string
+  createdAt: Date
+  completedAt?: Date
+}
+
+export type ProjectStatus = 'draft' | 'processing' | 'completed' | 'failed'
+export type VideoStatus = 'pending' | 'processing' | 'completed' | 'failed'
+```
+
+---
+
+## 十三、API 接口规范
+
+### 13.1 OpenAPI 规范
+
+```yaml
+# openapi.yaml
+
+openapi: 3.0.3
+info:
+  title: WhyFire 方言 Rap API
+  version: 2.0.0
+  description: 方言 Rap 视频生成平台 API
+
+servers:
+  - url: https://api.whyfire.ai/v2
+    description: 生产环境
+  - url: http://localhost:8000/v2
+    description: 开发环境
+
+tags:
+  - name: lyrics
+    description: 歌词生成
+  - name: music
+    description: 音乐生成
+  - name: video
+    description: 视频合成
+
+paths:
+  /lyrics/generate:
+    post:
+      tags: [lyrics]
+      summary: 生成歌词
+      operationId: generateLyrics
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LyricsGenerateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LyricsGenerateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /music/generate:
+    post:
+      tags: [music]
+      summary: 生成音乐
+      operationId: generateMusic
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MusicGenerateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MusicGenerateResponse'
+
+  /video/compose:
+    post:
+      tags: [video]
+      summary: 合成视频
+      operationId: composeVideo
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoComposeRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoComposeResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LyricsGenerateRequest:
+      type: object
+      required: [scene, dialect]
+      properties:
+        scene:
+          type: string
+          enum: [product, funny, ip, vlog]
+          example: funny
+        dialect:
+          type: string
+          enum: [mandarin, cantonese, sichuan, dongbei, shandong, henan, shaanxi, wu, minnan, hakka]
+          example: sichuan
+        inputs:
+          type: object
+          properties:
+            productName:
+              type: string
+            sellingPoints:
+              type: array
+              items:
+                type: string
+            theme:
+              type: string
+              example: 火锅
+        timeOptions:
+          type: object
+          properties:
+            includeFestival:
+              type: boolean
+              default: true
+            includeTrending:
+              type: boolean
+              default: true
+            includeMemes:
+              type: boolean
+              default: false
+
+    LyricsGenerateResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        data:
+          type: object
+          properties:
+            lyricsId:
+              type: string
+              format: uuid
+            content:
+              type: string
+            wordCount:
+              type: integer
+            estimatedDuration:
+              type: integer
+            meta:
+              type: object
+              properties:
+                festival:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                trendingTopics:
+                  type: array
+                  items:
+                    type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 400
+            message: "Invalid dialect: unknown"
+
+    Unauthorized:
+      description: 未授权
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 401
+            message: "Missing or invalid token"
+
+    RateLimited:
+      description: 请求频率超限
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 429
+            message: "Rate limit exceeded. Try again in 60 seconds."
+
+    InternalError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 500
+            message: "Internal server error"
+```
+
+### 13.2 API 版本策略
+
+| 版本 | 状态 | 说明 |
+|------|------|------|
+| v1 | 废弃 | 原有 WhyFire API |
+| v2 | 当前 | 方言 Rap 增强版 API |
+| v3 | 规划中 | 支持更多方言和功能 |
+
+---
+
+## 十四、安全方案
+
+### 14.1 认证与授权
+
+```python
+# app/middleware/auth.py
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import jwt
+
+security = HTTPBearer()
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> dict:
+    """验证 JWT Token"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM]
+        )
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+
+async def get_current_active_user(
+    user: dict = Depends(get_current_user)
+) -> dict:
+    """验证用户是否活跃"""
+    if not user.get('is_active'):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is disabled"
+        )
+    return user
+```
+
+### 14.2 速率限制
+
+```python
+# app/middleware/rate_limit.py
+
+from fastapi import Request, HTTPException
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
+# 速率限制配置
+RATE_LIMITS = {
+    "lyrics_generate": "10/minute",    # 歌词生成：每分钟 10 次
+    "music_generate": "5/minute",      # 音乐生成：每分钟 5 次
+    "video_compose": "3/minute",       # 视频合成：每分钟 3 次
+    "default": "100/minute"            # 默认：每分钟 100 次
+}
+
+@app.exception_handler(429)
+async def rate_limit_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "code": 429,
+            "message": "Rate limit exceeded",
+            "retry_after": exc.headers.get("Retry-After", 60)
+        }
+    )
+```
+
+### 14.3 输入验证
+
+```python
+# app/validators.py
+
+from pydantic import BaseModel, validator, constr
+from typing import Optional, List
+import re
+
+class LyricsGenerateRequest(BaseModel):
+    scene: constr(strip_whitespace=True, min_length=1, max_length=50)
+    dialect: constr(strip_whitespace=True, min_length=1, max_length=50)
+    inputs: Optional[dict] = {}
+    timeOptions: Optional[dict] = {}
+
+    @validator('scene')
+    def validate_scene(cls, v):
+        valid_scenes = ['product', 'funny', 'ip', 'vlog']
+        if v not in valid_scenes:
+            raise ValueError(f'Invalid scene: {v}')
+        return v
+
+    @validator('dialect')
+    def validate_dialect(cls, v):
+        valid_dialects = ['mandarin', 'cantonese', 'sichuan', 'dongbei',
+                          'shandong', 'henan', 'shaanxi', 'wu', 'minnan', 'hakka']
+        if v not in valid_dialects:
+            raise ValueError(f'Invalid dialect: {v}')
+        return v
+
+    @validator('inputs')
+    def sanitize_inputs(cls, v):
+        """防止 XSS 和注入攻击"""
+        if 'theme' in v and v['theme']:
+            # 移除潜在危险字符
+            v['theme'] = re.sub(r'[<>"\']', '', v['theme'])
+        return v
+
+    class Config:
+        str_strip_whitespace = True
+```
+
+### 14.4 敏感数据处理
+
+```python
+# app/utils/secrets.py
+
+import os
+from cryptography.fernet import Fernet
+
+class SecretsManager:
+    """敏感数据加密管理"""
+
+    def __init__(self):
+        key = os.environ.get('ENCRYPTION_KEY')
+        if not key:
+            raise ValueError("ENCRYPTION_KEY not set")
+        self.cipher = Fernet(key.encode())
+
+    def encrypt(self, data: str) -> str:
+        """加密敏感数据"""
+        return self.cipher.encrypt(data.encode()).decode()
+
+    def decrypt(self, encrypted: str) -> str:
+        """解密敏感数据"""
+        return self.cipher.decrypt(encrypted.encode()).decode()
+
+    @staticmethod
+    def mask_api_key(key: str) -> str:
+        """掩码 API Key 用于日志"""
+        if len(key) <= 8:
+            return '****'
+        return key[:4] + '****' + key[-4:]
+```
+
+### 14.5 安全检查清单
+
+| 检查项 | 状态 | 说明 |
+|--------|------|------|
+| JWT 认证 | ✅ | Bearer Token |
+| 速率限制 | ✅ | 按端点配置 |
+| 输入验证 | ✅ | Pydantic 验证 |
+| SQL 注入防护 | ✅ | 使用 ORM |
+| XSS 防护 | ✅ | 输入过滤 |
+| CORS 配置 | ✅ | 白名单机制 |
+| HTTPS 强制 | ✅ | 生产环境强制 |
+| 日志脱敏 | ✅ | API Key 掩码 |
+
+---
+
+## 十五、监控与日志
+
+### 15.1 监控架构
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          监控架构                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────────┐ │
+│  │ Prometheus  │───>│  Grafana    │───>│        告警              │ │
+│  │ (指标收集)   │    │  (可视化)   │    │  (Email/Slack/Webhook) │ │
+│  └─────────────┘    └─────────────┘    └─────────────────────────┘ │
+│         ▲                                                         │
+│         │                                                         │
+│  ┌──────┴──────┐    ┌─────────────┐    ┌─────────────────────────┐ │
+│  │  Exporter   │    │  Loki       │    │     日志查询             │ │
+│  │ (应用指标)   │    │  (日志)     │    │     (Grafana)           │ │
+│  └─────────────┘    └─────────────┘    └─────────────────────────┘ │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 15.2 Docker Compose 监控配置
+
+```yaml
+# docker-compose.monitoring.yml
+
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+      - loki
+
+  loki:
+    image: grafana/loki:2.8.0
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+
+  node_exporter:
+    image: prom/node-exporter:v1.6.0
+    ports:
+      - "9100:9100"
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+```
+
+### 15.3 关键监控指标
+
+```python
+# app/monitoring/metrics.py
+
+from prometheus_client import Counter, Histogram, Gauge
+
+# 请求计数
+REQUEST_COUNT = Counter(
+    'whyfire_request_total',
+    'Total request count',
+    ['method', 'endpoint', 'status']
+)
+
+# 请求延迟
+REQUEST_LATENCY = Histogram(
+    'whyfire_request_latency_seconds',
+    'Request latency in seconds',
+    ['method', 'endpoint'],
+    buckets=[0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0]
+)
+
+# 活跃任务
+ACTIVE_TASKS = Gauge(
+    'whyfire_active_tasks',
+    'Number of active processing tasks',
+    ['task_type']
+)
+
+# TTS 生成时间
+TTS_GENERATION_TIME = Histogram(
+    'whyfire_tts_generation_seconds',
+    'Time to generate TTS audio',
+    ['dialect', 'provider'],
+    buckets=[1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0]
+)
+
+# 视频生成时间
+VIDEO_GENERATION_TIME = Histogram(
+    'whyfire_video_generation_seconds',
+    'Time to generate video',
+    ['template'],
+    buckets=[10.0, 30.0, 60.0, 120.0, 180.0, 300.0]
+)
+
+# 缓存命中率
+CACHE_HIT_RATIO = Gauge(
+    'whyfire_cache_hit_ratio',
+    'Cache hit ratio',
+    ['cache_type']
+)
+```
+
+### 15.4 告警规则
+
+```yaml
+# monitoring/alerts.yml
+
+groups:
+  - name: whyfire_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(whyfire_request_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} requests/s"
+
+      - alert: SlowVideoGeneration
+        expr: histogram_quantile(0.95, rate(whyfire_video_generation_seconds_bucket[5m])) > 180
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Video generation is slow"
+          description: "95th percentile is {{ $value }}s"
+
+      - alert: TTSProviderDown
+        expr: up{job="cosyvoice"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CosyVoice TTS service is down"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage > 90%"
+
+      - alert: GPUMemoryHigh
+        expr: nvidia_gpu_memory_used_bytes / nvidia_gpu_memory_total_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU memory usage > 90%"
+```
+
+### 15.5 日志规范
+
+```python
+# app/utils/logger.py
+
+import logging
+import json
+from datetime import datetime
+
+class StructuredLogger:
+    """结构化日志"""
+
+    def __init__(self, name: str):
+        self.logger = logging.getLogger(name)
+
+    def log(self, level: str, message: str, **kwargs):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": level,
+            "message": message,
+            **kwargs
+        }
+        self.logger.log(
+            getattr(logging, level.upper()),
+            json.dumps(log_entry, ensure_ascii=False)
+        )
+
+    def info(self, message: str, **kwargs):
+        self.log("INFO", message, **kwargs)
+
+    def error(self, message: str, **kwargs):
+        self.log("ERROR", message, **kwargs)
+
+# 使用示例
+logger = StructuredLogger("whyfire")
+
+logger.info(
+    "Lyrics generated",
+    lyrics_id="abc123",
+    dialect="sichuan",
+    word_count=120,
+    processing_time=2.5
+)
+
+# 输出:
+# {"timestamp": "2026-03-21T10:30:00Z", "level": "INFO", "message": "Lyrics generated", "lyrics_id": "abc123", "dialect": "sichuan", "word_count": 120, "processing_time": 2.5}
+```
+
+---
+
+## 十六、错误处理规范
+
+### 16.1 错误码定义
+
+| 错误码 | HTTP 状态码 | 说明 | 示例 |
+|--------|-------------|------|------|
+| 0 | 200 | 成功 | - |
+| 400 | 400 | 请求参数错误 | Invalid dialect |
+| 401 | 401 | 未授权 | Token expired |
+| 403 | 403 | 权限不足 | Subscription required |
+| 404 | 404 | 资源不存在 | Project not found |
+| 429 | 429 | 请求频率超限 | Rate limit exceeded |
+| 500 | 500 | 服务器内部错误 | Internal error |
+| 501 | 501 | 功能未实现 | Feature not implemented |
+| 502 | 502 | 上游服务错误 | TTS service unavailable |
+| 503 | 503 | 服务不可用 | Maintenance mode |
+| 504 | 504 | 请求超时 | Generation timeout |
+
+### 16.2 错误响应格式
+
+```json
+{
+  "code": 400,
+  "message": "Invalid request parameters",
+  "details": {
+    "field": "dialect",
+    "value": "unknown",
+    "valid_values": ["mandarin", "cantonese", "sichuan"]
+  },
+  "request_id": "req_abc123",
+  "timestamp": "2026-03-21T10:30:00Z"
+}
+```
+
+### 16.3 错误处理中间件
+
+```python
+# app/middleware/error_handler.py
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+import traceback
+
+class AppException(Exception):
+    """应用异常基类"""
+    def __init__(self, code: int, message: str, details: dict = None):
+        self.code = code
+        self.message = message
+        self.details = details or {}
+
+@app.exception_handler(AppException)
+async def app_exception_handler(request: Request, exc: AppException):
+    return JSONResponse(
+        status_code=exc.code if exc.code >= 400 else 400,
+        content={
+            "code": exc.code,
+            "message": exc.message,
+            "details": exc.details,
+            "request_id": request.state.request_id
+        }
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        errors.append({
+            "field": ".".join(str(loc) for loc in error["loc"]),
+            "message": error["msg"]
+        })
+
+    return JSONResponse(
+        status_code=400,
+        content={
+            "code": 400,
+            "message": "Validation error",
+            "details": {"errors": errors},
+            "request_id": request.state.request_id
+        }
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    # 记录详细错误日志
+    logger.error(
+        "Unhandled exception",
+        error=str(exc),
+        traceback=traceback.format_exc(),
+        request_id=request.state.request_id
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "code": 500,
+            "message": "Internal server error",
+            "request_id": request.state.request_id
+        }
+    )
+```
+
+---
+
+## 十七、降级策略
+
+### 17.1 降级配置
+
+```python
+# app/config/fallback.py
+
+from dataclasses import dataclass
+from typing import Dict, List
+
+@dataclass
+class FallbackConfig:
+    """降级配置"""
+
+    # TTS 降级
+    tts: Dict = None
+
+    # 热点搜索降级
+    trending: Dict = None
+
+    # 视频生成降级
+    video: Dict = None
+
+    def __post_init__(self):
+        self.tts = {
+            "primary": "cosyvoice",           # 首选：方言 TTS
+            "fallback": "edge_tts",           # 降级：Edge TTS
+            "fallback_dialect": "mandarin",   # 降级方言
+            "timeout": 30,                     # 超时时间（秒）
+            "retry": 2,                        # 重试次数
+        }
+
+        self.trending = {
+            "primary": "serper_api",           # 首选：Serper API
+            "fallback": "cached",              # 降级：使用缓存
+            "cache_ttl": 3600,                 # 缓存时间（秒）
+            "max_age": 86400,                  # 最大缓存年龄（秒）
+        }
+
+        self.video = {
+            "primary": "full_generation",      # 首选：完整生成
+            "fallback": "simple_template",     # 降级：简单模板
+            "timeout": 300,                    # 超时时间（秒）
+        }
+
+FALLBACK_CONFIG = FallbackConfig()
+```
+
+### 17.2 TTS 降级实现
+
+```python
+# app/services/dialect_tts_service.py
+
+import asyncio
+from app.config.fallback import FALLBACK_CONFIG
+
+class DialectTTSService:
+    """方言 TTS 服务（带降级）"""
+
+    def __init__(self):
+        self.cosyvoice = CosyVoiceClient()
+        self.edge_tts = EdgeTTSClient()
+
+    async def generate(
+        self,
+        text: str,
+        dialect: str,
+        fallback: bool = True
+    ) -> dict:
+        """生成语音，支持自动降级"""
+
+        config = FALLBACK_CONFIG.tts
+
+        # 尝试首选服务
+        if config["primary"] == "cosyvoice" and dialect != "mandarin":
+            try:
+                result = await asyncio.wait_for(
+                    self.cosyvoice.generate(text, dialect),
+                    timeout=config["timeout"]
+                )
+                result["provider"] = "cosyvoice"
+                result["fallback_used"] = False
+                return result
+            except (TimeoutError, Exception) as e:
+                logger.warning(f"CosyVoice failed: {e}, falling back")
+                if not fallback:
+                    raise
+
+        # 降级到 Edge TTS
+        try:
+            result = await self.edge_tts.generate(
+                text,
+                config["fallback_dialect"]
+            )
+            result["provider"] = "edge_tts"
+            result["fallback_used"] = True
+            result["original_dialect"] = dialect
+            return result
+        except Exception as e:
+            raise AppException(
+                code=502,
+                message="TTS service unavailable",
+                details={"error": str(e)}
+            )
+```
+
+### 17.3 热点服务降级
+
+```python
+# app/services/trending_service.py
+
+from datetime import datetime, timedelta
+from app.config.fallback import FALLBACK_CONFIG
+
+class TrendingService:
+    """热点搜索服务（带降级）"""
+
+    def __init__(self, redis_client):
+        self.redis = redis_client
+        self.serper = SerperClient()
+
+    async def search(self, query: str) -> list:
+        """搜索热点，支持缓存降级"""
+
+        config = FALLBACK_CONFIG.trending
+        cache_key = f"trending:{query}"
+
+        # 尝试从缓存获取
+        cached = await self._get_cache(cache_key)
+        if cached and self._is_fresh(cached, config["max_age"]):
+            logger.info(f"Using cached trending data for: {query}")
+            return cached["data"]
+
+        # 尝试调用 API
+        try:
+            data = await self.serper.search(query)
+            await self._set_cache(cache_key, data, config["cache_ttl"])
+            return data
+        except Exception as e:
+            logger.warning(f"Trending API failed: {e}")
+
+            # 降级使用过期缓存
+            if cached:
+                logger.info(f"Using stale cache for: {query}")
+                return cached["data"]
+
+            # 完全无数据
+            return []
+
+    def _is_fresh(self, cached: dict, max_age: int) -> bool:
+        """检查缓存是否新鲜"""
+        fetched_at = datetime.fromisoformat(cached["fetched_at"])
+        return datetime.utcnow() - fetched_at < timedelta(seconds=max_age)
+```
+
+### 17.4 熔断器实现
+
+```python
+# app/utils/circuit_breaker.py
+
+from enum import Enum
+from datetime import datetime, timedelta
+import asyncio
+
+class CircuitState(Enum):
+    CLOSED = "closed"       # 正常
+    OPEN = "open"           # 熔断
+    HALF_OPEN = "half_open" # 半开
+
+class CircuitBreaker:
+    """熔断器"""
+
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60
+    ):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.failure_count = 0
+        self.state = CircuitState.CLOSED
+        self.last_failure_time = None
+
+    async def call(self, func, *args, **kwargs):
+        """执行调用，带熔断保护"""
+
+        if self.state == CircuitState.OPEN:
+            if self._should_attempt_recovery():
+                self.state = CircuitState.HALF_OPEN
+            else:
+                raise Exception("Circuit breaker is OPEN")
+
+        try:
+            result = await func(*args, **kwargs)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise e
+
+    def _should_attempt_recovery(self) -> bool:
+        if self.last_failure_time is None:
+            return False
+        return datetime.utcnow() - self.last_failure_time > timedelta(
+            seconds=self.recovery_timeout
+        )
+
+    def _on_success(self):
+        self.failure_count = 0
+        self.state = CircuitState.CLOSED
+
+    def _on_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = datetime.utcnow()
+
+        if self.failure_count >= self.failure_threshold:
+            self.state = CircuitState.OPEN
+            logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
+
+# 使用示例
+tts_circuit = CircuitBreaker(failure_threshold=3, recovery_timeout=30)
+
+async def generate_with_circuit(text: str, dialect: str):
+    return await tts_circuit.call(
+        dialect_tts_service.generate,
+        text,
+        dialect
+    )
+```
+
+---
+
+## 十八、性能指标与 SLA
+
+### 18.1 性能目标
+
+| 指标 | 目标值 | 告警阈值 | 说明 |
+|------|--------|----------|------|
+| API 响应时间 (P95) | < 500ms | > 1s | 不含生成任务 |
+| 歌词生成时间 | < 5s | > 10s | LLM 调用 |
+| TTS 生成时间 | < 15s | > 30s | 30秒音频 |
+| 视频生成时间 | < 120s | > 180s | 30秒视频 |
+| 端到端时间 | < 180s | > 300s | 完整流程 |
+
+### 18.2 并发能力
+
+| 资源 | 单实例能力 | 推荐部署 | 说明 |
+|------|------------|----------|------|
+| API 请求 | 100 QPS | 2+ 实例 | 负载均衡 |
+| 歌词生成 | 10 并发 | 按需扩展 | LLM 限制 |
+| TTS 生成 | 5 并发 | 2+ GPU | GPU 限制 |
+| 视频生成 | 3 并发 | 3+ 实例 | CPU/IO 密集 |
+
+### 18.3 资源使用
+
+| 资源 | 最低配置 | 推荐配置 | 说明 |
+|------|----------|----------|------|
+| CPU | 4 核 | 8 核 | API 服务 |
+| 内存 | 8 GB | 16 GB | 视频处理 |
+| GPU | T4 16GB | A10 24GB | CosyVoice |
+| 存储 | 50 GB | 200 GB SSD | 视频/模型 |
+| 网络 | 10 Mbps | 100 Mbps | 带宽 |
+
+---
+
+## 十九、上游同步策略
+
+### 19.1 Fork 管理策略
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Fork 同步策略                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  upstream (harry0703/MoneyPrinterTurbo)                         │
+│       │                                                         │
+│       │ fetch                                                   │
+│       ▼                                                         │
+│  ┌─────────────────────────────────────────┐                   │
+│  │  origin (your-fork/MoneyPrinterTurbo)   │                   │
+│  │                                         │                   │
+│  │  main ────────────────────────────────> │ 生产分支           │
+│  │    │                                    │                   │
+│  │    └── whyfire/ ──────────────────────> │ 改造分支           │
+│  │          │                              │                   │
+│  │          ├── feature/dialect-tts        │ 功能分支           │
+│  │          ├── feature/trending           │ 功能分支           │
+│  │          └── feature/festival           │ 功能分支           │
+│  └─────────────────────────────────────────┘                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 19.2 同步流程
+
+```bash
+# scripts/sync-upstream.sh
+
+#!/bin/bash
+# 每月同步上游更新
+
+set -e
+
+# 1. 添加上游远程（首次）
+git remote add upstream https://github.com/harry0703/MoneyPrinterTurbo.git 2>/dev/null || true
+
+# 2. 获取上游更新
+git fetch upstream
+
+# 3. 创建同步分支
+SYNC_BRANCH="sync/upstream-$(date +%Y%m)"
+git checkout -b $SYNC_BRANCH
+
+# 4. Rebase 到上游 main
+git rebase upstream/main
+
+# 5. 运行测试
+pytest tests/
+
+# 6. 如果测试通过，合并到 whyfire 分支
+if [ $? -eq 0 ]; then
+    git checkout whyfire/main
+    git merge $SYNC_BRANCH
+    echo "Sync completed successfully"
+else
+    echo "Tests failed, please resolve conflicts manually"
+    exit 1
+fi
+```
+
+### 19.3 改造代码隔离策略
+
+```
+app/
+├── services/
+│   ├── __init__.py
+│   ├── audio_service.py          # MPT 原始文件（最小修改）
+│   ├── script_service.py         # MPT 原始文件（最小修改）
+│   │
+│   └── whyfire/                  # WhyFire 改造模块（独立目录）
+│       ├── __init__.py
+│       ├── dialect_tts_service.py
+│       ├── trending_service.py
+│       ├── festival_service.py
+│       └── subtitle_sync_service.py
+│
+├── adapters/                     # 适配器层
+│   ├── tts_adapter.py            # TTS 适配器
+│   └── llm_adapter.py            # LLM 适配器
+│
+└── config/
+    └── whyfire_config.py         # WhyFire 配置
+```
+
+**关键原则：**
+1. **最小修改**：只修改 MPT 核心文件的接口调用点
+2. **独立模块**：改造代码放在 `whyfire/` 独立目录
+3. **适配器模式**：通过适配器连接 MPT 和 WhyFire 模块
+4. **配置隔离**：WhyFire 配置独立于 MPT 配置
+
+### 19.4 版本兼容性矩阵
+
+| MPT 版本 | WhyFire 版本 | 兼容性 | 说明 |
+|----------|--------------|--------|------|
+| v1.2.x | v2.0.x | ✅ | 当前版本 |
+| v1.3.x | v2.1.x | ⚠️ | 需要适配 |
+| v2.0.x | v3.0.x | ❌ | 可能需要重写 |
+
+---
+
 ## 附录 A：MoneyPrinterTurbo 快速开始
 
 ```bash
@@ -1167,4 +2718,4 @@ curl -X POST http://localhost:8001/tts \
 
 ---
 
-*文档结束 - v2.0 - 基于 MoneyPrinterTurbo 改造方案*
+*文档结束 - v2.1 - 基于 MoneyPrinterTurbo 改造方案 + 完整工程化规范*
