@@ -1,6 +1,9 @@
 /**
  * 方言类型定义
  * 支持 18+ 种中国方言
+ *
+ * @deprecated 使用 dialect-v2.ts 替代，仅保留 8 种核心方言
+ * @see dialect-v2.ts
  */
 
 /**

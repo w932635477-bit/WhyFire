@@ -184,4 +184,58 @@ describe('dialect types', () => {
       }
     })
   })
+
+  describe('CosyVoice 支持的 8 种方言', () => {
+    // CosyVoice 只支持以下 8 种方言
+    const COSYVOICE_DIALECTS: DialectCode[] = [
+      'mandarin',   // 普通话
+      'cantonese',  // 粤语
+      'sichuan',    // 四川话
+      'dongbei',    // 东北话
+      'shandong',   // 山东话
+      'henan',      // 河南话
+      'shaanxi',    // 陕西话
+      'wu',         // 吴语（上海话）
+    ]
+
+    it('CosyVoice 应该支持 8 种方言', () => {
+      expect(COSYVOICE_DIALECTS.length).toBe(8)
+    })
+
+    it('CosyVoice 支持的方言都应该在总配置中存在', () => {
+      for (const dialect of COSYVOICE_DIALECTS) {
+        const config = DIALECT_CONFIGS[dialect]
+        expect(config).toBeDefined()
+        expect(config.enabled).toBe(true)
+      }
+    })
+
+    it('CosyVoice 支持的方言应该有对应的 Voice ID', () => {
+      for (const dialect of COSYVOICE_DIALECTS) {
+        const voiceId = DIALECT_VOICE_MAP[dialect]
+        expect(voiceId).toBeDefined()
+        expect(voiceId.length).toBeGreaterThan(0)
+      }
+    })
+
+    it('CosyVoice 不支持的方言应该被正确识别', () => {
+      const unsupportedDialects: DialectCode[] = [
+        'minnan', 'hakka', 'xiang', 'gan', 'jin',
+        'lanyin', 'jianghuai', 'xinan', 'jiaoliao', 'zhongyuan',
+      ]
+
+      // 这些方言在总配置中存在，但 CosyVoice 不支持
+      for (const dialect of unsupportedDialects) {
+        const config = DIALECT_CONFIGS[dialect]
+        expect(config).toBeDefined()
+        expect(COSYVOICE_DIALECTS).not.toContain(dialect)
+      }
+    })
+
+    it('Fish Audio 支持的方言数量应该比 CosyVoice 多', () => {
+      const fishAudioDialects = Object.keys(DIALECT_CONFIGS) as DialectCode[]
+      expect(fishAudioDialects.length).toBe(19)
+      expect(fishAudioDialects.length).toBeGreaterThan(COSYVOICE_DIALECTS.length)
+    })
+  })
 })
