@@ -3,13 +3,14 @@
  * POST /api/music/generate
  * 支持所有 18 种方言
  *
- * 路由策略：
- * - 普通话/粤语/英语 → MiniMax API（支持完整音乐生成）
- * - 其他方言 → Fish Audio TTS（方言语音合成）
+ * 路由策略（优先级）：
+ * 1. Suno API - 真正的音乐生成（所有方言）✅ 推荐
+ * 2. MiniMax API - 普通话/粤语/英语
+ * 3. Fish Audio TTS - 方言语音合成
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { generateMusic, getRecommendedProvider } from '@/lib/music/music-router'
+import { generateMusic, getRecommendedProvider, getAvailableProviders, type MusicProvider } from '@/lib/music/music-router'
 import type { DialectCode } from '@/types/dialect'
 import { DIALECT_CONFIGS, DIALECT_LABELS } from '@/types/dialect'
 
@@ -25,7 +26,7 @@ type MusicStyle = 'rap' | 'pop' | 'electronic' | 'rock' | 'chill'
 interface MusicGenerateRequest {
   /** 歌词内容 */
   lyrics: string
-  /** 方言（支持 18 种） */
+  /** 方言（支持 19 种） */
   dialect: DialectCode
   /** 音乐风格 */
   style?: MusicStyle
@@ -33,6 +34,8 @@ interface MusicGenerateRequest {
   duration?: number
   /** 音色 ID（可选，用于 Fish Audio） */
   voiceId?: string
+  /** 强制使用指定提供商（可选） */
+  forceProvider?: MusicProvider
 }
 
 // 响应类型
@@ -43,7 +46,7 @@ interface MusicGenerateResponse {
     status: 'completed' | 'failed' | 'processing'
     audioUrl?: string
     duration?: number
-    provider?: 'minimax' | 'fish_audio'
+    provider?: MusicProvider
     dialect?: string
   }
   message?: string
@@ -59,7 +62,7 @@ export async function POST(
   try {
     // 解析请求体
     const body: MusicGenerateRequest = await request.json()
-    const { lyrics, dialect, style = 'rap', duration = 30, voiceId } = body
+    const { lyrics, dialect, style = 'rap', duration = 30, voiceId, forceProvider } = body
 
     // 验证必填字段
     if (!lyrics || lyrics.trim().length === 0) {
@@ -98,7 +101,7 @@ export async function POST(
     }
 
     // 获取推荐的服务提供商
-    const provider = getRecommendedProvider(dialect)
+    const provider = forceProvider || getRecommendedProvider(dialect)
     console.log(`[API] 方言: ${dialect} (${DIALECT_LABELS[dialect]}), 使用服务: ${provider}`)
 
     // 生成音乐
@@ -108,10 +111,11 @@ export async function POST(
       style,
       duration,
       voiceId,
+      forceProvider,
     })
 
     // 生成任务 ID
-    const taskId = `music-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const taskId = result.taskId || `music-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
     console.log(`[API] 音乐生成成功: taskId=${taskId}, provider=${result.provider}`)
 
@@ -131,17 +135,23 @@ export async function POST(
     console.error('[API] 音乐生成失败:', error)
 
     // 判断错误类型并返回相应消息
-    let errorMessage = '音乐生成失败，请稍后重试'
+    let errorMessage = '音乐生成失败，请稀后重试'
     let statusCode = 500
 
     if (error instanceof Error) {
-      if (error.message.includes('MINIMAX_API_KEY')) {
+      if (error.message.includes('SUNO_API_KEY')) {
+        errorMessage = '服务配置错误: SUNO_API_KEY 未配置'
+        statusCode = 503
+      } else if (error.message.includes('MINIMAX_API_KEY')) {
         errorMessage = '服务配置错误: MINIMAX_API_KEY 未配置'
       } else if (error.message.includes('FISH_AUDIO_API_KEY')) {
         errorMessage = '服务配置错误: FISH_AUDIO_API_KEY 未配置，无法生成方言语音'
         statusCode = 503
       } else if (error.message.includes('MINIMAX_GROUP_ID')) {
         errorMessage = '服务配置错误: MINIMAX_GROUP_ID 未配置'
+      } else if (error.message.includes('timeout')) {
+        errorMessage = '音乐生成超时，请稀后重试'
+        statusCode = 504
       } else {
         errorMessage = error.message
       }
@@ -160,18 +170,28 @@ export async function POST(
 
 /**
  * GET /api/music/generate
- * 返回支持的方言列表
+ * 返回支持的方言列表和可用的提供商
  */
 export async function GET() {
+  const availableProviders = getAvailableProviders()
+
   return NextResponse.json({
     code: 0,
     data: {
       dialects: Object.entries(DIALECT_LABELS).map(([code, name]) => ({
         code,
         name,
-        provider: getRecommendedProvider(code as DialectCode),
+        recommendedProvider: getRecommendedProvider(code as DialectCode),
       })),
       styles: ['rap', 'pop', 'electronic', 'rock', 'chill'],
+      providers: {
+        available: availableProviders,
+        descriptions: {
+          suno: 'Suno AI 音乐生成（推荐）- 真正的方言音乐',
+          minimax: 'MiniMax - 普通话/粤语/英语',
+          fish_audio: 'Fish Audio TTS - 方言语音合成',
+        },
+      },
     },
   })
 }
