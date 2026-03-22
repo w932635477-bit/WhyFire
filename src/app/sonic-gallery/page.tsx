@@ -289,22 +289,22 @@ export default function SonicGalleryHome() {
               </Link>
             </div>
 
-            {/* Tech Card */}
-            <div className="mt-20 max-w-xl">
-              <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl hover:bg-white/[0.05] hover:border-white/[0.1] transition-all duration-500">
+            {/* Tech Card - Refined */}
+            <div className="mt-16 max-w-lg">
+              <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-500">
                 <div className="flex items-start gap-4">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex-shrink-0">
-                    <span className="material-symbols-outlined text-white text-lg">
+                  <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-white/70 text-lg">
                       auto_awesome
                     </span>
                   </div>
-                  <div>
-                    <h3 className="text-white font-semibold text-sm mb-1">
+                  <div className="flex-1">
+                    <h3 className="text-white font-medium text-sm mb-2">
                       核心技术
                     </h3>
-                    <p className="text-white/50 text-sm leading-relaxed">
-                      集成 <span className="text-white/70 font-medium">GPT-SoVITS</span> 情感合成与{' '}
-                      <span className="text-white/70 font-medium">Demucs</span>{' '}
+                    <p className="text-white/40 text-sm leading-relaxed">
+                      集成 <span className="text-white/60">GPT-SoVITS</span> 情感合成与{' '}
+                      <span className="text-white/60">Demucs</span>{' '}
                       音轨分离技术。仅需 5 秒样本，捕捉细微咬字特征。
                     </p>
                   </div>
@@ -406,48 +406,50 @@ export default function SonicGalleryHome() {
         </div>
       </section>
 
-      {/* Visual Section */}
-      <section className="py-32 bg-[#080808]">
-        <div className="max-w-6xl mx-auto px-8 lg:px-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* Visual Section - Refined */}
+      <section className="py-24 bg-[#080808]">
+        <div className="max-w-5xl mx-auto px-8 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7 rounded-2xl overflow-hidden aspect-video relative group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&q=80"
               alt="录音工作室"
-              className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
+              className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <button className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center hover:scale-110 hover:bg-white/20 transition-all duration-300 border border-white/20">
-                <span className="material-symbols-outlined text-white text-4xl">
+              <button className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:scale-110 hover:bg-white/20 transition-all duration-300 border border-white/10">
+                <span className="material-symbols-outlined text-white text-3xl">
                   play_arrow
                 </span>
               </button>
             </div>
           </div>
 
-          <div className="lg:col-span-5 space-y-6">
-            <span className="text-emerald-400 text-sm font-medium tracking-wider uppercase">
+          <div className="lg:col-span-5 space-y-5">
+            <span className="text-emerald-400 text-xs font-medium tracking-widest uppercase">
               创作流程
             </span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight tracking-tight">
               像写诗一样，
               <br />
               构建你的数字回响。
             </h2>
-            <p className="text-white/40 leading-relaxed">
-              我们打破了技术与艺术的边界。在这里，你只需要输入歌词，选择方言风格，人工智能就会根据你的声线特征生成极具张力的说唱段落。
+            <p className="text-white/40 text-sm leading-relaxed">
+              打破技术与艺术的边界。输入歌词，选择方言风格，AI 将根据你的声线特征生成极具张力的说唱段落。
             </p>
 
-            <div className="pt-8 border-t border-white/[0.06] flex gap-12">
+            {/* Stats - Refined */}
+            <div className="pt-6 border-t border-white/[0.06] flex gap-10">
               <div>
-                <div className="text-3xl font-bold text-white">99%</div>
-                <div className="text-xs text-white/30 uppercase tracking-wider mt-1">
+                <div className="text-2xl font-bold text-white tracking-tight">99%</div>
+                <div className="text-xs text-white/30 tracking-wide mt-1">
                   声纹相似度
                 </div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-white">2400+</div>
-                <div className="text-xs text-white/30 uppercase tracking-wider mt-1">
+                <div className="text-2xl font-bold text-white tracking-tight">2400+</div>
+                <div className="text-xs text-white/30 tracking-wide mt-1">
                   方言词条
                 </div>
               </div>
