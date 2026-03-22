@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useCreateContext } from './create-context'
+import { generateLyrics, ApiError } from '@/lib/services/create-api'
 
 interface Step3LyricsGenerationProps {
   onNext: () => void
@@ -28,6 +29,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
   const [isGenerating, setIsGenerating] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editedLyrics, setEditedLyrics] = useState(state.lyrics.generatedLyrics)
+  const [error, setError] = useState<string | null>(null)
 
   const toggleTopic = (topicId: string) => {
     setTopics(
@@ -45,9 +47,37 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
     )
   }
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true)
-    // 模拟生成过程
+    setError(null)
+
+    try {
+      // 调用实际 API
+      const result = await generateLyrics({
+        scene: 'funny',
+        dialect: state.dialect.selected as any,
+        selfDescription: state.lyrics.selfDescription,
+        selectedTopics: state.lyrics.selectedTopics,
+        selectedMemes: state.lyrics.selectedMemes,
+        timeOptions: {
+          includeFestival: true,
+          includeTrending: true,
+          includeMemes: state.lyrics.selectedMemes.length > 0,
+        },
+      })
+
+      setLyrics(result.content)
+      setEditedLyrics(result.content)
+    } catch (err) {
+      console.error('歌词生成失败:', err)
+      if (err instanceof ApiError) {
+        setError(err.message)
+      } else {
+        setError('歌词生成失败，请稍后重试')
+      }
+    } finally {
+      setIsGenerating(false)
+    }
     setTimeout(() => {
       // 这里应该调用 API 生成歌词
       const newLyrics = `(前奏)
@@ -246,6 +276,24 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
               </span>
             </div>
           </button>
+
+          {/* Error Display */}
+          {error && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-400 text-lg">error</span>
+              <div className="flex-1">
+                <p className="text-red-400 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  {error}
+                </p>
+                <button
+                  onClick={handleGenerate}
+                  className="text-red-400/70 text-xs mt-2 hover:text-red-400 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                >
+                  点击重试
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Lyrics Display/Edit */}
           <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
