@@ -14,59 +14,56 @@ const steps = [
   { id: 4, title: '预览生成', description: '预览你的杰作', time: '2分钟', icon: 'play_circle' },
 ]
 
-// 欢迎引导弹窗组件
+// 欢迎引导弹窗组件 - Apple Style Refined
 function WelcomeModal({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative max-w-lg w-full bg-[#0f0f0f] border border-white/[0.08] rounded-3xl p-8 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      <div className="relative max-w-md w-full bg-[#0f0f0f] border border-white/[0.08] rounded-2xl p-8 animate-fade-in">
         {/* 关闭按钮 */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white/30 hover:text-white/60 transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/[0.1] transition-all"
         >
-          <span className="material-symbols-outlined">close</span>
+          <span className="material-symbols-outlined text-lg">close</span>
         </button>
 
         {/* 头部 */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🎤</div>
-          <h2 className="text-2xl font-bold text-white mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center mx-auto mb-5">
+            <span className="material-symbols-outlined text-white/80 text-2xl">mic</span>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
             欢迎使用方言回响
           </h2>
-          <p className="text-white/50 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
             用你自己的声音，创作独一无二的方言 Rap
           </p>
         </div>
 
         {/* 流程预览 */}
-        <div className="space-y-3 mb-8">
+        <div className="space-y-2 mb-8">
           {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-violet-400 text-lg">
-                  {step.icon}
-                </span>
+            <div key={step.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
+                <span className="text-white/50 text-xs font-medium">{index + 1}</span>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-white font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    {index + 1}. {step.title}
+                  <span className="text-white/80 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    {step.title}
                   </span>
-                  <span className="text-white/40 text-xs">{step.time}</span>
+                  <span className="text-white/30 text-xs">{step.time}</span>
                 </div>
-                <span className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  {step.description}
-                </span>
               </div>
             </div>
           ))}
         </div>
 
         {/* 时间预估 */}
-        <div className="text-center mb-6 p-4 rounded-xl bg-violet-500/10 border border-violet-500/20">
-          <div className="flex items-center justify-center gap-2 text-violet-400">
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            <span className="font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+        <div className="text-center mb-6 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-center gap-2 text-white/50">
+            <span className="material-symbols-outlined text-base">schedule</span>
+            <span className="text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
               整个流程约 5 分钟完成
             </span>
           </div>
@@ -75,15 +72,15 @@ function WelcomeModal({ onClose }: { onClose: () => void }) {
         {/* 开始按钮 */}
         <button
           onClick={onClose}
-          className="w-full bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity font-['PingFang_SC','Noto_Sans_SC',sans-serif] flex items-center justify-center gap-2"
+          className="w-full bg-white text-black py-3 rounded-xl font-semibold text-sm hover:bg-white/90 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif] flex items-center justify-center gap-2"
         >
           开始创作
-          <span className="material-symbols-outlined text-xl">arrow_forward</span>
+          <span className="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
 
         {/* 提示 */}
-        <p className="text-center text-white/30 text-xs mt-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          💡 中间步骤可以随时返回修改，只有最终导出才计入使用次数
+        <p className="text-center text-white/25 text-xs mt-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          中间步骤可以随时返回修改，只有最终导出才计入使用次数
         </p>
       </div>
     </div>
@@ -191,9 +188,9 @@ export default function CreatePage() {
           </h1>
         </div>
 
-        {/* Step Indicator with Time Estimate */}
-        <div className="mb-16">
-          <div className="flex items-center justify-center max-w-xl mx-auto">
+        {/* Step Indicator - Apple Style Refined */}
+        <div className="mb-12">
+          <div className="flex items-center justify-center max-w-lg mx-auto">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <button
@@ -203,38 +200,36 @@ export default function CreatePage() {
                   }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
                       currentStep === step.id
-                        ? 'bg-gradient-to-br from-violet-500 to-emerald-500 text-white shadow-lg shadow-violet-500/30 scale-110'
+                        ? 'bg-white text-black'
                         : currentStep > step.id
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-white/[0.05] text-white/30 border border-white/[0.1]'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-white/[0.03] text-white/30 border border-white/[0.08]'
                     }`}
                   >
                     {currentStep > step.id ? (
-                      <span className="material-symbols-outlined text-lg">
-                        check
-                      </span>
+                      <span className="material-symbols-outlined text-base">check</span>
                     ) : (
                       step.id
                     )}
                   </div>
-                  <span className={`text-xs mt-3 font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif] transition-colors duration-300 ${
-                    currentStep >= step.id ? 'text-white' : 'text-white/30'
+                  <span className={`text-xs mt-2 font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif] transition-colors duration-300 ${
+                    currentStep >= step.id ? 'text-white/70' : 'text-white/30'
                   }`}>
                     {step.title}
                   </span>
                   {currentStep === step.id && (
-                    <span className="text-violet-400 text-[10px] mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-white/40 text-[10px] mt-0.5 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                       {step.time}
                     </span>
                   )}
                 </button>
                 {index < steps.length - 1 && (
-                  <div className="relative w-16 mx-2 h-[2px]">
-                    <div className="absolute inset-0 bg-white/[0.1]" />
+                  <div className="relative w-12 mx-1.5 h-px">
+                    <div className="absolute inset-0 bg-white/[0.08]" />
                     <div
-                      className={`absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 to-emerald-500 transition-all duration-500`}
+                      className="absolute inset-y-0 left-0 bg-white/40 transition-all duration-300"
                       style={{ width: currentStep > step.id ? '100%' : '0%' }}
                     />
                   </div>
@@ -244,8 +239,8 @@ export default function CreatePage() {
           </div>
 
           {/* 剩余时间提示 */}
-          <div className="text-center mt-4">
-            <span className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <div className="text-center mt-3">
+            <span className="text-white/25 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
               预计剩余时间：{getRemainingTime()}
             </span>
           </div>
