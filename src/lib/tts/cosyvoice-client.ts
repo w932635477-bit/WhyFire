@@ -1,9 +1,13 @@
 /**
- * CosyVoice 3 TTS 客户端
+ * CosyVoice 3/3.5 TTS 客户端
  * 支持方言语音合成
  * API 文档: https://help.aliyun.com/zh/model-studio/cosyvoice-websocket-api
  *
- * 支持的方言:
+ * 模型选择:
+ * - cosyvoice-v3-flash (默认): 支持系统音色 + 复刻音色，推荐用于方言 TTS
+ * - cosyvoice-v3.5-flash: 仅支持复刻音色，支持更强大的指令控制
+ *
+ * 支持的方言 (通过 instruction 指令):
  * - 普通话 (mandarin)
  * - 粤语 (cantonese)
  * - 四川话 (sichuan)
@@ -165,6 +169,13 @@ interface CosyVoiceParameters {
 }
 
 /**
+ * CosyVoice 模型类型
+ * - v3: 支持系统音色 + 复刻音色
+ * - v3.5: 仅支持复刻音色，效果更好
+ */
+export type CosyVoiceModel = 'cosyvoice-v3-flash' | 'cosyvoice-v3-plus' | 'cosyvoice-v3.5-flash' | 'cosyvoice-v3.5-plus'
+
+/**
  * CosyVoice API 配置
  */
 interface CosyVoiceConfig {
@@ -173,9 +184,11 @@ interface CosyVoiceConfig {
   wsUrl: string
   /** 连接超时 */
   timeout: number
-  /** 默认模型 */
-  model: string
-  /** 默认音色 */
+  /** 默认模型（使用系统音色时） */
+  model: CosyVoiceModel
+  /** 高级模型（使用复刻音色时） */
+  advancedModel: CosyVoiceModel
+  /** 默认系统音色 */
   defaultVoice: string
 }
 
@@ -238,8 +251,9 @@ export class CosyVoiceClient {
       apiKey: apiKey || '',
       wsUrl,
       timeout: 60000, // 60 秒超时
-      model: 'cosyvoice-v3-flash', // 推荐模型，支持 8 种方言
-      defaultVoice: 'longanyang', // 默认音色
+      model: 'cosyvoice-v3-flash', // 系统音色模型（支持方言）
+      advancedModel: 'cosyvoice-v3.5-flash', // 复刻音色模型（效果更好）
+      defaultVoice: 'longanyang', // 默认系统音色
     }
   }
 
@@ -280,7 +294,13 @@ export class CosyVoiceClient {
       throw new Error(`Unsupported dialect: ${dialect}. CosyVoice only supports: mandarin, cantonese, sichuan, dongbei, shandong, wu, henan, xiang`)
     }
 
+    // 根据是否使用复刻音色选择模型
+    // v3.5 系列仅支持复刻音色，无系统音色
+    const model = voiceId ? this.config.advancedModel : this.config.model
+    const voice = voiceId || this.config.defaultVoice
+
     console.log(`[CosyVoice] Generating speech for dialect: ${dialect}, text length: ${text.length}`)
+    console.log(`[CosyVoice] Using model: ${model}, voice: ${voiceId ? 'cloned' : 'system'}`)
 
     // 生成任务 ID
     const taskId = randomUUID()
@@ -309,6 +329,30 @@ export class CosyVoiceClient {
       ws.on('open', () => {
         console.log('[CosyVoice] WebSocket connected')
 
+        // 构建参数
+        // 注意: instruction 参数仅对复刻音色有效，系统音色需要固定格式
+        const parameters: CosyVoiceParameters = {
+          text_type: 'PlainText',
+          voice,
+          format,
+          sample_rate: sampleRate,
+          volume,
+          rate,
+          pitch,
+          enable_ssml: false,
+          word_timestamp_enabled: wordTimestampEnabled,
+          language_hints: languageHints || this.getLanguageHints(dialect),
+        }
+
+        // 仅复刻音色支持自定义 instruction
+        // 系统音色的 instruction 必须使用固定格式（参考音色列表文档）
+        if (voiceId && instruction) {
+          parameters.instruction = instruction
+        } else if (voiceId && !instruction) {
+          // 复刻音色默认使用方言指令
+          parameters.instruction = DIALECT_INSTRUCTION_MAP[dialect]
+        }
+
         // 发送 run-task 指令
         const runTaskMessage: WSMessage = {
           header: {
@@ -320,20 +364,8 @@ export class CosyVoiceClient {
             task_group: 'audio',
             task: 'tts',
             function: 'SpeechSynthesizer',
-            model: this.config.model,
-            parameters: {
-              text_type: 'PlainText',
-              voice: voiceId || this.config.defaultVoice,
-              format,
-              sample_rate: sampleRate,
-              volume,
-              rate,
-              pitch,
-              enable_ssml: false,
-              word_timestamp_enabled: wordTimestampEnabled,
-              language_hints: languageHints || this.getLanguageHints(dialect),
-              instruction: instruction || DIALECT_INSTRUCTION_MAP[dialect],
-            },
+            model,
+            parameters,
             input: {},
           },
         }
