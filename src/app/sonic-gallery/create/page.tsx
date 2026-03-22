@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { Step1VoiceCloning } from './step-1-voice-cloning'
 import { Step2BeatDialect } from './step-2-beat-dialect'
-import { Step3Preview } from './step-3-preview'
+import { Step3LyricsGeneration } from './step-3-lyrics-generation'
+import { Step4Preview } from './step-4-preview'
 
 const steps = [
   { id: 1, title: '音色克隆', description: '建立你的数字身份' },
   { id: 2, title: '节奏方言', description: '选择声音灵魂' },
-  { id: 3, title: '预览生成', description: '预览你的杰作' },
+  { id: 3, title: '歌词创作', description: '生成个性化歌词' },
+  { id: 4, title: '预览生成', description: '预览你的杰作' },
 ]
 
 export default function CreatePage() {
@@ -26,7 +28,14 @@ export default function CreatePage() {
           />
         )
       case 3:
-        return <Step3Preview onPrev={() => setCurrentStep(2)} />
+        return (
+          <Step3LyricsGeneration
+            onNext={() => setCurrentStep(4)}
+            onPrev={() => setCurrentStep(2)}
+          />
+        )
+      case 4:
+        return <Step4Preview onPrev={() => setCurrentStep(3)} />
       default:
         return null
     }

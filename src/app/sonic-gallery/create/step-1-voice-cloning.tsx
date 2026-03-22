@@ -9,6 +9,15 @@ interface Step1VoiceCloningProps {
 export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [trainingProgress, setTrainingProgress] = useState(68)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [recordedMinutes, setRecordedMinutes] = useState(0)
+
+  // 指定朗读文本
+  const readingText = `今天天气很好，我出门散步。阳光洒在脸上，感觉特别温暖。
+路边的花开得正艳，小鸟在枝头歌唱。
+我沿着小路慢慢走着，心情格外舒畅。
+远处的山峦若隐若现，像一幅美丽的水墨画。
+生活虽然忙碌，但偶尔也要停下来，感受这美好的时光。`
 
   return (
     <div className="space-y-12">
@@ -21,7 +30,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
           建立你的数字声音身份
         </h2>
         <p className="text-white/40 text-base leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          提供 1-5 分钟的高质量人声样本，由 GPT-SoVITS 训练你的专属音色模型
+          提供 30 秒至 2 分钟的高质量人声样本，由 GPT-SoVITS 训练你的专属音色模型
         </p>
       </div>
 
@@ -51,8 +60,16 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                   录制人声
                 </h3>
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  在浏览器中直接录音，获取最佳采样率
+                  在浏览器中直接录音，建议录制 30秒-2分钟
                 </p>
+                {isRecording && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-red-400 text-sm font-medium">
+                      00:32
+                    </span>
+                  </div>
+                )}
               </div>
               <span className="material-symbols-outlined text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all">
                 arrow_forward
@@ -60,7 +77,22 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             </div>
           </div>
 
-          {/* Upload Audio */}
+          {/* Reading Text Card - 显示指定朗读文本 */}
+          <div className="p-5 rounded-2xl bg-violet-500/5 border border-violet-500/20">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="material-symbols-outlined text-violet-400 text-lg">
+                article
+              </span>
+              <span className="text-white/70 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                请朗读以下文字（约1分钟）
+              </span>
+            </div>
+            <p className="text-white/50 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif] whitespace-pre-line">
+              {readingText}
+            </p>
+          </div>
+
+          {/* Upload Audio/Video */}
           <div className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -70,10 +102,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               </div>
               <div className="flex-1">
                 <h3 className="text-white font-semibold text-lg mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  上传音频
+                  上传音频/视频
                 </h3>
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  支持 WAV、FLAC 或 MP3 格式
+                  支持 WAV、FLAC、MP3 或 MP4 格式
                 </p>
               </div>
               <span className="material-symbols-outlined text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all">
@@ -95,6 +127,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             <ul className="space-y-2 text-white/40 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-violet-400" />
+                最少录制 30 秒，建议 1-2 分钟
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-violet-400" />
                 选择安静环境录制
               </li>
               <li className="flex items-center gap-2">
@@ -103,7 +139,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-violet-400" />
-                录制时说话自然流畅
+                按照指定文本自然朗读
               </li>
             </ul>
           </div>
