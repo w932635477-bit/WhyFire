@@ -10,9 +10,9 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'WhyFire - AI Rap 视频一键生成',
-  description: '输入信息，一键生成创意 Rap 短视频。电商推广、搞笑洗脑、IP混剪、日常Vlog，四种场景任你选。',
-  keywords: ['AI视频生成', 'Rap视频', '短视频创作', '电商推广', 'AI写词', 'AI配乐'],
+  title: '方言回响 - AI 方言说唱创作平台',
+  description: '用 AI 克隆你的音色，在 8 种地道方言中重塑你的嘻哈灵魂。GPT-SoVITS 音色克隆，一键生成方言说唱。',
+  keywords: ['AI音乐', '方言说唱', '音色克隆', 'GPT-SoVITS', '方言Rap', 'AI创作'],
   icons: {
     icon: '/favicon.svg',
   },
