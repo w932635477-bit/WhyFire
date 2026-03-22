@@ -1195,96 +1195,136 @@ audio::-webkit-media-controls-timeline::-webkit-slider-thumb {
    HERO TEXT - APPLE STYLE ANIMATIONS
    ============================================ */
 
-/* Character-by-character float animation */
-@keyframes charFloat {
-  0%, 100% {
-    transform: translateY(0);
-    opacity: 0.9;
-  }
-  50% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
-}
+/* =============================================
+   Split Reveal Animation - Apple Keynote Style
+   ============================================= */
 
-/* Gradient flow animation for Rap letters */
-@keyframes gradientFlow {
+/* Chinese characters: blur + fade + slight slide up */
+@keyframes charReveal {
   0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(8px);
   }
   100% {
-    background-position: 0% 50%;
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
 }
 
-/* Letter pulse animation with subtle scale */
-@keyframes letterPulse {
+/* Rap: dramatic entrance with bounce easing */
+@keyframes rapReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.9);
+    filter: blur(12px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+    filter: blur(0);
+  }
+  80% {
+    transform: translateY(3px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Hover glow effect - subtle */
+@keyframes hoverGlow {
+  0%, 100% {
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Hover interaction - subtle scale */
+@keyframes hoverPulse {
   0%, 100% {
     transform: scale(1);
-    filter: brightness(1) drop-shadow(0 0 20px currentColor);
   }
   50% {
     transform: scale(1.02);
-    filter: brightness(1.1) drop-shadow(0 0 40px currentColor);
   }
 }
 
-/* Underline shimmer effect */
-@keyframes underlineShimmer {
+/* Split Reveal - Main animation for hero text */
+@keyframes splitReveal {
   0% {
-    background-position: -200% 0;
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(12px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(2px);
   }
   100% {
-    background-position: 200% 0;
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
 }
 
-/* Scan line animation for hero effect */
-@keyframes scanLine {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
+/* Underline grows from center */
+@keyframes underlineGrow {
+  from {
+    width: 0%;
   }
-  10% {
-    opacity: 0.3;
-  }
-  90% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(100%);
-    opacity: 0;
+  to {
+    width: 70%;
   }
 }
 
-/* Breathing glow for hero text container */
-@keyframes breathingGlow {
+/* =============================================
+   Rock / Rap Style Animations
+   ============================================= */
+
+/* Sparkle for decorative icons */
+@keyframes sparkle {
   0%, 100% {
-    box-shadow: 0 0 60px rgba(139, 92, 246, 0.2), 0 0 120px rgba(16, 185, 129, 0.1);
+    opacity: 0.2;
+    transform: scale(1) rotate(var(--rotation, 0deg));
   }
   50% {
-    box-shadow: 0 0 80px rgba(139, 92, 246, 0.3), 0 0 160px rgba(16, 185, 129, 0.15);
+    opacity: 0.5;
+    transform: scale(1.1) rotate(var(--rotation, 0deg));
   }
 }
 
-/* 3D rotate on hover */
-@keyframes heroHover3D {
+/* Subtle shake - single pulse */
+@keyframes subtleShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Rap continuous micro-shake - very subtle */
+@keyframes rapShake {
+  0%, 100% { transform: translateY(0) skewX(0deg); }
+  25% { transform: translateY(-1px) skewX(-0.3deg); }
+  75% { transform: translateY(1px) skewX(0.3deg); }
+}
+
+/* Underline slash - aggressive entry */
+@keyframes underlineSlash {
   0% {
-    transform: rotateX(0deg) rotateY(0deg);
-  }
-  25% {
-    transform: rotateX(2deg) rotateY(-2deg);
+    width: 0%;
+    opacity: 0;
   }
   50% {
-    transform: rotateX(-2deg) rotateY(2deg);
-  }
-  75% {
-    transform: rotateX(1deg) rotateY(1deg);
+    width: 85%;
+    opacity: 1;
   }
   100% {
-    transform: rotateX(0deg) rotateY(0deg);
+    width: 75%;
+    opacity: 1;
   }
 }
