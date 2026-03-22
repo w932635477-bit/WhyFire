@@ -58,36 +58,36 @@ export default function SonicGalleryHome() {
               >
                 {/* Character-by-character animation */}
                 <span
-                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-[0.12em]"
                   style={{
-                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    textShadow: '0 0 40px rgba(255,255,255,0.2), 0 4px 20px rgba(0,0,0,0.5)',
                     animation: 'charFloat 4s ease-in-out infinite',
                   }}
                 >
                   一
                 </span>
                 <span
-                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-[0.12em]"
                   style={{
-                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    textShadow: '0 0 40px rgba(255,255,255,0.2), 0 4px 20px rgba(0,0,0,0.5)',
                     animation: 'charFloat 4s ease-in-out 0.1s infinite',
                   }}
                 >
                   键
                 </span>
                 <span
-                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-[0.12em]"
                   style={{
-                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    textShadow: '0 0 40px rgba(255,255,255,0.2), 0 4px 20px rgba(0,0,0,0.5)',
                     animation: 'charFloat 4s ease-in-out 0.2s infinite',
                   }}
                 >
                   方
                 </span>
                 <span
-                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-[0.12em]"
                   style={{
-                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    textShadow: '0 0 40px rgba(255,255,255,0.2), 0 4px 20px rgba(0,0,0,0.5)',
                     animation: 'charFloat 4s ease-in-out 0.3s infinite',
                   }}
                 >
@@ -240,16 +240,16 @@ export default function SonicGalleryHome() {
                       className="relative mb-1"
                       style={{ transform: 'rotateX(5deg)' }}
                     >
-                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out infinite' }}>
+                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out infinite' }}>
                         一
                       </span>
-                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.1s infinite' }}>
+                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.1s infinite' }}>
                         键
                       </span>
-                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.2s infinite' }}>
+                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.2s infinite' }}>
                         方
                       </span>
-                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.3s infinite' }}>
+                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.3s infinite' }}>
                         言
                       </span>
                     </div>
