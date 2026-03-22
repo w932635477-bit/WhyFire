@@ -26,33 +26,156 @@ export default function SonicGalleryHome() {
           }} />
         </div>
 
-        {/* 一键方言 Rap - Center Position */}
+        {/* 一键方言 Rap - Center Position - Apple Style Design */}
         <Link
           href="/sonic-gallery/create"
-          className="absolute top-1/2 left-[55%] -translate-y-1/2 z-30 group cursor-pointer hidden lg:block"
+          className="absolute top-1/2 left-[58%] -translate-y-1/2 z-30 group cursor-pointer hidden lg:block"
         >
-          <div className="relative">
-            {/* Animated Glow Background */}
-            <div className="absolute -inset-16 bg-gradient-to-r from-violet-500/0 via-purple-500/30 to-emerald-500/0 blur-3xl opacity-70 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="relative" style={{ perspective: '1000px' }}>
+            {/* Multi-layer Glow Effect */}
+            <div className="absolute -inset-20 opacity-0 group-hover:opacity-100 transition-all duration-1000">
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-600/40 via-fuchsia-500/30 to-emerald-500/40 blur-3xl animate-pulse" />
+              <div className="absolute inset-4 bg-gradient-to-r from-cyan-500/20 via-violet-500/20 to-pink-500/20 blur-2xl" />
+            </div>
+            <div className="absolute -inset-12 bg-gradient-to-r from-violet-500/20 via-purple-500/25 to-emerald-500/20 blur-3xl opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
 
-            {/* Text */}
-            <div className="relative text-center">
+            {/* Scan Lines Effect */}
+            <div className="absolute -inset-8 overflow-hidden opacity-20 group-hover:opacity-40 transition-opacity duration-500">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)',
+              }} />
+            </div>
+
+            {/* Main Text Container */}
+            <div className="relative text-center" style={{ transformStyle: 'preserve-3d' }}>
+              {/* "一键方言" - Refined Typography */}
               <div
-                className="text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.2] tracking-tight"
-                style={{ animation: 'textFloat 4s ease-in-out infinite' }}
-              >
-                一键方言
-              </div>
-              <div
-                className="text-7xl lg:text-8xl xl:text-9xl font-black leading-[1.1] tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-emerald-400 bg-clip-text text-transparent"
+                className="relative mb-2"
                 style={{
-                  backgroundSize: '200% auto',
-                  animation: 'gradient 3s linear infinite, rapPulse 2s ease-in-out infinite'
+                  transform: 'rotateX(5deg)',
+                  transformOrigin: 'bottom center'
                 }}
               >
-                Rap
+                {/* Character-by-character animation */}
+                <span
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  style={{
+                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    animation: 'charFloat 4s ease-in-out infinite',
+                  }}
+                >
+                  一
+                </span>
+                <span
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  style={{
+                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    animation: 'charFloat 4s ease-in-out 0.1s infinite',
+                  }}
+                >
+                  键
+                </span>
+                <span
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  style={{
+                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    animation: 'charFloat 4s ease-in-out 0.2s infinite',
+                  }}
+                >
+                  方
+                </span>
+                <span
+                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-extralight text-white/90 tracking-[0.15em]"
+                  style={{
+                    textShadow: '0 0 40px rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+                    animation: 'charFloat 4s ease-in-out 0.3s infinite',
+                  }}
+                >
+                  言
+                </span>
+              </div>
+
+              {/* "Rap" - Hero Typography with Maximum Impact */}
+              <div
+                className="relative"
+                style={{
+                  transform: 'rotateX(-3deg) translateZ(20px)',
+                  transformOrigin: 'top center'
+                }}
+              >
+                {/* R */}
+                <span
+                  className="inline-block text-8xl lg:text-[10rem] xl:text-[12rem] font-black tracking-tighter"
+                  style={{
+                    background: 'linear-gradient(135deg, #fff 0%, #e879f9 25%, #a855f7 50%, #22d3ee 75%, #fff 100%)',
+                    backgroundSize: '300% 300%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 80px rgba(168, 85, 247, 0.5)',
+                    animation: 'gradientFlow 4s ease infinite, letterPulse 3s ease-in-out infinite',
+                  }}
+                >
+                  R
+                </span>
+                {/* a */}
+                <span
+                  className="inline-block text-8xl lg:text-[10rem] xl:text-[12rem] font-black tracking-tighter"
+                  style={{
+                    background: 'linear-gradient(135deg, #fff 0%, #22d3ee 25%, #a855f7 50%, #e879f9 75%, #fff 100%)',
+                    backgroundSize: '300% 300%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 80px rgba(34, 211, 238, 0.5)',
+                    animation: 'gradientFlow 4s ease 0.15s infinite, letterPulse 3s ease-in-out 0.2s infinite',
+                  }}
+                >
+                  a
+                </span>
+                {/* p */}
+                <span
+                  className="inline-block text-8xl lg:text-[10rem] xl:text-[12rem] font-black tracking-tighter"
+                  style={{
+                    background: 'linear-gradient(135deg, #fff 0%, #a855f7 25%, #22d3ee 50%, #10b981 75%, #fff 100%)',
+                    backgroundSize: '300% 300%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 80px rgba(16, 185, 129, 0.5)',
+                    animation: 'gradientFlow 4s ease 0.3s infinite, letterPulse 3s ease-in-out 0.4s infinite',
+                  }}
+                >
+                  p
+                </span>
+
+                {/* Animated Underline */}
+                <div
+                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 h-1 rounded-full opacity-60 group-hover:opacity-100 group-hover:h-1.5 transition-all duration-500"
+                  style={{
+                    width: '80%',
+                    background: 'linear-gradient(90deg, transparent, #a855f7, #22d3ee, #10b981, transparent)',
+                    animation: 'underlineShimmer 2s linear infinite',
+                  }}
+                />
+              </div>
+
+              {/* Hover Hint */}
+              <div
+                className="absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              >
+                <span className="text-white/40 text-sm tracking-widest uppercase flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  点击开始创作
+                </span>
               </div>
             </div>
+
+            {/* Corner Accents */}
+            <div className="absolute -top-6 -left-6 w-3 h-3 border-t-2 border-l-2 border-violet-400/50 group-hover:border-violet-400 transition-colors duration-500" />
+            <div className="absolute -top-6 -right-6 w-3 h-3 border-t-2 border-r-2 border-cyan-400/50 group-hover:border-cyan-400 transition-colors duration-500" />
+            <div className="absolute -bottom-6 -left-6 w-3 h-3 border-b-2 border-l-2 border-emerald-400/50 group-hover:border-emerald-400 transition-colors duration-500" />
+            <div className="absolute -bottom-6 -right-6 w-3 h-3 border-b-2 border-r-2 border-fuchsia-400/50 group-hover:border-fuchsia-400 transition-colors duration-500" />
           </div>
         </Link>
 
@@ -101,33 +224,67 @@ export default function SonicGalleryHome() {
                 </div>
               </div>
 
-              {/* Mobile: 一键方言 Rap */}
+              {/* Mobile: 一键方言 Rap - Apple Style */}
               <Link
                 href="/sonic-gallery/create"
                 className="flex-shrink-0 group cursor-pointer lg:hidden"
               >
-                <div className="relative">
-                  {/* Animated Glow Background */}
-                  <div className="absolute -inset-10 bg-gradient-to-r from-violet-500/0 via-purple-500/20 to-emerald-500/0 blur-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="relative" style={{ perspective: '800px' }}>
+                  {/* Glow */}
+                  <div className="absolute -inset-8 bg-gradient-to-r from-violet-500/25 via-purple-500/20 to-emerald-500/25 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-700" />
 
                   {/* Text */}
-                  <div className="relative text-center">
+                  <div className="relative text-center" style={{ transformStyle: 'preserve-3d' }}>
+                    {/* "一键方言" */}
                     <div
-                      className="text-3xl sm:text-4xl font-bold text-white leading-[1.2] tracking-tight"
-                      style={{ animation: 'textFloat 4s ease-in-out infinite' }}
+                      className="relative mb-1"
+                      style={{ transform: 'rotateX(5deg)' }}
                     >
-                      一键方言
+                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out infinite' }}>
+                        一
+                      </span>
+                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.1s infinite' }}>
+                        键
+                      </span>
+                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.2s infinite' }}>
+                        方
+                      </span>
+                      <span className="inline-block text-3xl sm:text-4xl font-extralight text-white/90 tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.3s infinite' }}>
+                        言
+                      </span>
                     </div>
+
+                    {/* "Rap" */}
+                    <div style={{ transform: 'rotateX(-3deg) translateZ(10px)' }}>
+                      <span
+                        className="inline-block text-6xl sm:text-7xl font-black tracking-tighter"
+                        style={{
+                          background: 'linear-gradient(135deg, #fff, #e879f9, #a855f7, #22d3ee)',
+                          backgroundSize: '300% 300%',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          animation: 'gradientFlow 4s ease infinite, letterPulse 3s ease-in-out infinite',
+                        }}
+                      >
+                        Rap
+                      </span>
+                    </div>
+
+                    {/* Underline */}
                     <div
-                      className="text-5xl sm:text-6xl font-black leading-[1.1] tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-emerald-400 bg-clip-text text-transparent"
+                      className="mx-auto h-0.5 rounded-full opacity-50"
                       style={{
-                        backgroundSize: '200% auto',
-                        animation: 'gradient 3s linear infinite, rapPulse 2s ease-in-out infinite'
+                        width: '70%',
+                        background: 'linear-gradient(90deg, transparent, #a855f7, #22d3ee, #10b981, transparent)',
                       }}
-                    >
-                      Rap
-                    </div>
+                    />
                   </div>
+
+                  {/* Corner Accents */}
+                  <div className="absolute -top-3 -left-3 w-2 h-2 border-t border-l border-violet-400/40" />
+                  <div className="absolute -top-3 -right-3 w-2 h-2 border-t border-r border-cyan-400/40" />
+                  <div className="absolute -bottom-3 -left-3 w-2 h-2 border-b border-l border-emerald-400/40" />
+                  <div className="absolute -bottom-3 -right-3 w-2 h-2 border-b border-r border-fuchsia-400/40" />
                 </div>
               </Link>
             </div>
