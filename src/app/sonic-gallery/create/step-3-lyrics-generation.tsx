@@ -116,6 +116,31 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
               <span>越具体，生成的歌词越有个性</span>
               <span>{selfDescription.length}/200</span>
             </div>
+
+            {/* 输入引导示例 */}
+            <div className="mt-4 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="material-symbols-outlined text-violet-400 text-sm">lightbulb</span>
+                <span className="text-violet-400 text-xs font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  填写技巧
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <p className="text-white/40 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">你填写：</p>
+                  <p className="text-white/60 text-xs italic font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    "程序员，喜欢打游戏，最近在减肥"
+                  </p>
+                </div>
+                <span className="material-symbols-outlined text-white/20 text-lg">arrow_forward</span>
+                <div className="flex-1">
+                  <p className="text-white/40 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">生成歌词：</p>
+                  <p className="text-emerald-400/80 text-xs italic font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    "代码敲到凌晨三点半，减肥计划又拖延..."
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Hot Topics */}
@@ -281,14 +306,26 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6 border-t border-white/[0.04]">
-        <button
-          onClick={onPrev}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-        >
-          <span className="material-symbols-outlined text-lg">arrow_back</span>
-          上一步
-        </button>
+      <div className="flex justify-between items-end pt-6 border-t border-white/[0.04]">
+        <div>
+          <button
+            onClick={onPrev}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+          >
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            上一步
+          </button>
+        </div>
+        {/* 下一步预览 */}
+        <div className="hidden md:block text-right">
+          <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              生成你的方言 Rap，听到自己的声音！
+            </span>
+            <span className="material-symbols-outlined text-emerald-400 text-lg">play_circle</span>
+          </div>
+        </div>
         <button
           onClick={onNext}
           className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3 rounded-full font-semibold text-base hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"

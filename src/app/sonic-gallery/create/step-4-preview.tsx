@@ -171,6 +171,16 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           >
             返回修改
           </button>
+
+          {/* 免费重试政策说明 */}
+          <div className="mt-4 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-400 text-sm">info</span>
+              <span className="text-emerald-400/80 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                💡 中间步骤可以无限次修改，只有最终导出才计入使用次数
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

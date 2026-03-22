@@ -315,14 +315,26 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6 border-t border-white/[0.04]">
-        <button
-          onClick={onPrev}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-        >
-          <span className="material-symbols-outlined text-lg">arrow_back</span>
-          上一步
-        </button>
+      <div className="flex justify-between items-end pt-6 border-t border-white/[0.04]">
+        <div>
+          <button
+            onClick={onPrev}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+          >
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            上一步
+          </button>
+        </div>
+        {/* 下一步预览 */}
+        <div className="hidden md:block text-right">
+          <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              AI 帮你生成个性化歌词
+            </span>
+            <span className="material-symbols-outlined text-violet-400 text-lg">lyrics</span>
+          </div>
+        </div>
         <button
           onClick={onNext}
           className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3 rounded-full font-semibold text-base hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"

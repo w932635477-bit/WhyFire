@@ -34,6 +34,40 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </p>
       </div>
 
+      {/* 🤔 为什么要录音？解释卡片 */}
+      <div className="max-w-4xl mx-auto p-5 rounded-2xl bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border border-violet-500/20">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-violet-400 text-2xl">
+              help
+            </span>
+          </div>
+          <div className="flex-1">
+            <h4 className="text-white font-semibold mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              🤔 为什么要录音？
+            </h4>
+            <p className="text-white/60 text-sm leading-relaxed mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              AI 会学习你的声音特点，然后用<strong className="text-violet-400">你自己的声音</strong>唱出方言 Rap。
+              就像有一个"数字分身"在帮你唱歌！
+            </p>
+            <div className="flex items-center gap-4 text-xs text-white/40">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                <span>相似度 ≥ 80%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                <span>保持你的声音特色</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                <span>可随时重新录制优化</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Action Cards */}
@@ -238,7 +272,17 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-between items-end pt-4">
+        {/* 下一步预览 */}
+        <div className="hidden md:block">
+          <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-400 text-lg">graphic_eq</span>
+            <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              选择方言风格和背景音乐
+            </span>
+          </div>
+        </div>
         <button
           onClick={onNext}
           className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3.5 rounded-full font-semibold text-base hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
