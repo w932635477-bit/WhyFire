@@ -315,62 +315,92 @@ export default function SonicGalleryHome() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="px-8 lg:px-20 py-32 bg-[#0a0a0a]">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-16">
-            <span className="text-violet-400 text-sm font-medium tracking-wider uppercase mb-4 block">
-              核心功能
+      {/* Features Section - Apple Style Refined */}
+      <section className="px-8 lg:px-16 py-24 bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto">
+          {/* Section Header */}
+          <div className="mb-16 max-w-2xl">
+            <span className="text-emerald-400 text-xs font-medium tracking-widest uppercase mb-3 block">
+              核心能力
             </span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight">
-              重新定义声音生产力
+            <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
+              声音，重新定义
             </h2>
+            <p className="text-white/40 text-base mt-4 leading-relaxed">
+              三项核心技术，让每一个声音都独一无二
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Feature 1 */}
-            <div className="group p-8 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-500">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <span className="material-symbols-outlined text-violet-400 text-2xl">
-                  record_voice_over
-                </span>
+          {/* Feature Cards - Asymmetric Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            {/* Feature 1 - Large Card */}
+            <div className="md:col-span-7 group">
+              <div className="h-full p-8 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-500">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="material-symbols-outlined text-white/80 text-xl">
+                    record_voice_over
+                  </span>
+                  <span className="text-white/40 text-xs font-medium tracking-wider uppercase">
+                    Voice Cloning
+                  </span>
+                </div>
+                <h4 className="text-white font-semibold text-xl mb-3 tracking-tight">
+                  人声克隆
+                </h4>
+                <p className="text-white/50 text-sm leading-relaxed mb-6">
+                  零样本学习，实时提取你的声纹特征。支持多情感维度的说唱表达，完美保留你的个人辨识度。
+                </p>
+                <div className="flex items-center gap-4 pt-4 border-t border-white/[0.06]">
+                  <div className="text-center">
+                    <div className="text-white font-semibold text-lg">5s</div>
+                    <div className="text-white/30 text-xs">最小样本</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/[0.06]" />
+                  <div className="text-center">
+                    <div className="text-white font-semibold text-lg">99%</div>
+                    <div className="text-white/30 text-xs">相似度</div>
+                  </div>
+                </div>
               </div>
-              <h4 className="text-white font-semibold text-lg mb-3">
-                人声克隆
-              </h4>
-              <p className="text-white/40 text-sm leading-relaxed">
-                零样本学习，实时提取你的声纹特征，支持多情感维度的说唱表达，完美保留你的个人辨识度。
-              </p>
             </div>
 
-            {/* Feature 2 */}
-            <div className="group p-8 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-500">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <span className="material-symbols-outlined text-emerald-400 text-2xl">
-                  graphic_eq
-                </span>
+            {/* Feature 2 & 3 - Stacked Cards */}
+            <div className="md:col-span-5 flex flex-col gap-6">
+              {/* Feature 2 */}
+              <div className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-500">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="material-symbols-outlined text-white/80 text-xl">
+                    graphic_eq
+                  </span>
+                  <span className="text-white/40 text-xs font-medium tracking-wider uppercase">
+                    Beat Sync
+                  </span>
+                </div>
+                <h4 className="text-white font-semibold text-lg mb-2 tracking-tight">
+                  节奏对齐
+                </h4>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  AI 自动分析 BPM 与律动，确保歌词咬字精准落点。
+                </p>
               </div>
-              <h4 className="text-white font-semibold text-lg mb-3">
-                节奏对齐
-              </h4>
-              <p className="text-white/40 text-sm leading-relaxed">
-                人工智能自动分析节拍的 BPM 与律动，确保歌词咬字与重音精准落点，无需繁琐的手工对位。
-              </p>
-            </div>
 
-            {/* Feature 3 */}
-            <div className="group p-8 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-500">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <span className="material-symbols-outlined text-purple-400 text-2xl">
-                  language
-                </span>
+              {/* Feature 3 */}
+              <div className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-500">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="material-symbols-outlined text-white/80 text-xl">
+                    language
+                  </span>
+                  <span className="text-white/40 text-xs font-medium tracking-wider uppercase">
+                    Dialects
+                  </span>
+                </div>
+                <h4 className="text-white font-semibold text-lg mb-2 tracking-tight">
+                  八种方言
+                </h4>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  粤语、川渝、东北、闽南等核心语系，内置地道韵脚库。
+                </p>
               </div>
-              <h4 className="text-white font-semibold text-lg mb-3">
-                八种方言
-              </h4>
-              <p className="text-white/40 text-sm leading-relaxed">
-                涵盖粤语、川渝、东北、闽南等核心语系，内置海量地道韵脚库，赋予你的作品地缘生命力。
-              </p>
             </div>
           </div>
         </div>
