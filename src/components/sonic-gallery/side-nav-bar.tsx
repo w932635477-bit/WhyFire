@@ -21,6 +21,9 @@ export function SideNavBar() {
   const pathname = usePathname()
   const [isVisible, setIsVisible] = useState(false)
 
+  // 首页不需要侧边栏 logo（顶部导航已有）
+  const isHomePage = pathname === '/sonic-gallery'
+
   return (
     <>
       {/* Hover Trigger Zone - Left edge */}
@@ -36,24 +39,28 @@ export function SideNavBar() {
         }`}
         onMouseLeave={() => setIsVisible(false)}
       >
-        {/* Logo Area */}
-        <Link href="/sonic-gallery" className="flex items-center gap-3 mb-10 group">
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow duration-500">
-            <span className="text-white font-bold text-lg tracking-tight">W</span>
-            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-white font-semibold text-base tracking-tight">
-              方言回响
-            </span>
-            <span className="text-[10px] text-white/40 tracking-[0.2em] uppercase font-medium">
-              WhyFire Studio
-            </span>
-          </div>
-        </Link>
+        {/* Logo Area - Hidden on homepage */}
+        {!isHomePage && (
+          <Link href="/sonic-gallery" className="flex items-center gap-3 mb-10 group">
+            <div
+              className="w-10 h-10 rounded-lg bg-white flex items-center justify-center group-hover:scale-105 transition-transform"
+              style={{ boxShadow: '2px 2px 0 rgba(139,92,246,0.8)' }}
+            >
+              <span className="text-black font-black text-lg italic">W</span>
+            </div>
+            <div>
+              <span className="text-white font-bold text-base block tracking-tight">
+                方言回响
+              </span>
+              <span className="text-[10px] text-white/40 tracking-[0.2em] uppercase font-medium">
+                WhyFire
+              </span>
+            </div>
+          </Link>
+        )}
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-1.5">
+        <nav className={`flex flex-col gap-1.5 ${isHomePage ? 'pt-4' : ''}`}>
           {navItems.map((item, index) => {
             const isActive = pathname === item.href ||
               (item.href !== '/sonic-gallery' && pathname.startsWith(item.href))
