@@ -1,5 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+/* Material Symbols - Icon font styles */
+/* Font is loaded via <link> in layout.tsx for better reliability */
+
+/* Ensure Material Symbols render correctly */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -moz-font-feature-settings: 'liga';
+}
+
+/* Other fonts are loaded via Next.js font optimization in layout.tsx */
 
 @tailwind base;
 @tailwind components;
@@ -114,6 +136,16 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
+}
+
+/* Hide scrollbar utility for horizontal scroll areas */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Accent Text Colors - Solid, no gradients */
@@ -440,6 +472,77 @@ body {
   outline-offset: 2px;
 }
 
+/* Enhanced Focus States - Accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease;
+}
+
+/* Primary Button Focus */
+button.bg-white:focus-visible,
+.btn-primary:focus-visible,
+.btn-cta:focus-visible {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+
+/* Secondary Button Focus */
+.btn-secondary:focus-visible,
+button[class*="bg-white/"]:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+}
+
+/* Input Focus */
+input:focus-visible,
+textarea:focus-visible {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Card/Interactive Element Focus */
+.card:focus-visible,
+.card-brutal:focus-visible,
+.card-glass:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+}
+
+/* Link Focus */
+a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Chip/Tag Focus */
+.suno-chip:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* Touch Target Minimum Size */
+@media (pointer: coarse) {
+  button,
+  a,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  .suno-chip {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Selection */
 ::selection {
   background: rgba(139,92,246,0.3);
@@ -455,6 +558,53 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Skeleton Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Slide Up Animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
 
 /* ============================================
@@ -1326,5 +1476,147 @@ audio::-webkit-media-controls-timeline::-webkit-slider-thumb {
   100% {
     width: 75%;
     opacity: 1;
+  }
+}
+
+/* ========================================
+   Micro-interactions & Interactive States
+   ======================================== */
+
+/* Button press effect - scale down slightly on active */
+.btn-press {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Card lift on hover */
+.card-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Icon bounce on hover */
+.icon-bounce {
+  transition: transform 0.2s ease;
+}
+
+.icon-bounce:hover {
+  transform: scale(1.1);
+}
+
+.icon-bounce:active {
+  transform: scale(0.95);
+}
+
+/* Link underline grow effect */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.2s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* Pulse ring effect for buttons */
+@keyframes pulseRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+.pulse-ring {
+  animation: pulseRing 2s infinite;
+}
+
+/* Subtle glow on hover */
+@keyframes subtleGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  }
+}
+
+.glow-hover:hover {
+  animation: subtleGlow 1.5s ease-in-out;
+}
+
+/* Tap highlight for mobile */
+@media (pointer: coarse) {
+  .tap-highlight {
+    -webkit-tap-highlight-color: rgba(139, 92, 246, 0.2);
+  }
+}
+
+/* Smooth appear animation for dynamic content */
+@keyframes smoothAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-smooth-appear {
+  animation: smoothAppear 0.3s ease-out forwards;
+}
+
+/* Stagger delay utilities for list animations */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .btn-press:active {
+    transform: none;
+  }
+  .card-lift:hover {
+    transform: none;
+  }
+  .icon-bounce:hover {
+    transform: none;
+  }
+  .pulse-ring {
+    animation: none;
+  }
+  .glow-hover:hover {
+    animation: none;
+  }
+  .animate-smooth-appear {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

@@ -130,15 +130,15 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
   ]
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-5xl mx-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 max-w-5xl mx-auto">
       {/* Left Column */}
-      <div className="lg:col-span-4 space-y-8">
+      <div className="lg:col-span-4 space-y-6 lg:space-y-8 order-2 lg:order-1">
         {/* Header */}
         <div>
           <span className="text-emerald-400 text-sm font-medium tracking-wider uppercase mb-3 block">
             步骤四
           </span>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
             预览你的杰作
           </h1>
           <p className="text-white/40 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
@@ -272,7 +272,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {!audioUrl && !isGenerating && (
             <button
               onClick={handleGenerateMusic}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
             >
               <span className="material-symbols-outlined text-lg">auto_awesome</span>
               生成音乐
@@ -303,18 +303,18 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {/* Primary Actions (after generation) */}
           {audioUrl && !isGenerating && (
             <>
-              <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                 <span className="material-symbols-outlined text-lg">download</span>
                 导出音频
               </button>
 
               {/* Secondary Actions */}
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   <span className="material-symbols-outlined text-base">share</span>
                   分享
                 </button>
-                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   <span className="material-symbols-outlined text-base">save</span>
                   保存
                 </button>
@@ -323,7 +323,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               {/* Regenerate Button */}
               <button
                 onClick={handleGenerateMusic}
-                className="w-full py-2 text-white/40 hover:text-white/60 text-sm transition-colors flex items-center justify-center gap-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                className="w-full py-2 text-white/40 hover:text-white/60 text-sm transition-colors flex items-center justify-center gap-2 min-h-[44px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
               >
                 <span className="material-symbols-outlined text-base">refresh</span>
                 重新生成
@@ -351,8 +351,8 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
       </div>
 
       {/* Right Column - Player Card */}
-      <div className="lg:col-span-8">
-        <div className="relative rounded-3xl overflow-hidden aspect-[4/3] bg-gradient-to-br from-violet-900/30 to-emerald-900/30">
+      <div className="lg:col-span-8 order-1 lg:order-2">
+        <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] bg-gradient-to-br from-violet-900/30 to-emerald-900/30">
           {/* Background Image */}
           <div
             className="absolute inset-0 opacity-30 mix-blend-overlay"
@@ -365,21 +365,21 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
           {/* Content */}
-          <div className="relative h-full p-8 flex flex-col justify-between">
+          <div className="relative h-full p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-emerald-400 text-xs font-medium tracking-wider uppercase">
                   正在预览
                 </span>
-                <h2 className="text-white text-2xl font-bold mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h2 className="text-white text-xl sm:text-2xl font-bold mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   成都漂移
                 </h2>
                 <p className="text-white/40 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   {selectedDialect?.name || '方言'}版
                 </p>
               </div>
-              <button className="w-10 h-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all">
+              <button className="w-10 h-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all min-w-[44px] min-h-[44px]">
                 <span className="material-symbols-outlined">more_horiz</span>
               </button>
             </div>
@@ -436,29 +436,29 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
             </div>
 
             {/* Lyrics Display */}
-            <div className="space-y-2 text-center mb-4">
-              <p className="text-white/30 text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+            <div className="space-y-1 sm:space-y-2 text-center mb-2 sm:mb-4 px-2">
+              <p className="text-white/30 text-sm sm:text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
                 老子们成都的节奏在夜里跳动
               </p>
-              <p className="text-white text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <p className="text-white text-lg sm:text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
                 穿越雾都的街道，节奏不停在燃烧...
               </p>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center justify-center gap-8">
-              <button className="text-white/40 hover:text-white transition-colors">
+            <div className="flex items-center justify-center gap-6 sm:gap-8">
+              <button className="text-white/40 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <span className="material-symbols-outlined text-2xl">skip_previous</span>
               </button>
               <button
                 onClick={handlePlayPause}
-                className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/20"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/20 min-w-[44px] min-h-[44px]"
               >
-                <span className="material-symbols-outlined text-3xl">
+                <span className="material-symbols-outlined text-2xl sm:text-3xl">
                   {isPlaying ? 'pause' : 'play_arrow'}
                 </span>
               </button>
-              <button className="text-white/40 hover:text-white transition-colors">
+              <button className="text-white/40 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <span className="material-symbols-outlined text-2xl">skip_next</span>
               </button>
             </div>

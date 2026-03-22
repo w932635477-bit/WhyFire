@@ -174,8 +174,8 @@ export async function POST(
     const trendingService = getTrendingService()
 
     // 获取热点和热梗
-    let trendingTopics = undefined
-    let memes = undefined
+    let trendingTopics: Awaited<ReturnType<typeof trendingService.getTrendingTopics>> | undefined = undefined
+    let memes: Awaited<ReturnType<typeof trendingService.getInternetMemes>> | undefined = undefined
 
     if (includeTrending) {
       try {

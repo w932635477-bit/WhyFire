@@ -34,7 +34,12 @@ export interface CreateState {
     audioUrl: string | null
     recordingBlob: Blob | null
     recordingDuration: number
-    uploadType: 'record' | 'upload' | null
+    uploadType: 'record' | 'upload' | 'video' | null
+    // 视频提取相关
+    videoFile: File | null
+    videoUrl: string | null
+    isExtracting: boolean
+    extractProgress: number
   }
 
   // Step 2: 方言 + Beat
@@ -76,6 +81,10 @@ const initialState: CreateState = {
     recordingBlob: null,
     recordingDuration: 0,
     uploadType: null,
+    videoFile: null,
+    videoUrl: null,
+    isExtracting: false,
+    extractProgress: 0,
   },
   dialect: {
     selected: 'cantonese',
@@ -114,7 +123,9 @@ const initialState: CreateState = {
 type CreateAction =
   | { type: 'SET_VOICE_FILE'; payload: { file: File | null; url: string | null } }
   | { type: 'SET_RECORDING'; payload: { blob: Blob | null; duration: number } }
-  | { type: 'SET_UPLOAD_TYPE'; payload: 'record' | 'upload' | null }
+  | { type: 'SET_UPLOAD_TYPE'; payload: 'record' | 'upload' | 'video' | null }
+  | { type: 'SET_VIDEO_FILE'; payload: { file: File | null; url: string | null } }
+  | { type: 'SET_EXTRACTING'; payload: { isExtracting: boolean; progress: number } }
   | { type: 'SET_DIALECT'; payload: string }
   | { type: 'SET_BEAT'; payload: string | null }
   | { type: 'SET_CUSTOM_BEAT'; payload: File | null }
@@ -134,7 +145,9 @@ interface CreateContextType {
   // 便捷方法
   setVoiceFile: (file: File | null, url: string | null) => void
   setRecording: (blob: Blob | null, duration: number) => void
-  setUploadType: (type: 'record' | 'upload' | null) => void
+  setUploadType: (type: 'record' | 'upload' | 'video' | null) => void
+  setVideoFile: (file: File | null, url: string | null) => void
+  setExtracting: (isExtracting: boolean, progress: number) => void
   setDialect: (dialectId: string) => void
   setBeat: (beatId: string | null) => void
   setCustomBeat: (file: File | null) => void
@@ -178,6 +191,24 @@ function createReducer(state: CreateState, action: CreateAction): CreateState {
         voiceCloning: {
           ...state.voiceCloning,
           uploadType: action.payload,
+        },
+      }
+    case 'SET_VIDEO_FILE':
+      return {
+        ...state,
+        voiceCloning: {
+          ...state.voiceCloning,
+          videoFile: action.payload.file,
+          videoUrl: action.payload.url,
+        },
+      }
+    case 'SET_EXTRACTING':
+      return {
+        ...state,
+        voiceCloning: {
+          ...state.voiceCloning,
+          isExtracting: action.payload.isExtracting,
+          extractProgress: action.payload.progress,
         },
       }
     case 'SET_DIALECT':
@@ -278,8 +309,16 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_RECORDING', payload: { blob, duration } })
   }, [])
 
-  const setUploadType = useCallback((type: 'record' | 'upload' | null) => {
+  const setUploadType = useCallback((type: 'record' | 'upload' | 'video' | null) => {
     dispatch({ type: 'SET_UPLOAD_TYPE', payload: type })
+  }, [])
+
+  const setVideoFile = useCallback((file: File | null, url: string | null) => {
+    dispatch({ type: 'SET_VIDEO_FILE', payload: { file, url } })
+  }, [])
+
+  const setExtracting = useCallback((isExtracting: boolean, progress: number) => {
+    dispatch({ type: 'SET_EXTRACTING', payload: { isExtracting, progress } })
   }, [])
 
   const setDialect = useCallback((dialectId: string) => {
@@ -332,6 +371,8 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     setVoiceFile,
     setRecording,
     setUploadType,
+    setVideoFile,
+    setExtracting,
     setDialect,
     setBeat,
     setCustomBeat,

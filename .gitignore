@@ -53,3 +53,4 @@ public/audio/music-*.mp3
 
 # 测试结果
 test-results/
+.gstack/

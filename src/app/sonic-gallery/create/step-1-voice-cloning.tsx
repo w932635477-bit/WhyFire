@@ -2,18 +2,19 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useCreateContext } from './create-context'
+import { extractAudioFromVideo, formatDuration } from '@/lib/audio/audio-extractor'
 
 interface Step1VoiceCloningProps {
   onNext: () => void
 }
 
 export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
-  const { state, setVoiceFile, setRecording, setUploadType } = useCreateContext()
+  const { state, setVoiceFile, setRecording, setUploadType, setVideoFile, setExtracting } = useCreateContext()
   const [isRecording, setIsRecording] = useState(false)
   const [trainingProgress, setTrainingProgress] = useState(68)
   const [recordingTime, setRecordingTime] = useState(0)
-  const [recordedMinutes, setRecordedMinutes] = useState(0)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
+  const audioInputRef = useRef<HTMLInputElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
 
@@ -31,8 +32,41 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  // 处理文件上传
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 处理视频上传
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const url = URL.createObjectURL(file)
+    setVideoFile(file, url)
+    setUploadType('video')
+
+    // 开始提取音频
+    setExtracting(true, 0)
+
+    try {
+      const result = await extractAudioFromVideo(file, {
+        onProgress: (progress) => {
+          setExtracting(true, Math.round(progress * 100))
+        },
+        outputFormat: 'mp3',
+      })
+
+      // 提取完成，设置音频数据
+      setVoiceFile(
+        new File([result.audioBlob], 'extracted-audio.mp3', { type: 'audio/mpeg' }),
+        result.audioUrl
+      )
+      setExtracting(false, 100)
+    } catch (error) {
+      console.error('Failed to extract audio:', error)
+      setExtracting(false, 0)
+      alert('音频提取失败，请尝试其他方式')
+    }
+  }
+
+  // 处理音频文件上传
+  const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const url = URL.createObjectURL(file)
@@ -89,6 +123,9 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
   // 检查是否可以进入下一步
   const canProceed = state.voiceCloning.audioFile || state.voiceCloning.recordingBlob
 
+  // 正在提取中
+  const isExtracting = state.voiceCloning.isExtracting
+
   return (
     <div className="space-y-12">
       {/* Header */}
@@ -104,7 +141,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </p>
       </div>
 
-      {/* 为什么要录音？解释卡片 - Refined */}
+      {/* 为什么要录音？解释卡片 */}
       <div className="max-w-3xl mx-auto p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
@@ -140,11 +177,84 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Action Cards */}
+        {/* Left Column - Action Cards */}
         <div className="lg:col-span-4 flex flex-col gap-4">
-          {/* Record Voice */}
+          {/* 主卡片：上传视频 - 最推荐 */}
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleVideoUpload}
+            className="hidden"
+          />
           <div
-            className={`group p-5 rounded-2xl transition-all duration-300 cursor-pointer ${
+            className={`group p-6 rounded-2xl transition-all duration-300 cursor-pointer card-lift ${
+              state.voiceCloning.uploadType === 'video'
+                ? 'bg-gradient-to-br from-violet-500/15 to-emerald-500/15 border-2 border-violet-500/40'
+                : 'bg-gradient-to-br from-violet-500/5 to-emerald-500/5 border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1]'
+            }`}
+            onClick={() => !isExtracting && videoInputRef.current?.click()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-xl text-violet-400">
+                  movie
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-white/90 font-semibold text-base font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    上传视频
+                  </h3>
+                  <span className="px-2 py-0.5 bg-violet-500/20 text-violet-400 text-xs rounded-full font-medium">
+                    推荐
+                  </span>
+                </div>
+                <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif] mb-2">
+                  从相册选择视频，自动提取人声
+                </p>
+                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  支持 MP4 / MOV / AVI
+                </p>
+
+                {/* 提取进度 */}
+                {state.voiceCloning.uploadType === 'video' && (
+                  <div className="mt-3">
+                    {isExtracting ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-violet-400">正在提取音频...</span>
+                          <span className="text-white/60">{state.voiceCloning.extractProgress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-white/[0.1] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 rounded-full transition-all duration-300"
+                            style={{ width: `${state.voiceCloning.extractProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : state.voiceCloning.videoFile ? (
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                        <span className="text-emerald-400/80">✓ 已提取音频</span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 分隔线 */}
+          <div className="flex items-center gap-3 py-2">
+            <div className="flex-1 h-px bg-white/[0.06]" />
+            <span className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">其他方式</span>
+            <div className="flex-1 h-px bg-white/[0.06]" />
+          </div>
+
+          {/* 直接录音 */}
+          <div
+            className={`group p-5 rounded-2xl transition-all duration-300 cursor-pointer card-lift ${
               state.voiceCloning.uploadType === 'record'
                 ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
                 : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]'
@@ -165,10 +275,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               </div>
               <div className="flex-1">
                 <h3 className="text-white/90 font-medium text-base mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  录制人声
+                  直接录音
                 </h3>
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  在浏览器中直接录音，建议录制 30秒-2分钟
+                  点击开始，朗读指定文本
                 </p>
                 {(isRecording || state.voiceCloning.recordingBlob) && (
                   <div className="flex items-center gap-2 mt-2">
@@ -188,57 +298,124 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             </div>
           </div>
 
-          {/* Reading Text Card - 显示指定朗读文本 */}
-          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="material-symbols-outlined text-white/50 text-base">
-                article
-              </span>
-              <span className="text-white/60 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                请朗读以下文字（约1分钟）
-              </span>
-            </div>
-            <p className="text-white/40 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif] whitespace-pre-line">
-              {readingText}
-            </p>
-          </div>
-
-          {/* Upload Audio/Video */}
+          {/* 上传音频 */}
           <input
-            ref={fileInputRef}
+            ref={audioInputRef}
             type="file"
-            accept="audio/*,video/*"
-            onChange={handleFileUpload}
+            accept="audio/*"
+            onChange={handleAudioUpload}
             className="hidden"
           />
           <div
-            className={`group p-5 rounded-2xl transition-all duration-300 cursor-pointer ${
+            className={`group p-5 rounded-2xl transition-all duration-300 cursor-pointer card-lift ${
               state.voiceCloning.uploadType === 'upload'
                 ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
                 : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]'
             }`}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => audioInputRef.current?.click()}
           >
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-white/60 text-lg">
-                  upload_file
+                  audio_file
                 </span>
               </div>
               <div className="flex-1">
                 <h3 className="text-white/90 font-medium text-base mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  上传音频/视频
+                  上传音频
                 </h3>
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  支持 WAV、FLAC、MP3 或 MP4 格式
+                  从文件选择音频
                 </p>
-                {state.voiceCloning.audioFile && (
+                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif] mt-1">
+                  MP3 / WAV / FLAC / M4A
+                </p>
+                {state.voiceCloning.audioFile && state.voiceCloning.uploadType === 'upload' && (
                   <p className="text-emerald-400/80 text-xs mt-2">✓ {state.voiceCloning.audioFile.name}</p>
                 )}
               </div>
               <span className="material-symbols-outlined text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all text-lg">
                 arrow_forward
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Reading Text & Quality Analysis */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Reading Text Card - 录音时显示 */}
+          {(state.voiceCloning.uploadType === 'record' || isRecording) && (
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-white/50 text-base">
+                  article
+                </span>
+                <span className="text-white/60 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  请朗读以下文字（约1分钟）
+                </span>
+              </div>
+              <p className="text-white/40 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif] whitespace-pre-line">
+                {readingText}
+              </p>
+            </div>
+          )}
+
+          {/* Quality Analysis Panel */}
+          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-white text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  声音质量分析
+                </h3>
+                <p className="text-white/30 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  自动检测音频质量指标
+                </p>
+              </div>
+              <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                <span className="text-emerald-400 text-xs font-medium">
+                  分析就绪
+                </span>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">信噪比</span>
+                  <span className="text-white font-semibold">38.2 dB</span>
+                </div>
+                <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
+                  <div className="h-full w-[85%] bg-gradient-to-r from-violet-500 to-violet-400 rounded-full" />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">清晰度</span>
+                  <span className="text-white font-semibold">94%</span>
+                </div>
+                <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
+                  <div className="h-full w-[94%] bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" />
+                </div>
+              </div>
+            </div>
+
+            {/* Quality Checks */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { icon: 'check_circle', label: '无削波' },
+                { icon: 'check_circle', label: '环境安静' },
+                { icon: 'check_circle', label: '采样率 44.1k' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03]">
+                  <span className="material-symbols-outlined text-emerald-400 text-lg">
+                    {item.icon}
+                  </span>
+                  <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    {item.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -270,65 +447,6 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 按照指定文本自然朗读
               </li>
             </ul>
-          </div>
-        </div>
-
-        {/* Quality Analysis Panel */}
-        <div className="lg:col-span-8 p-8 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-white text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                声音质量分析
-              </h3>
-              <p className="text-white/30 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                自动检测音频质量指标
-              </p>
-            </div>
-            <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-              <span className="text-emerald-400 text-xs font-medium">
-                分析就绪
-              </span>
-            </div>
-          </div>
-
-          {/* Metrics */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">信噪比</span>
-                <span className="text-white font-semibold">38.2 dB</span>
-              </div>
-              <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
-                <div className="h-full w-[85%] bg-gradient-to-r from-violet-500 to-violet-400 rounded-full" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">清晰度</span>
-                <span className="text-white font-semibold">94%</span>
-              </div>
-              <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
-                <div className="h-full w-[94%] bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" />
-              </div>
-            </div>
-          </div>
-
-          {/* Quality Checks */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { icon: 'check_circle', label: '无削波' },
-              { icon: 'check_circle', label: '环境安静' },
-              { icon: 'check_circle', label: '采样率 44.1k' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03]">
-                <span className="material-symbols-outlined text-emerald-400 text-lg">
-                  {item.icon}
-                </span>
-                <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  {item.label}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -366,7 +484,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between items-end pt-4">
+      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 pt-4">
         {/* 下一步预览 */}
         <div className="hidden md:block">
           <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
@@ -380,7 +498,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         <button
           onClick={onNext}
           disabled={!canProceed}
-          className={`group inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+          className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
             canProceed
               ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
               : 'bg-white/10 text-white/40 cursor-not-allowed'

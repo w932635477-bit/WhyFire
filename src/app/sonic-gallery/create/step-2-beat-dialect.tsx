@@ -301,12 +301,12 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
             </div>
 
             {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               {beatCategories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
                     activeCategory === category.id
                       ? 'bg-white/[0.08] text-white border border-white/[0.15]'
                       : 'bg-white/[0.02] text-white/50 border border-white/[0.05] hover:bg-white/[0.04]'
@@ -481,11 +481,11 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between items-end pt-6 border-t border-white/[0.04]">
-        <div>
+      <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4 pt-6 border-t border-white/[0.04]">
+        <div className="w-full sm:w-auto">
           <button
             onClick={onPrev}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
           >
             <span className="material-symbols-outlined text-lg">arrow_back</span>
             上一步
@@ -504,7 +504,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
         <button
           onClick={onNext}
           disabled={!canProceed}
-          className={`group inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+          className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
             canProceed
               ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
               : 'bg-white/10 text-white/40 cursor-not-allowed'

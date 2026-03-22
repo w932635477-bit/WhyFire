@@ -264,7 +264,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 to-emerald-500/10 border border-violet-500/20 hover:border-violet-500/40 transition-all duration-500"
+            className="w-full group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 to-emerald-500/10 border border-violet-500/20 hover:border-violet-500/40 transition-all duration-500 btn-press"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-violet-500/0 via-violet-500/10 to-violet-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             <div className="relative flex items-center justify-center gap-3">
@@ -375,11 +375,11 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between items-end pt-6 border-t border-white/[0.04]">
-        <div>
+      <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4 pt-6 border-t border-white/[0.04]">
+        <div className="w-full sm:w-auto">
           <button
             onClick={onPrev}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
           >
             <span className="material-symbols-outlined text-lg">arrow_back</span>
             上一步
@@ -398,7 +398,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
         <button
           onClick={onNext}
           disabled={!canProceed}
-          className={`group inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+          className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
             canProceed
               ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
               : 'bg-white/10 text-white/40 cursor-not-allowed'

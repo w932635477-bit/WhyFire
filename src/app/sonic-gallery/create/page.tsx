@@ -153,17 +153,17 @@ function CreatePageContent() {
 
       {/* 顶部导航栏 - Logo + 返回按钮 */}
       <header className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.04]">
-        <div className="max-w-6xl mx-auto px-8 lg:px-16 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-16 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* 返回按钮 */}
             <Link
               href="/sonic-gallery"
-              className="group flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+              className="group flex items-center gap-2 text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px]"
             >
               <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">
                 arrow_back
               </span>
-              <span className="text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">返回首页</span>
+              <span className="text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif] hidden sm:inline">返回首页</span>
             </Link>
 
             {/* Logo */}
@@ -185,30 +185,30 @@ function CreatePageContent() {
         </div>
       </header>
 
-      <div className="px-8 lg:px-16 py-12 max-w-6xl mx-auto">
+      <div className="px-4 sm:px-6 lg:px-16 py-8 sm:py-12 max-w-6xl mx-auto">
         {/* Page Header */}
-        <div className="mb-12 text-center">
+        <div className="mb-8 sm:mb-12 text-center">
           <span className="text-violet-400 text-sm font-medium tracking-wider uppercase mb-3 block">
             创作工坊
           </span>
-          <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
             创作你的方言说唱
           </h1>
         </div>
 
         {/* Step Indicator - Apple Style Refined */}
-        <div className="mb-12">
-          <div className="flex items-center justify-center max-w-lg mx-auto">
+        <div className="mb-8 sm:mb-12">
+          <div className="flex items-center justify-center max-w-lg mx-auto overflow-x-auto px-2">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
+              <div key={step.id} className="flex items-center flex-shrink-0">
                 <button
                   onClick={() => step.id < state.currentStep && goToStep(step.id)}
-                  className={`flex flex-col items-center group ${
+                  className={`flex flex-col items-center group min-w-[60px] ${
                     step.id < state.currentStep ? 'cursor-pointer' : 'cursor-default'
                   }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
                       state.currentStep === step.id
                         ? 'bg-white text-black'
                         : state.currentStep > step.id
@@ -222,13 +222,13 @@ function CreatePageContent() {
                       step.id
                     )}
                   </div>
-                  <span className={`text-xs mt-2 font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif] transition-colors duration-300 ${
+                  <span className={`text-[10px] sm:text-xs mt-1.5 sm:mt-2 font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif] transition-colors duration-300 text-center ${
                     state.currentStep >= step.id ? 'text-white/70' : 'text-white/30'
                   }`}>
                     {step.title}
                   </span>
                   {state.currentStep === step.id && (
-                    <span className="text-white/40 text-[10px] mt-0.5 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-white/40 text-[9px] sm:text-[10px] mt-0.5 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                       {step.time}
                     </span>
                   )}

@@ -29,6 +29,22 @@ interface PromptContext {
 const DIALECT_DESCRIPTIONS: Record<DialectType, string> = {
   mandarin: 'Mandarin Chinese (普通话)',
   cantonese: 'Cantonese (粤语)',
+  sichuan: 'Sichuan Dialect (四川话)',
+  dongbei: 'Northeastern Mandarin (东北话)',
+  shandong: 'Shandong Dialect (山东话)',
+  henan: 'Henan Dialect (河南话)',
+  shaanxi: 'Shaanxi Dialect (陕西话)',
+  lanyin: 'Lanyin Mandarin (兰银官话)',
+  jianghuai: 'Jianghuai Mandarin (江淮官话)',
+  xinan: 'Southwestern Mandarin (西南官话)',
+  jiaoliao: 'Jiaoliao Mandarin (胶辽官话)',
+  zhongyuan: 'Central Plains Mandarin (中原官话)',
+  wu: 'Wu Dialect (吴语)',
+  minnan: 'Min Nan Dialect (闽南语)',
+  hakka: 'Hakka Dialect (客家话)',
+  xiang: 'Xiang Dialect (湘语)',
+  gan: 'Gan Dialect (赣语)',
+  jin: 'Jin Dialect (晋语)',
   english: 'English',
 }
 
