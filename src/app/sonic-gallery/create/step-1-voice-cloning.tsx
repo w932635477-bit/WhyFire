@@ -34,34 +34,34 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </p>
       </div>
 
-      {/* 🤔 为什么要录音？解释卡片 */}
-      <div className="max-w-4xl mx-auto p-5 rounded-2xl bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border border-violet-500/20">
+      {/* 为什么要录音？解释卡片 - Refined */}
+      <div className="max-w-3xl mx-auto p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-            <span className="material-symbols-outlined text-violet-400 text-2xl">
+          <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-white/60 text-lg">
               help
             </span>
           </div>
           <div className="flex-1">
-            <h4 className="text-white font-semibold mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              🤔 为什么要录音？
+            <h4 className="text-white/90 font-medium mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              为什么要录音？
             </h4>
-            <p className="text-white/60 text-sm leading-relaxed mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              AI 会学习你的声音特点，然后用<strong className="text-violet-400">你自己的声音</strong>唱出方言 Rap。
+            <p className="text-white/50 text-sm leading-relaxed mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              AI 会学习你的声音特点，然后用<strong className="text-white/70">你自己的声音</strong>唱出方言 Rap。
               就像有一个"数字分身"在帮你唱歌！
             </p>
-            <div className="flex items-center gap-4 text-xs text-white/40">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/35">
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                <span className="material-symbols-outlined text-emerald-400/70 text-sm">check</span>
                 <span>相似度 ≥ 80%</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                <span className="material-symbols-outlined text-emerald-400/70 text-sm">check</span>
                 <span>保持你的声音特色</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
-                <span>可随时重新录制优化</span>
+                <span className="material-symbols-outlined text-emerald-400/70 text-sm">check</span>
+                <span>可随时重新录制</span>
               </div>
             </div>
           </div>
@@ -74,23 +74,23 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         <div className="lg:col-span-4 flex flex-col gap-4">
           {/* Record Voice */}
           <div
-            className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer"
+            className="group p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer"
             onClick={() => setIsRecording(!isRecording)}
           >
             <div className="flex items-start gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
                 isRecording
-                  ? 'bg-red-500/20 animate-pulse'
-                  : 'bg-gradient-to-br from-violet-500/20 to-violet-500/5 group-hover:scale-110'
+                  ? 'bg-red-500/10'
+                  : 'bg-white/[0.05]'
               }`}>
-                <span className={`material-symbols-outlined text-2xl ${
-                  isRecording ? 'text-red-400' : 'text-violet-400'
+                <span className={`material-symbols-outlined text-lg ${
+                  isRecording ? 'text-red-400' : 'text-white/60'
                 }`}>
                   {isRecording ? 'stop' : 'mic'}
                 </span>
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold text-lg mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h3 className="text-white/90 font-medium text-base mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   录制人声
                 </h3>
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
@@ -98,51 +98,51 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 </p>
                 {isRecording && (
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-red-400 text-sm font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-red-400/80 text-xs font-medium">
                       00:32
                     </span>
                   </div>
                 )}
               </div>
-              <span className="material-symbols-outlined text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all">
+              <span className="material-symbols-outlined text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all text-lg">
                 arrow_forward
               </span>
             </div>
           </div>
 
           {/* Reading Text Card - 显示指定朗读文本 */}
-          <div className="p-5 rounded-2xl bg-violet-500/5 border border-violet-500/20">
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
             <div className="flex items-center gap-2 mb-3">
-              <span className="material-symbols-outlined text-violet-400 text-lg">
+              <span className="material-symbols-outlined text-white/50 text-base">
                 article
               </span>
-              <span className="text-white/70 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <span className="text-white/60 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                 请朗读以下文字（约1分钟）
               </span>
             </div>
-            <p className="text-white/50 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif] whitespace-pre-line">
+            <p className="text-white/40 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif] whitespace-pre-line">
               {readingText}
             </p>
           </div>
 
           {/* Upload Audio/Video */}
-          <div className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer">
+          <div className="group p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span className="material-symbols-outlined text-emerald-400 text-2xl">
+              <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-white/60 text-lg">
                   upload_file
                 </span>
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold text-lg mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h3 className="text-white/90 font-medium text-base mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   上传音频/视频
                 </h3>
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   支持 WAV、FLAC、MP3 或 MP4 格式
                 </p>
               </div>
-              <span className="material-symbols-outlined text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all">
+              <span className="material-symbols-outlined text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all text-lg">
                 arrow_forward
               </span>
             </div>
