@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Step1VoiceCloning } from './step-1-voice-cloning'
 import { Step2BeatDialect } from './step-2-beat-dialect'
 import { Step3LyricsGeneration } from './step-3-lyrics-generation'
@@ -144,6 +145,40 @@ export default function CreatePage() {
     <>
       {/* 欢迎引导弹窗 */}
       {showWelcome && <WelcomeModal onClose={handleCloseWelcome} />}
+
+      {/* 顶部导航栏 - Logo + 返回按钮 */}
+      <header className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.04]">
+        <div className="max-w-6xl mx-auto px-8 lg:px-16 py-4">
+          <div className="flex items-center justify-between">
+            {/* 返回按钮 */}
+            <Link
+              href="/sonic-gallery"
+              className="group flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+            >
+              <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">
+                arrow_back
+              </span>
+              <span className="text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">返回首页</span>
+            </Link>
+
+            {/* Logo */}
+            <Link href="/sonic-gallery" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <span className="text-white font-bold text-lg">W</span>
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-white font-semibold text-lg block font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  方言回响
+                </span>
+                <span className="text-white/30 text-xs">WhyFire Studio</span>
+              </div>
+            </Link>
+
+            {/* 右侧占位 - 保持布局平衡 */}
+            <div className="w-24 hidden sm:block" />
+          </div>
+        </div>
+      </header>
 
       <div className="px-8 lg:px-16 py-12 max-w-6xl mx-auto">
         {/* Page Header */}
