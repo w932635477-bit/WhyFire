@@ -23,7 +23,6 @@ const beatCategories = [
   {
     id: 'energetic',
     name: '激情',
-    color: 'from-orange-500/20 to-red-500/20',
     icon: 'local_fire_department',
     beats: [
       { id: 'beat-1', name: 'Fire Drill', bpm: 140, duration: '2:30' },
@@ -36,7 +35,6 @@ const beatCategories = [
   {
     id: 'funny',
     name: '搞笑',
-    color: 'from-yellow-500/20 to-amber-500/20',
     icon: 'sentiment_very_satisfied',
     beats: [
       { id: 'beat-6', name: 'Bouncy Town', bpm: 110, duration: '2:10' },
@@ -49,7 +47,6 @@ const beatCategories = [
   {
     id: 'lyrical',
     name: '抒情',
-    color: 'from-blue-500/20 to-cyan-500/20',
     icon: 'favorite',
     beats: [
       { id: 'beat-11', name: 'Moonlit Path', bpm: 85, duration: '3:30' },
@@ -62,7 +59,6 @@ const beatCategories = [
   {
     id: 'general',
     name: '通用',
-    color: 'from-violet-500/20 to-purple-500/20',
     icon: 'music_note',
     beats: [
       { id: 'beat-16', name: 'Classic Flow', bpm: 120, duration: '2:40' },
@@ -159,8 +155,8 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                   onClick={() => setActiveCategory(category.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                     activeCategory === category.id
-                      ? `bg-gradient-to-r ${category.color} text-white border border-white/20`
-                      : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06]'
+                      ? 'bg-white/[0.08] text-white border border-white/[0.15]'
+                      : 'bg-white/[0.02] text-white/50 border border-white/[0.05] hover:bg-white/[0.04]'
                   }`}
                 >
                   <span className="material-symbols-outlined text-base">
@@ -172,45 +168,45 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
             </div>
 
             {/* Beat List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {beatCategories.find(c => c.id === activeCategory)?.beats.map((beat) => (
                 <button
                   key={beat.id}
                   onClick={() => setSelectedBeat(beat.id)}
-                  className={`group flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
+                  className={`group flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
                     selectedBeat === beat.id
-                      ? 'bg-gradient-to-r from-violet-500/10 to-emerald-500/10 border border-violet-500/30'
+                      ? 'bg-white/[0.05] border border-white/[0.15]'
                       : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]'
                   }`}
                 >
                   {/* Play Button */}
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                       playingBeat === beat.id
                         ? 'bg-emerald-500 text-black'
-                        : 'bg-white/[0.05] text-white/60 group-hover:bg-white/10'
+                        : 'bg-white/[0.05] text-white/60 group-hover:bg-white/[0.08]'
                     }`}
                     onClick={(e) => {
                       e.stopPropagation()
                       setPlayingBeat(playingBeat === beat.id ? null : beat.id)
                     }}
                   >
-                    <span className="material-symbols-outlined text-lg">
+                    <span className="material-symbols-outlined text-base">
                       {playingBeat === beat.id ? 'pause' : 'play_arrow'}
                     </span>
                   </div>
 
                   {/* Beat Info */}
                   <div className="flex-1 text-left">
-                    <h4 className="text-white font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <h4 className="text-white/80 font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                       {beat.name}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-white/40 text-xs">
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-white/35 text-xs">
                         {beat.bpm} BPM
                       </span>
-                      <span className="text-white/30 text-xs">•</span>
-                      <span className="text-white/40 text-xs">
+                      <span className="text-white/20 text-xs">·</span>
+                      <span className="text-white/35 text-xs">
                         {beat.duration}
                       </span>
                     </div>
@@ -218,7 +214,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
 
                   {/* Selected Indicator */}
                   {selectedBeat === beat.id && (
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-violet-500 to-emerald-500" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   )}
                 </button>
               ))}
@@ -228,25 +224,25 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
           {/* Beat Upload - 或上传自定义伴奏 */}
           <div className="relative">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-white/40 text-sm">或者</span>
-              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="text-white/30 text-xs">或者</span>
+              <div className="flex-1 h-px bg-white/[0.05]" />
             </div>
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-violet-500/30 transition-colors cursor-pointer group">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-white/[0.1] transition-colors cursor-pointer group">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="material-symbols-outlined text-white/60 text-2xl">
+                <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-white/50 text-lg">
                     cloud_upload
                   </span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-white font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  <h4 className="text-white/80 font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                     上传自定义伴奏
                   </h4>
-                  <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  <p className="text-white/35 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                     拖拽音频文件或点击浏览（支持 MP3、WAV、FLAC）
                   </p>
                 </div>
-                <div className="hidden sm:flex items-center gap-4 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06]">
+                <div className="hidden sm:flex items-center gap-4 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05]">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-violet-400 text-sm">speed</span>
                     <span className="text-xs text-white/50">自动检测 BPM</span>
