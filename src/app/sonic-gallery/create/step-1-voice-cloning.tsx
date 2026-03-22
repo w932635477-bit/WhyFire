@@ -1,16 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useCreateContext } from './create-context'
 
 interface Step1VoiceCloningProps {
   onNext: () => void
 }
 
 export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
+  const { state, setVoiceFile, setRecording, setUploadType } = useCreateContext()
   const [isRecording, setIsRecording] = useState(false)
   const [trainingProgress, setTrainingProgress] = useState(68)
   const [recordingTime, setRecordingTime] = useState(0)
   const [recordedMinutes, setRecordedMinutes] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
   // 指定朗读文本
   const readingText = `今天天气很好，我出门散步。阳光洒在脸上，感觉特别温暖。
@@ -18,6 +23,71 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
 我沿着小路慢慢走着，心情格外舒畅。
 远处的山峦若隐若现，像一幅美丽的水墨画。
 生活虽然忙碌，但偶尔也要停下来，感受这美好的时光。`
+
+  // 格式化录音时间
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // 处理文件上传
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setVoiceFile(file, url)
+      setUploadType('upload')
+    }
+  }
+
+  // 处理录音
+  const handleRecording = async () => {
+    if (isRecording) {
+      // 停止录音
+      mediaRecorderRef.current?.stop()
+      setIsRecording(false)
+    } else {
+      // 开始录音
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const mediaRecorder = new MediaRecorder(stream)
+        mediaRecorderRef.current = mediaRecorder
+        chunksRef.current = []
+
+        mediaRecorder.ondataavailable = (e) => {
+          chunksRef.current.push(e.data)
+        }
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+          setRecording(blob, recordingTime)
+          setUploadType('record')
+          stream.getTracks().forEach(track => track.stop())
+        }
+
+        mediaRecorder.start()
+        setIsRecording(true)
+        setUploadType('record')
+      } catch (error) {
+        console.error('Failed to start recording:', error)
+      }
+    }
+  }
+
+  // 录音计时
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isRecording])
+
+  // 检查是否可以进入下一步
+  const canProceed = state.voiceCloning.audioFile || state.voiceCloning.recordingBlob
 
   return (
     <div className="space-y-12">
@@ -74,8 +144,12 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         <div className="lg:col-span-4 flex flex-col gap-4">
           {/* Record Voice */}
           <div
-            className="group p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer"
-            onClick={() => setIsRecording(!isRecording)}
+            className={`group p-5 rounded-2xl transition-all duration-300 cursor-pointer ${
+              state.voiceCloning.uploadType === 'record'
+                ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
+                : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]'
+            }`}
+            onClick={handleRecording}
           >
             <div className="flex items-start gap-4">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
@@ -96,12 +170,15 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   在浏览器中直接录音，建议录制 30秒-2分钟
                 </p>
-                {isRecording && (
+                {(isRecording || state.voiceCloning.recordingBlob) && (
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-red-400/80 text-xs font-medium">
-                      00:32
+                    {isRecording && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+                    <span className={`${isRecording ? 'text-red-400/80' : 'text-emerald-400/80'} text-xs font-medium`}>
+                      {formatTime(recordingTime)}
                     </span>
+                    {state.voiceCloning.recordingBlob && !isRecording && (
+                      <span className="text-emerald-400/60 text-xs ml-2">✓ 已录制</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -127,7 +204,21 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
           </div>
 
           {/* Upload Audio/Video */}
-          <div className="group p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 cursor-pointer">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*,video/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <div
+            className={`group p-5 rounded-2xl transition-all duration-300 cursor-pointer ${
+              state.voiceCloning.uploadType === 'upload'
+                ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
+                : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]'
+            }`}
+            onClick={() => fileInputRef.current?.click()}
+          >
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-white/60 text-lg">
@@ -141,6 +232,9 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                   支持 WAV、FLAC、MP3 或 MP4 格式
                 </p>
+                {state.voiceCloning.audioFile && (
+                  <p className="text-emerald-400/80 text-xs mt-2">✓ {state.voiceCloning.audioFile.name}</p>
+                )}
               </div>
               <span className="material-symbols-outlined text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all text-lg">
                 arrow_forward
@@ -285,9 +379,14 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </div>
         <button
           onClick={onNext}
-          className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3.5 rounded-full font-semibold text-base hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+          disabled={!canProceed}
+          className={`group inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+            canProceed
+              ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
+              : 'bg-white/10 text-white/40 cursor-not-allowed'
+          }`}
         >
-          下一步
+          {canProceed ? '下一步' : '请先录制或上传音频'}
           <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
             arrow_forward
           </span>

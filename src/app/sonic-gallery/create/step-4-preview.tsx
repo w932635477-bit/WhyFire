@@ -1,32 +1,42 @@
 'use client'
 
 import { useState } from 'react'
+import { useCreateContext } from './create-context'
 
 interface Step4PreviewProps {
   onPrev: () => void
 }
 
 export function Step4Preview({ onPrev }: Step4PreviewProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
+  const { state, setPreviewParams, setPlaying, setLyrics } = useCreateContext()
   const [isEditingLyrics, setIsEditingLyrics] = useState(false)
-  const [speed, setSpeed] = useState(1.0)
-  const [pitch, setPitch] = useState(0)
-  const [lyrics, setLyrics] = useState(`(前奏)
+  const [editedLyrics, setEditedLyrics] = useState(state.lyrics.generatedLyrics)
 
-老子们成都的节奏在夜里跳动
-穿越雾都的街道，节奏不停在燃烧
-方言的魅力，让你感受到地道的味道
-每一句押韵，都是文化的传承
+  // 从 context 获取状态
+  const { speed, pitch, isPlaying } = state.preview
+  const lyrics = state.lyrics.generatedLyrics
+  const selectedDialect = state.dialect.dialects.find(d => d.id === state.dialect.selected)
 
-(副歌)
-川渝的调调，带你去飘摇
-东北的味儿，老铁杠杠滴
-粤语的韵脚，听着真带感
-普通话的标准，全国都传遍
+  const handleSpeedChange = (newSpeed: number) => {
+    setPreviewParams({ speed: newSpeed })
+  }
 
-(尾奏)
-这就是咱们的方言Rap
-独特的韵味，你值得拥有`)
+  const handlePitchChange = (newPitch: number) => {
+    setPreviewParams({ pitch: newPitch })
+  }
+
+  const handlePlayPause = () => {
+    setPlaying(!isPlaying)
+  }
+
+  const handleSaveLyrics = () => {
+    setLyrics(editedLyrics)
+    setIsEditingLyrics(false)
+  }
+
+  const handleReset = () => {
+    setPreviewParams({ speed: 1.0, pitch: 0 })
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-5xl mx-auto">
@@ -71,10 +81,8 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                   <span className="text-white text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                     {item.label}
                   </span>
-                  <span className={`text-xs ${
-                    item.status === 'done' ? 'text-white/40' : 'text-violet-400'
-                  }`}>
-                    {item.status === 'done' ? item.time : `${item.progress}%`}
+                  <span className="text-white/40 text-xs">
+                    {item.time}
                   </span>
                 </div>
               </div>
@@ -94,7 +102,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               </span>
             </div>
             <button
-              onClick={() => { setSpeed(1.0); setPitch(0); }}
+              onClick={handleReset}
               className="text-white/40 text-xs hover:text-white/60 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
             >
               重置
@@ -113,7 +121,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               max="2"
               step="0.1"
               value={speed}
-              onChange={(e) => setSpeed(parseFloat(e.target.value))}
+              onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
               className="w-full h-1 bg-white/[0.1] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-violet-500 [&::-webkit-slider-thumb]:to-emerald-500"
             />
             <div className="flex justify-between text-white/30 text-xs">
@@ -134,7 +142,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               max="5"
               step="1"
               value={pitch}
-              onChange={(e) => setPitch(parseInt(e.target.value))}
+              onChange={(e) => handlePitchChange(parseInt(e.target.value))}
               className="w-full h-1 bg-white/[0.1] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-violet-500 [&::-webkit-slider-thumb]:to-emerald-500"
             />
             <div className="flex justify-between text-white/30 text-xs">
@@ -210,7 +218,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                   成都漂移
                 </h2>
                 <p className="text-white/40 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  川渝陷阱 · 粤语版
+                  {selectedDialect?.name || '方言'}版
                 </p>
               </div>
               <button className="w-10 h-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all">
@@ -247,7 +255,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                 <span className="material-symbols-outlined text-2xl">skip_previous</span>
               </button>
               <button
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={handlePlayPause}
                 className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/20"
               >
                 <span className="material-symbols-outlined text-3xl">
@@ -286,12 +294,20 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           </div>
 
           {isEditingLyrics ? (
-            <textarea
-              value={lyrics}
-              onChange={(e) => setLyrics(e.target.value)}
-              className="w-full h-48 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed"
-              placeholder="在此编辑歌词..."
-            />
+            <div className="space-y-3">
+              <textarea
+                value={editedLyrics}
+                onChange={(e) => setEditedLyrics(e.target.value)}
+                className="w-full h-48 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed"
+                placeholder="在此编辑歌词..."
+              />
+              <button
+                onClick={handleSaveLyrics}
+                className="w-full py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm font-medium hover:bg-violet-500/30 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              >
+                保存修改
+              </button>
+            </div>
           ) : (
             <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 h-48 overflow-y-auto">
               <pre className="text-white/60 text-sm whitespace-pre-wrap font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed">

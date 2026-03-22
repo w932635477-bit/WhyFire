@@ -6,6 +6,7 @@ import { Step1VoiceCloning } from './step-1-voice-cloning'
 import { Step2BeatDialect } from './step-2-beat-dialect'
 import { Step3LyricsGeneration } from './step-3-lyrics-generation'
 import { Step4Preview } from './step-4-preview'
+import { CreateProvider, useCreateContext } from './create-context'
 
 const steps = [
   { id: 1, title: '音色克隆', description: '建立你的数字身份', time: '1-2分钟', icon: 'mic' },
@@ -88,7 +89,15 @@ function WelcomeModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function CreatePage() {
-  const [currentStep, setCurrentStep] = useState(1)
+  return (
+    <CreateProvider>
+      <CreatePageContent />
+    </CreateProvider>
+  )
+}
+
+function CreatePageContent() {
+  const { state, goToStep } = useCreateContext()
   const [showWelcome, setShowWelcome] = useState(false)
 
   // 检查是否首次使用
@@ -106,33 +115,32 @@ export default function CreatePage() {
 
   // 计算已用时间和剩余时间
   const getRemainingTime = () => {
-    const times = ['1-2分钟', '30秒', '1分钟', '2分钟']
-    if (currentStep === 1) return '约 5 分钟'
-    if (currentStep === 2) return '约 3-4 分钟'
-    if (currentStep === 3) return '约 3 分钟'
+    if (state.currentStep === 1) return '约 5 分钟'
+    if (state.currentStep === 2) return '约 3-4 分钟'
+    if (state.currentStep === 3) return '约 3 分钟'
     return '约 2 分钟'
   }
 
   const renderStep = () => {
-    switch (currentStep) {
+    switch (state.currentStep) {
       case 1:
-        return <Step1VoiceCloning onNext={() => setCurrentStep(2)} />
+        return <Step1VoiceCloning onNext={() => goToStep(2)} />
       case 2:
         return (
           <Step2BeatDialect
-            onNext={() => setCurrentStep(3)}
-            onPrev={() => setCurrentStep(1)}
+            onNext={() => goToStep(3)}
+            onPrev={() => goToStep(1)}
           />
         )
       case 3:
         return (
           <Step3LyricsGeneration
-            onNext={() => setCurrentStep(4)}
-            onPrev={() => setCurrentStep(2)}
+            onNext={() => goToStep(4)}
+            onPrev={() => goToStep(2)}
           />
         )
       case 4:
-        return <Step4Preview onPrev={() => setCurrentStep(3)} />
+        return <Step4Preview onPrev={() => goToStep(3)} />
       default:
         return null
     }
@@ -194,32 +202,32 @@ export default function CreatePage() {
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <button
-                  onClick={() => step.id < currentStep && setCurrentStep(step.id)}
+                  onClick={() => step.id < state.currentStep && goToStep(step.id)}
                   className={`flex flex-col items-center group ${
-                    step.id < currentStep ? 'cursor-pointer' : 'cursor-default'
+                    step.id < state.currentStep ? 'cursor-pointer' : 'cursor-default'
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                      currentStep === step.id
+                      state.currentStep === step.id
                         ? 'bg-white text-black'
-                        : currentStep > step.id
+                        : state.currentStep > step.id
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                         : 'bg-white/[0.03] text-white/30 border border-white/[0.08]'
                     }`}
                   >
-                    {currentStep > step.id ? (
+                    {state.currentStep > step.id ? (
                       <span className="material-symbols-outlined text-base">check</span>
                     ) : (
                       step.id
                     )}
                   </div>
                   <span className={`text-xs mt-2 font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif] transition-colors duration-300 ${
-                    currentStep >= step.id ? 'text-white/70' : 'text-white/30'
+                    state.currentStep >= step.id ? 'text-white/70' : 'text-white/30'
                   }`}>
                     {step.title}
                   </span>
-                  {currentStep === step.id && (
+                  {state.currentStep === step.id && (
                     <span className="text-white/40 text-[10px] mt-0.5 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                       {step.time}
                     </span>
@@ -230,7 +238,7 @@ export default function CreatePage() {
                     <div className="absolute inset-0 bg-white/[0.08]" />
                     <div
                       className="absolute inset-y-0 left-0 bg-white/40 transition-all duration-300"
-                      style={{ width: currentStep > step.id ? '100%' : '0%' }}
+                      style={{ width: state.currentStep > step.id ? '100%' : '0%' }}
                     />
                   </div>
                 )}

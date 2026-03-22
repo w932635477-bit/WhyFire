@@ -1,35 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useCreateContext } from './create-context'
 
 interface Step2BeatDialectProps {
   onNext: () => void
   onPrev: () => void
 }
 
-const dialects = [
-  { id: 'mandarin', name: '普通话', region: '标准' },
-  { id: 'cantonese', name: '粤语', region: '广东' },
-  { id: 'sichuan', name: '四川话', region: '川渝' },
-  { id: 'dongbei', name: '东北话', region: '东北' },
-  { id: 'shandong', name: '山东话', region: '齐鲁' },
-  { id: 'shanghai', name: '上海话', region: '吴语' },
-  { id: 'henan', name: '河南话', region: '中原' },
-  { id: 'hunan', name: '湖南话', region: '湘语' },
-]
+interface BeatInfo {
+  id: string
+  name: string
+  bpm: number
+  duration: string
+}
 
-// Beat 库数据
+// Beat 库数据 - 使用占位音频 URL（实际项目中替换为真实音频）
 const beatCategories = [
   {
     id: 'energetic',
     name: '激情',
     icon: 'local_fire_department',
     beats: [
-      { id: 'beat-1', name: 'Fire Drill', bpm: 140, duration: '2:30' },
-      { id: 'beat-2', name: 'Thunder Road', bpm: 138, duration: '2:45' },
-      { id: 'beat-3', name: 'Night Runner', bpm: 145, duration: '3:00' },
-      { id: 'beat-4', name: 'Power Move', bpm: 142, duration: '2:20' },
-      { id: 'beat-5', name: 'Street Kings', bpm: 136, duration: '2:55' },
+      { id: 'beat-1', name: 'Fire Drill', bpm: 140, duration: '2:30', audioUrl: '/beats/fire-drill.mp3' },
+      { id: 'beat-2', name: 'Thunder Road', bpm: 138, duration: '2:45', audioUrl: '/beats/thunder-road.mp3' },
+      { id: 'beat-3', name: 'Night Runner', bpm: 145, duration: '3:00', audioUrl: '/beats/night-runner.mp3' },
+      { id: 'beat-4', name: 'Power Move', bpm: 142, duration: '2:20', audioUrl: '/beats/power-move.mp3' },
+      { id: 'beat-5', name: 'Street Kings', bpm: 136, duration: '2:55', audioUrl: '/beats/street-kings.mp3' },
     ],
   },
   {
@@ -37,11 +34,11 @@ const beatCategories = [
     name: '搞笑',
     icon: 'sentiment_very_satisfied',
     beats: [
-      { id: 'beat-6', name: 'Bouncy Town', bpm: 110, duration: '2:10' },
-      { id: 'beat-7', name: 'Goofy Groove', bpm: 105, duration: '2:25' },
-      { id: 'beat-8', name: 'Happy Days', bpm: 115, duration: '2:00' },
-      { id: 'beat-9', name: 'Silly Walk', bpm: 108, duration: '2:35' },
-      { id: 'beat-10', name: 'Comedy Club', bpm: 112, duration: '2:15' },
+      { id: 'beat-6', name: 'Bouncy Town', bpm: 110, duration: '2:10', audioUrl: '/beats/bouncy-town.mp3' },
+      { id: 'beat-7', name: 'Goofy Groove', bpm: 105, duration: '2:25', audioUrl: '/beats/goofy-groove.mp3' },
+      { id: 'beat-8', name: 'Happy Days', bpm: 115, duration: '2:00', audioUrl: '/beats/happy-days.mp3' },
+      { id: 'beat-9', name: 'Silly Walk', bpm: 108, duration: '2:35', audioUrl: '/beats/silly-walk.mp3' },
+      { id: 'beat-10', name: 'Comedy Club', bpm: 112, duration: '2:15', audioUrl: '/beats/comedy-club.mp3' },
     ],
   },
   {
@@ -49,11 +46,11 @@ const beatCategories = [
     name: '抒情',
     icon: 'favorite',
     beats: [
-      { id: 'beat-11', name: 'Moonlit Path', bpm: 85, duration: '3:30' },
-      { id: 'beat-12', name: 'Gentle Rain', bpm: 80, duration: '3:15' },
-      { id: 'beat-13', name: 'Memory Lane', bpm: 88, duration: '3:00' },
-      { id: 'beat-14', name: 'Soft Dreams', bpm: 82, duration: '3:45' },
-      { id: 'beat-15', name: 'Heartsong', bpm: 86, duration: '3:20' },
+      { id: 'beat-11', name: 'Moonlit Path', bpm: 85, duration: '3:30', audioUrl: '/beats/moonlit-path.mp3' },
+      { id: 'beat-12', name: 'Gentle Rain', bpm: 80, duration: '3:15', audioUrl: '/beats/gentle-rain.mp3' },
+      { id: 'beat-13', name: 'Memory Lane', bpm: 88, duration: '3:00', audioUrl: '/beats/memory-lane.mp3' },
+      { id: 'beat-14', name: 'Soft Dreams', bpm: 82, duration: '3:45', audioUrl: '/beats/soft-dreams.mp3' },
+      { id: 'beat-15', name: 'Heartsong', bpm: 86, duration: '3:20', audioUrl: '/beats/heartsong.mp3' },
     ],
   },
   {
@@ -61,20 +58,176 @@ const beatCategories = [
     name: '通用',
     icon: 'music_note',
     beats: [
-      { id: 'beat-16', name: 'Classic Flow', bpm: 120, duration: '2:40' },
-      { id: 'beat-17', name: 'Smooth Operator', bpm: 118, duration: '2:50' },
-      { id: 'beat-18', name: 'Urban Beat', bpm: 125, duration: '2:30' },
-      { id: 'beat-19', name: 'Chill Vibes', bpm: 115, duration: '3:00' },
-      { id: 'beat-20', name: 'Night Cruise', bpm: 122, duration: '2:45' },
+      { id: 'beat-16', name: 'Classic Flow', bpm: 120, duration: '2:40', audioUrl: '/beats/classic-flow.mp3' },
+      { id: 'beat-17', name: 'Smooth Operator', bpm: 118, duration: '2:50', audioUrl: '/beats/smooth-operator.mp3' },
+      { id: 'beat-18', name: 'Urban Beat', bpm: 125, duration: '2:30', audioUrl: '/beats/urban-beat.mp3' },
+      { id: 'beat-19', name: 'Chill Vibes', bpm: 115, duration: '3:00', audioUrl: '/beats/chill-vibes.mp3' },
+      { id: 'beat-20', name: 'Night Cruise', bpm: 122, duration: '2:45', audioUrl: '/beats/night-cruise.mp3' },
     ],
   },
 ]
 
+// 获取所有 beat 的映射
+const allBeats = beatCategories.flatMap(c => c.beats).reduce((acc, beat) => {
+  acc[beat.id] = beat
+  return acc
+}, {} as Record<string, typeof beatCategories[0]['beats'][0] & { audioUrl: string }>)
+
 export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
-  const [selectedDialect, setSelectedDialect] = useState('cantonese')
-  const [selectedBeat, setSelectedBeat] = useState<string | null>(null)
+  const { state, setDialect, setBeat, setCustomBeat } = useCreateContext()
   const [playingBeat, setPlayingBeat] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState('energetic')
+  const [audioProgress, setAudioProgress] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+
+  // 从 context 获取选中的方言和 beat
+  const selectedDialect = state.dialect.selected
+  const selectedBeat = state.beat.selected
+
+  // 初始化音频上下文
+  const initAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      analyserRef.current = audioContextRef.current.createAnalyser()
+      analyserRef.current.fftSize = 256
+    }
+    return audioContextRef.current
+  }, [])
+
+  // 播放 Beat
+  const handlePlayBeat = useCallback((beatId: string) => {
+    // 如果正在播放同一个 beat，则暂停
+    if (playingBeat === beatId && audioRef.current) {
+      audioRef.current.pause()
+      setPlayingBeat(null)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      return
+    }
+
+    // 停止之前的播放
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    // 创建新的音频元素
+    const beat = allBeats[beatId]
+    if (!beat) return
+
+    // 使用 Web Audio API 播放
+    try {
+      const audio = new Audio(beat.audioUrl)
+      audio.crossOrigin = 'anonymous'
+      audioRef.current = audio
+
+      // 连接到音频分析器
+      const ctx = initAudioContext()
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+
+      const source = ctx.createMediaElementSource(audio)
+      source.connect(analyserRef.current!)
+      analyserRef.current!.connect(ctx.destination)
+
+      // 监听播放进度
+      audio.addEventListener('timeupdate', () => {
+        setAudioProgress((audio.currentTime / audio.duration) * 100)
+      })
+
+      audio.addEventListener('ended', () => {
+        setPlayingBeat(null)
+        setAudioProgress(0)
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current)
+        }
+      })
+
+      audio.addEventListener('error', (e) => {
+        console.warn('Audio load error, using fallback oscillator')
+        // 使用振荡器作为后备
+        playFallbackOscillator(beat.bpm, beatId)
+      })
+
+      audio.play().catch(() => {
+        // 如果播放失败，使用振荡器作为后备
+        playFallbackOscillator(beat.bpm, beatId)
+      })
+
+      setPlayingBeat(beatId)
+    } catch (error) {
+      console.warn('Audio playback failed, using fallback')
+      playFallbackOscillator(beat.bpm, beatId)
+    }
+  }, [playingBeat, initAudioContext])
+
+  // 后备振荡器播放（当音频文件不可用时）
+  const playFallbackOscillator = useCallback((bpm: number, beatId: string) => {
+    try {
+      const ctx = initAudioContext()
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+
+      // 创建简单的节拍
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+
+      // 根据 BPM 设置频率
+      oscillator.frequency.value = 220 + (bpm - 100) * 2
+      oscillator.type = 'sawtooth'
+
+      // 设置音量包络
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5)
+
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.5)
+
+      setPlayingBeat(beatId)
+
+      // 0.5秒后停止
+      setTimeout(() => {
+        if (playingBeat === beatId) {
+          setPlayingBeat(null)
+        }
+      }, 500)
+    } catch (e) {
+      console.error('Fallback oscillator failed:', e)
+      setPlayingBeat(null)
+    }
+  }, [initAudioContext, playingBeat])
+
+  // 处理自定义 Beat 上传
+  const handleCustomBeatUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setCustomBeat(file)
+      setBeat(null) // 清除预设选择
+    }
+  }
+
+  // 检查是否可以进入下一步
+  const canProceed = selectedBeat || state.beat.customBeatFile
+
+  // 清理音频播放
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
 
   return (
     <div className="space-y-10">
@@ -108,10 +261,10 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
 
           {/* Dialect Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {dialects.map((dialect) => (
+            {state.dialect.dialects.map((dialect) => (
               <button
                 key={dialect.id}
-                onClick={() => setSelectedDialect(dialect.id)}
+                onClick={() => setDialect(dialect.id)}
                 className={`group relative flex flex-col items-center justify-center p-5 rounded-2xl transition-all duration-300 ${
                   selectedDialect === dialect.id
                     ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
@@ -172,7 +325,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
               {beatCategories.find(c => c.id === activeCategory)?.beats.map((beat) => (
                 <button
                   key={beat.id}
-                  onClick={() => setSelectedBeat(beat.id)}
+                  onClick={() => { setBeat(beat.id); setCustomBeat(null); }}
                   className={`group flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
                     selectedBeat === beat.id
                       ? 'bg-white/[0.05] border border-white/[0.15]'
@@ -188,7 +341,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                     }`}
                     onClick={(e) => {
                       e.stopPropagation()
-                      setPlayingBeat(playingBeat === beat.id ? null : beat.id)
+                      handlePlayBeat(beat.id)
                     }}
                   >
                     <span className="material-symbols-outlined text-base">
@@ -227,7 +380,21 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
               <span className="text-white/30 text-xs">或者</span>
               <div className="flex-1 h-px bg-white/[0.05]" />
             </div>
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-white/[0.1] transition-colors cursor-pointer group">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              onChange={handleCustomBeatUpload}
+              className="hidden"
+            />
+            <div
+              className={`p-5 rounded-2xl transition-colors cursor-pointer group ${
+                state.beat.customBeatFile
+                  ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
+                  : 'bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-white/[0.1]'
+              }`}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-white/50 text-lg">
@@ -241,6 +408,9 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                   <p className="text-white/35 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
                     拖拽音频文件或点击浏览（支持 MP3、WAV、FLAC）
                   </p>
+                  {state.beat.customBeatFile && (
+                    <p className="text-emerald-400/80 text-xs mt-2">✓ {state.beat.customBeatFile.name}</p>
+                  )}
                 </div>
                 <div className="hidden sm:flex items-center gap-4 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05]">
                   <div className="flex items-center gap-2">
@@ -333,9 +503,14 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
         </div>
         <button
           onClick={onNext}
-          className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3 rounded-full font-semibold text-base hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+          disabled={!canProceed}
+          className={`group inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+            canProceed
+              ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
+              : 'bg-white/10 text-white/40 cursor-not-allowed'
+          }`}
         >
-          下一步
+          {canProceed ? '下一步' : '请选择 Beat'}
           <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
             arrow_forward
           </span>

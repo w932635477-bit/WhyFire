@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useCreateContext } from './create-context'
 
 interface Step3LyricsGenerationProps {
   onNext: () => void
@@ -23,11 +24,33 @@ const hotTopics = [
 const popularMemes = ['yyds', '绝绝子', '遥遥领先', '泰酷辣', '栓Q', '芭比Q了', '摆烂', '内卷']
 
 export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationProps) {
-  const [selfDescription, setSelfDescription] = useState('')
-  const [selectedTopics, setSelectedTopics] = useState<string[]>(['topic-5'])
-  const [selectedMemes, setSelectedMemes] = useState<string[]>([])
+  const { state, setSelfDescription, setTopics, setMemes, setLyrics } = useCreateContext()
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedLyrics, setGeneratedLyrics] = useState(`(前奏)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedLyrics, setEditedLyrics] = useState(state.lyrics.generatedLyrics)
+
+  const toggleTopic = (topicId: string) => {
+    setTopics(
+      state.lyrics.selectedTopics.includes(topicId)
+        ? state.lyrics.selectedTopics.filter(id => id !== topicId)
+        : [...state.lyrics.selectedTopics, topicId]
+    )
+  }
+
+  const toggleMeme = (meme: string) => {
+    setMemes(
+      state.lyrics.selectedMemes.includes(meme)
+        ? state.lyrics.selectedMemes.filter(m => m !== meme)
+        : [...state.lyrics.selectedMemes, meme]
+    )
+  }
+
+  const handleGenerate = () => {
+    setIsGenerating(true)
+    // 模拟生成过程
+    setTimeout(() => {
+      // 这里应该调用 API 生成歌词
+      const newLyrics = `(前奏)
 
 老铁们看过来，这产品真带劲
 遥遥领先的技术，用完都说行
@@ -42,33 +65,20 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
 
 (尾奏)
 这就是咱们的方言Rap
-独特的韵味，你值得拥有`)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedLyrics, setEditedLyrics] = useState(generatedLyrics)
-
-  const toggleTopic = (topicId: string) => {
-    setSelectedTopics(prev =>
-      prev.includes(topicId)
-        ? prev.filter(id => id !== topicId)
-        : [...prev, topicId]
-    )
-  }
-
-  const toggleMeme = (meme: string) => {
-    setSelectedMemes(prev =>
-      prev.includes(meme)
-        ? prev.filter(m => m !== meme)
-        : [...prev, meme]
-    )
-  }
-
-  const handleGenerate = () => {
-    setIsGenerating(true)
-    // 模拟生成过程
-    setTimeout(() => {
+独特的韵味，你值得拥有`
+      setLyrics(newLyrics)
+      setEditedLyrics(newLyrics)
       setIsGenerating(false)
     }, 2000)
   }
+
+  const handleSaveEdit = () => {
+    setLyrics(editedLyrics)
+    setIsEditing(false)
+  }
+
+  // 检查是否可以进入下一步
+  const canProceed = state.lyrics.generatedLyrics.length > 0
 
   return (
     <div className="space-y-10">
@@ -107,14 +117,14 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
               </div>
             </div>
             <textarea
-              value={selfDescription}
+              value={state.lyrics.selfDescription}
               onChange={(e) => setSelfDescription(e.target.value)}
               placeholder="例如：程序员，喜欢打游戏，最近在减肥，想吐槽一下加班生活..."
               className="w-full h-32 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 placeholder:text-white/20 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
             />
             <div className="flex items-center justify-between mt-3 text-xs text-white/30">
               <span>越具体，生成的歌词越有个性</span>
-              <span>{selfDescription.length}/200</span>
+              <span>{state.lyrics.selfDescription.length}/200</span>
             </div>
 
             {/* 输入引导示例 */}
@@ -171,7 +181,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
                   key={topic.id}
                   onClick={() => toggleTopic(topic.id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-                    selectedTopics.includes(topic.id)
+                    state.lyrics.selectedTopics.includes(topic.id)
                       ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
                       : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06] hover:text-white/70'
                   }`}
@@ -206,7 +216,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
                   key={meme}
                   onClick={() => toggleMeme(meme)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-                    selectedMemes.includes(meme)
+                    state.lyrics.selectedMemes.includes(meme)
                       ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30'
                       : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06] hover:text-white/70'
                   }`}
@@ -264,24 +274,35 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
                       : 'bg-white/[0.03] text-white/40 hover:text-white/60'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-lg">edit</span>
+                  <span className="material-symbols-outlined text-lg">{isEditing ? 'check' : 'edit'}</span>
                 </button>
-                <button className="p-2 rounded-lg bg-white/[0.03] text-white/40 hover:text-white/60 transition-all">
+                <button
+                  onClick={handleGenerate}
+                  className="p-2 rounded-lg bg-white/[0.03] text-white/40 hover:text-white/60 transition-all"
+                >
                   <span className="material-symbols-outlined text-lg">refresh</span>
                 </button>
               </div>
             </div>
 
             {isEditing ? (
-              <textarea
-                value={editedLyrics}
-                onChange={(e) => setEditedLyrics(e.target.value)}
-                className="w-full h-80 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed"
-              />
+              <div className="space-y-3">
+                <textarea
+                  value={editedLyrics}
+                  onChange={(e) => setEditedLyrics(e.target.value)}
+                  className="w-full h-80 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed"
+                />
+                <button
+                  onClick={handleSaveEdit}
+                  className="w-full py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm font-medium hover:bg-violet-500/30 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                >
+                  保存修改
+                </button>
+              </div>
             ) : (
               <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 h-80 overflow-y-auto">
                 <pre className="text-white/70 text-sm whitespace-pre-wrap font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed">
-                  {generatedLyrics}
+                  {state.lyrics.generatedLyrics || '点击上方「生成歌词」按钮开始创作...'}
                 </pre>
               </div>
             )}
@@ -294,7 +315,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
               </div>
               <div className="flex items-center gap-2 text-xs text-white/40">
                 <span className="material-symbols-outlined text-base">text_fields</span>
-                <span>{generatedLyrics.length} 字</span>
+                <span>{state.lyrics.generatedLyrics.length} 字</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-white/40">
                 <span className="material-symbols-outlined text-base">format_list_numbered</span>
@@ -328,9 +349,14 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
         </div>
         <button
           onClick={onNext}
-          className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3 rounded-full font-semibold text-base hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+          disabled={!canProceed}
+          className={`group inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 active:scale-95 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+            canProceed
+              ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
+              : 'bg-white/10 text-white/40 cursor-not-allowed'
+          }`}
         >
-          下一步：生成音乐
+          {canProceed ? '下一步：生成音乐' : '请先生成歌词'}
           <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
             arrow_forward
           </span>
