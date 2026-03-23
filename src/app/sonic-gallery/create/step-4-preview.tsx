@@ -16,12 +16,50 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
   const [generateProgress, setGenerateProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [wordTimestamps, setWordTimestamps] = useState<Array<{
+    text: string
+    beginTime: number
+    endTime: number
+  }> | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // 从 context 获取状态
   const { speed, pitch, isPlaying } = state.preview
   const lyrics = state.lyrics.generatedLyrics
   const selectedDialect = state.dialect.dialects.find(d => d.id === state.dialect.selected)
+
+  // 获取当前高亮的歌词行
+  const getCurrentLyricLine = () => {
+    if (!wordTimestamps || currentTime === 0) return { current: '', next: '' }
+
+    const currentWord = wordTimestamps.find(
+      (w) => currentTime >= w.beginTime / 1000 && currentTime <= w.endTime / 1000
+    )
+
+    if (!currentWord) {
+      // 找下一个即将播放的词
+      const nextWord = wordTimestamps.find((w) => w.beginTime / 1000 > currentTime)
+      return {
+        current: '',
+        next: nextWord?.text || ''
+      }
+    }
+
+    // 找当前词之后的词
+    const currentIndex = wordTimestamps.indexOf(currentWord)
+    const nextWords = wordTimestamps
+      .slice(currentIndex + 1, currentIndex + 6)
+      .map(w => w.text)
+      .join('')
+
+    return {
+      current: currentWord.text,
+      next: nextWords
+    }
+  }
+
+  const { current: currentLyric, next: nextLyric } = getCurrentLyricLine()
 
   const handleSpeedChange = (newSpeed: number) => {
     setPreviewParams({ speed: newSpeed })
@@ -87,16 +125,26 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
       if (result.audioUrl) {
         setAudioUrl(result.audioUrl)
 
+        // 保存时间戳数据（如果有）
+        if (result.wordTimestamps) {
+          setWordTimestamps(result.wordTimestamps)
+        }
+
         // 创建音频元素
         const audio = new Audio(result.audioUrl)
         audioRef.current = audio
 
         audio.addEventListener('ended', () => {
           setPlaying(false)
+          setCurrentTime(0)
         })
 
         audio.addEventListener('error', () => {
           setError('音频加载失败')
+        })
+
+        audio.addEventListener('timeupdate', () => {
+          setCurrentTime(audio.currentTime)
         })
       }
     } catch (err) {
@@ -435,14 +483,27 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               )}
             </div>
 
-            {/* Lyrics Display */}
+            {/* Lyrics Display - 同步高亮 */}
             <div className="space-y-1 sm:space-y-2 text-center mb-2 sm:mb-4 px-2">
-              <p className="text-white/30 text-sm sm:text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
-                老子们成都的节奏在夜里跳动
-              </p>
-              <p className="text-white text-lg sm:text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
-                穿越雾都的街道，节奏不停在燃烧...
-              </p>
+              {wordTimestamps ? (
+                <>
+                  <p className="text-white/30 text-sm sm:text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
+                    {nextLyric || '...'}
+                  </p>
+                  <p className="text-white text-lg sm:text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate animate-pulse">
+                    {currentLyric || (isPlaying ? '...' : '点击播放')}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-white/30 text-sm sm:text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
+                    {lyrics.split('\n')[0]?.slice(0, 15) || '歌词预览...'}
+                  </p>
+                  <p className="text-white text-lg sm:text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
+                    {lyrics.split('\n')[1]?.slice(0, 20) || '生成音乐后可同步显示'}
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Controls */}

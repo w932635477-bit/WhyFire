@@ -1,6 +1,8 @@
-# 方言Rap生成系统 - 技术设计文档 v3.0
+# 方言Rap生成系统 - 技术设计文档 v3.1
 
 > 本文档与需求文档 `dialect-rap-requirements.md` 配套，确保技术实现与产品需求完全一致
+>
+> **v3.1 更新**：统一使用 CosyVoice API 完成声音克隆和方言 TTS，移除 GPT-SoVITS 依赖
 
 ---
 
@@ -10,7 +12,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           方言Rap生成系统 v3.0                                    │
+│                           方言Rap生成系统 v3.1                                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │   前端层 (PC Web)                                                               │
@@ -24,7 +26,7 @@
 │   API层 (Node.js + TypeScript)                                                  │
 │   ┌───────────────────────────────────────────────────────────────────────┐    │
 │   │  REST API                                                              │    │
-│   │  POST /api/voice/clone       - 声音克隆                                │    │
+│   │  POST /api/voice/clone       - 声音克隆 (CosyVoice)                   │    │
 │   │  POST /api/voice/upload-video - 上传视频                              │    │
 │   │  POST /api/lyrics/generate   - 生成歌词                                │    │
 │   │  POST /api/rap/generate      - 生成方言Rap                             │    │
@@ -38,13 +40,14 @@
 │                                                                                 │
 │   ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐               │
 │   │  Voice Service  │  │ Lyrics Service  │  │  Rap Service    │               │
-│   │  声音克隆+转换   │  │ 歌词生成(搞笑)  │  │ Rap生成+混音    │               │
+│   │  CosyVoice克隆  │  │ 歌词生成(搞笑)  │  │ Rap生成+混音    │               │
 │   └────────┬────────┘  └────────┬────────┘  └────────┬────────┘               │
 │            │                    │                    │                        │
 │            ▼                    ▼                    ▼                        │
 │   ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐               │
-│   │ GPT-SoVITS      │  │ Claude API      │  │ Rhythm Adaptor  │               │
-│   │ Spleeter/Demucs │  │ (歌词生成)      │  │ (自研核心)      │               │
+│   │ CosyVoice API   │  │ Claude API      │  │ Rhythm Adaptor  │               │
+│   │ 声音复刻+TTS    │  │ (歌词生成)      │  │ (自研核心)      │               │
+│   │ Spleeter/Demucs │  │                 │  │                 │               │
 │   │ (人声分离)      │  │                 │  │                 │               │
 │   └─────────────────┘  └─────────────────┘  └─────────────────┘               │
 │                                                                                 │
@@ -53,7 +56,7 @@
 │   外部服务层                                                                     │
 │   ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  │
 │   │ CosyVoice API │  │ Claude API    │  │ 微信OAuth     │  │ 阿里云OSS     │  │
-│   │ (方言TTS)     │  │ (歌词LLM)     │  │ (扫码登录)    │  │ (文件存储)    │  │
+│   │ (声音复刻+TTS)│  │ (歌词LLM)     │  │ (扫码登录)    │  │ (文件存储)    │  │
 │   └───────────────┘  └───────────────┘  └───────────────┘  └───────────────┘  │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -75,8 +78,8 @@
 │              └────────────┬─────────────────┘                              │
 │                           ▼                                                 │
 │              ┌─────────────────────────┐                                    │
-│              │ GPT-SoVITS 声音克隆     │                                    │
-│              │ → 用户音色模型          │                                    │
+│              │ CosyVoice 声音复刻      │                                    │
+│              │ → 复刻音色 ID           │                                    │
 │              └───────────┬─────────────┘                                    │
 │                          ▼                                                  │
 │  Step 2: 歌词生成                                                           │
@@ -88,15 +91,13 @@
 │  │                   个性化Rap歌词                                      │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                          ▼                                                  │
-│  Step 3: 方言语音合成                                                       │
+│  Step 3: 方言语音合成（CosyVoice 统一处理）                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │              CosyVoice API（8种方言）                                │   │
+│  │         复刻音色 ID + instruction(方言) + 歌词                       │   │
 │  │                          ↓                                          │   │
-│  │                   方言语音内容                                       │   │
+│  │              CosyVoice TTS API (cosyvoice-v3-flash)                 │   │
 │  │                          ↓                                          │   │
-│  │              Voice Converter（用户音色）                             │   │
-│  │                          ↓                                          │   │
-│  │              用户声音 + 方言发音                                     │   │
+│  │              用户声音 + 方言发音（一步完成）                          │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                          ▼                                                  │
 │  Step 4: Rap节奏处理                                                        │
@@ -120,6 +121,24 @@
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 1.3 CosyVoice 方言指令映射
+
+```typescript
+// 方言到 instruction 的映射（仅对复刻音色有效）
+const DIALECT_INSTRUCTION_MAP: Record<Dialect, string> = {
+  mandarin: '请用标准普通话说话。',
+  cantonese: '请用广东话表达。',
+  sichuan: '请用四川话表达。',
+  dongbei: '请用东北话表达。',
+  shandong: '请用山东话表达。',
+  wu: '请用上海话表达。',
+  henan: '请用河南话表达。',
+  xiang: '请用湖南话表达。',
+}
+```
+
+**关键限制**：instruction 参数仅对复刻音色有效，系统音色不支持方言指令。
+
 ---
 
 ## 二、核心技术模块
@@ -132,10 +151,146 @@
 |--------|------|----------|
 | 视频处理 | 上传视频 → 提取音轨 → 人声分离 | ffmpeg + Spleeter/Demucs |
 | 录音处理 | 录音文件 → 质量检测 → 预处理 | Python音频处理 |
-| 声音克隆 | 用户音频 → 音色模型 | GPT-SoVITS |
-| 音色转换 | 方言语音 + 用户音色 | GPT-SoVITS推理 |
+| 声音克隆 | 用户音频 → 复刻音色 ID | CosyVoice Voice Cloning API |
+| 方言 TTS | 复刻音色 + 方言指令 → 方言语音 | CosyVoice TTS API |
 
-#### 2.1.1 视频上传与人声分离
+#### 2.1.1 CosyVoice 声音复刻
+
+**API 端点**：
+- 声音复刻：`POST https://dashscope.aliyuncs.com/api/v1/services/audio/tts/customization`
+- TTS WebSocket：`wss://dashscope.aliyuncs.com/api-ws/v1/inference/`
+
+**模型**：`cosyvoice-v3-flash`（支持 18 种中国方言）
+
+```typescript
+// src/lib/voice/cosyvoice-clone-client.ts
+
+export interface CosyVoiceCloneOptions {
+  audioUrl: string;           // 用户音频 URL（公网可访问）
+  prefix: string;             // 音色前缀（仅数字和英文字母，≤10字符）
+  languageHints: string[];    // 语言提示 ['zh']
+}
+
+export interface CosyVoiceCloneResult {
+  voiceId: string;            // 复刻音色 ID
+  status: 'DEPLOYING' | 'OK' | 'FAILED';
+  message?: string;
+}
+
+export class CosyVoiceCloneClient {
+  private apiKey: string;
+  private apiUrl = 'https://dashscope.aliyuncs.com/api/v1/services/audio/tts/customization';
+
+  constructor() {
+    this.apiKey = process.env.DASHSCOPE_API_KEY!;
+  }
+
+  /**
+   * 创建复刻音色
+   */
+  async createVoice(options: CosyVoiceCloneOptions): Promise<CosyVoiceCloneResult> {
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'voice-enrollment',
+        input: {
+          action: 'create_voice',
+          target_model: 'cosyvoice-v3-flash',
+          prefix: options.prefix,
+          url: options.audioUrl,
+          language_hints: options.languageHints,
+        },
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`Voice cloning failed: ${data.message}`);
+    }
+
+    return {
+      voiceId: data.output.voice_id,
+      status: 'DEPLOYING',
+    };
+  }
+
+  /**
+   * 查询音色状态
+   */
+  async getVoiceStatus(voiceId: string): Promise<CosyVoiceCloneResult> {
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'voice-enrollment',
+        input: {
+          action: 'list_voice',
+          page_size: 100,
+          page_index: 0,
+        },
+      }),
+    });
+
+    const data = await response.json();
+    const voice = data.output?.voice_list?.find((v: any) => v.voice_id === voiceId);
+
+    if (!voice) {
+      return { voiceId, status: 'FAILED', message: 'Voice not found' };
+    }
+
+    return {
+      voiceId: voice.voice_id,
+      status: voice.status,
+    };
+  }
+}
+```
+
+#### 2.1.2 CosyVoice 方言 TTS
+
+```typescript
+// src/lib/tts/cosyvoice-client.ts（已实现）
+
+// 方言指令映射
+const DIALECT_INSTRUCTION_MAP: Record<Dialect, string> = {
+  mandarin: '请用标准普通话说话。',
+  cantonese: '请用广东话表达。',
+  sichuan: '请用四川话表达。',
+  dongbei: '请用东北话表达。',
+  shandong: '请用山东话表达。',
+  wu: '请用上海话表达。',
+  henan: '请用河南话表达。',
+  xiang: '请用湖南话表达。',
+};
+
+// 使用复刻音色 + 方言指令生成方言语音
+async function generateDialectSpeech(
+  text: string,
+  clonedVoiceId: string,
+  dialect: Dialect
+): Promise<Buffer> {
+  const client = getCosyVoiceClient();
+
+  const result = await client.generate({
+    text,
+    dialect,
+    voiceId: clonedVoiceId,  // 使用复刻音色
+    instruction: DIALECT_INSTRUCTION_MAP[dialect],  // 方言指令
+  });
+
+  return result.audioBuffer;
+}
+```
+
+#### 2.1.3 视频上传与人声分离
 
 ```typescript
 // src/lib/dialect-rap/voice-service/video-processor.ts
@@ -251,193 +406,6 @@ export class VideoProcessor {
     return JSON.parse(result);
   }
 }
-```
-
-#### 2.1.2 声音克隆（GPT-SoVITS）
-
-```typescript
-// src/lib/dialect-rap/voice-service/voice-cloner.ts
-
-import { execSync } from 'child_process';
-import path from 'path';
-
-export interface VoiceProfile {
-  id: string;
-  userId: string;
-  modelPath: string;
-  sampleDuration: number;
-  quality: number;
-  createdAt: Date;
-  expiresAt: Date;
-}
-
-export class VoiceCloner {
-  private modelDir: string;
-  private pythonPath: string;
-
-  constructor(modelDir: string = '/data/voice-models') {
-    this.modelDir = modelDir;
-    this.pythonPath = process.env.PYTHON_PATH || 'python3';
-  }
-
-  /**
-   * 克隆用户声音
-   * @param audioPath 用户音频文件（纯净人声）
-   * @param userId 用户ID
-   * @param text 录音对应的文本（如果是朗读模式）
-   */
-  async clone(
-    audioPath: string,
-    userId: string,
-    text?: string
-  ): Promise<VoiceProfile> {
-    const modelPath = path.join(this.modelDir, userId);
-    const scriptPath = path.join(__dirname, 'python', 'train_gpt_sovits.py');
-
-    console.log(`[VoiceCloner] Training voice model for user ${userId}...`);
-
-    // 调用 GPT-SoVITS 训练脚本
-    const result = execSync(
-      `${this.pythonPath} "${scriptPath}" ` +
-      `--audio "${audioPath}" ` +
-      `--output "${modelPath}" ` +
-      (text ? `--text "${text}"` : ''),
-      { encoding: 'utf-8', timeout: 600000, maxBuffer: 100 * 1024 * 1024 }
-    );
-
-    const response = JSON.parse(result);
-
-    if (response.status !== 'success') {
-      throw new Error(`Voice cloning failed: ${response.message}`);
-    }
-
-    // 计算过期时间（游客7天，登录用户30天）
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 默认7天
-
-    return {
-      id: `voice_${userId}_${Date.now()}`,
-      userId,
-      modelPath: response.model_path,
-      sampleDuration: response.duration,
-      quality: response.quality,
-      createdAt: new Date(),
-      expiresAt,
-    };
-  }
-
-  /**
-   * 使用用户音色进行语音合成
-   */
-  async synthesize(
-    text: string,
-    voiceProfile: VoiceProfile,
-    outputPath: string
-  ): Promise<string> {
-    const scriptPath = path.join(__dirname, 'python', 'inference_gpt_sovits.py');
-
-    const result = execSync(
-      `${this.pythonPath} "${scriptPath}" ` +
-      `--model "${voiceProfile.modelPath}" ` +
-      `--text "${text}" ` +
-      `--output "${outputPath}"`,
-      { encoding: 'utf-8', timeout: 120000 }
-    );
-
-    const response = JSON.parse(result);
-    return response.audio_path;
-  }
-}
-```
-
-#### 2.1.3 Python 训练脚本（GPT-SoVITS）
-
-```python
-# src/lib/dialect-rap/voice-service/python/train_gpt_sovits.py
-
-import argparse
-import json
-import os
-import sys
-
-def train_voice_model(audio_path: str, output_path: str, text: str = None):
-    """
-    使用 GPT-SoVITS 训练用户声音模型
-    参考：https://github.com/RVC-Boss/GPT-SoVITS
-
-    最佳实践：
-    - 音频时长：≥1分钟
-    - 音频质量：安静环境，无背景噪音
-    - 如果是指定文本朗读，需提供文本内容
-    """
-    try:
-        from GPT_SoVITS import TTS, Config
-
-        # 1. 加载预训练模型
-        config = Config()
-        tts = TTS(config)
-
-        # 2. 如果有文本，使用零样本推理
-        # 如果没有文本，使用自动转录 + 微调
-        if text:
-            # 零样本模式：直接使用参考音频
-            tts.set_reference_audio(audio_path, text)
-            model_info = {
-                "mode": "zero_shot",
-                "reference_audio": audio_path,
-                "reference_text": text
-            }
-        else:
-            # 微调模式：使用 Whisper 转录 + LoRA 微调
-            print("Transcribing audio with Whisper...")
-            import whisper
-            whisper_model = whisper.load_model("base")
-            result = whisper_model.transcribe(audio_path, language="zh")
-            transcribed_text = " ".join([seg["text"] for seg in result["segments"]])
-
-            # 快速 LoRA 微调
-            print("Fine-tuning with LoRA...")
-            tts.finetune(
-                audio_path=audio_path,
-                text=transcribed_text,
-                output_dir=output_path,
-                epochs=100,
-                use_lora=True,
-                lora_rank=8
-            )
-            model_info = {
-                "mode": "finetuned",
-                "model_path": output_path
-            }
-
-        # 3. 获取音频信息
-        import librosa
-        y, sr = librosa.load(audio_path)
-        duration = librosa.get_duration(y=y, sr=sr)
-
-        return {
-            "status": "success",
-            "model_path": output_path,
-            "duration": duration,
-            "quality": 0.85,  # 质量评分
-            "model_info": model_info
-        }
-
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--audio", required=True)
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--text", default=None)
-    args = parser.parse_args()
-
-    result = train_voice_model(args.audio, args.output, args.text)
-    print(json.dumps(result, ensure_ascii=False))
 ```
 
 ---
@@ -1060,11 +1028,11 @@ CREATE TABLE rap_works (
 
 ```bash
 # .env
-# Claude API
+# Claude API（歌词生成）
 ANTHROPIC_API_KEY=sk-ant-xxx
 
-# CosyVoice API
-ALIBABA_CLOUD_API_KEY=sk-xxx
+# CosyVoice API（声音复刻 + 方言 TTS）
+DASHSCOPE_API_KEY=sk-xxx
 
 # 微信登录
 WECHAT_APP_ID=wx xxx
@@ -1088,10 +1056,10 @@ DATABASE_URL=postgresql://user:pass@host:5432/dialect_rap
 
 | 功能 | 状态 | 技术方案 |
 |------|------|----------|
-| 用户声音克隆 | ✅必做 | GPT-SoVITS |
+| 用户声音克隆 | ✅必做 | CosyVoice Voice Cloning API |
 | 视频上传+人声分离 | ✅必做 | Spleeter/Demucs |
 | 录音朗读 | ✅必做 | 指定文本 |
-| 8种方言支持 | ✅必做 | CosyVoice API |
+| 8种方言支持 | ✅必做 | CosyVoice TTS (复刻音色+instruction) |
 | 个性化歌词生成 | ✅必做 | Claude API + 搞笑风格 |
 | Rhythm Adaptor | ✅必做 | 自研基础版 |
 | 混音合成 | ✅必做 | ffmpeg |
@@ -1126,7 +1094,8 @@ DATABASE_URL=postgresql://user:pass@host:5432/dialect_rap
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
     "uuid": "^9.0.0",
-    "ffmpeg-static": "^5.2.0"
+    "ffmpeg-static": "^5.2.0",
+    "ws": "^8.0.0"
   }
 }
 ```
@@ -1145,10 +1114,6 @@ demucs>=4.0.0
 # 或
 spleeter>=2.0.0
 
-# 声音克隆
-# GPT-SoVITS（需单独安装）
-# 参考：https://github.com/RVC-Boss/GPT-SoVITS
-
 # 敏感词
 sensitive-word>=1.0.0
 ```
@@ -1165,6 +1130,26 @@ apt-get install ffmpeg rubberband-tools
 
 ---
 
-*文档版本: v3.0*
-*更新时间: 2026-03-21*
-*状态: 与需求文档完全对齐*
+## 八、技术验证记录
+
+### 8.1 CosyVoice 声音复刻验证（2026-03-23）
+
+**验证内容**：
+1. ✅ 声音复刻 API 可用
+2. ✅ 复刻音色审核通过（状态：OK）
+3. ✅ 复刻音色 + 方言指令 TTS 可用（普通话/四川话/粤语/东北话）
+
+**测试脚本**：
+- `test-cosyvoice-clone.mjs` - 声音复刻 API 测试
+- `test-cloned-voice-dialect.mjs` - 复刻音色方言 TTS 测试
+
+**关键发现**：
+- instruction 参数仅对复刻音色有效
+- 系统音色（如 longanyang）不支持 instruction，返回 428 错误
+- 必须使用"复刻音色 + instruction"实现方言语音
+
+---
+
+*文档版本: v3.1*
+*更新时间: 2026-03-23*
+*状态: 与需求文档完全对齐，技术方案已验证*

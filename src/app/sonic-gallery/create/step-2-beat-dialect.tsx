@@ -11,212 +11,86 @@ interface Step2BeatDialectProps {
 interface BeatInfo {
   id: string
   name: string
+  file: string
   bpm: number
   duration: string
 }
 
-// Beat 库数据 - 使用占位音频 URL（实际项目中替换为真实音频）
-const beatCategories = [
-  {
-    id: 'energetic',
-    name: '激情',
-    icon: 'local_fire_department',
-    beats: [
-      { id: 'beat-1', name: 'Fire Drill', bpm: 140, duration: '2:30', audioUrl: '/beats/fire-drill.mp3' },
-      { id: 'beat-2', name: 'Thunder Road', bpm: 138, duration: '2:45', audioUrl: '/beats/thunder-road.mp3' },
-      { id: 'beat-3', name: 'Night Runner', bpm: 145, duration: '3:00', audioUrl: '/beats/night-runner.mp3' },
-      { id: 'beat-4', name: 'Power Move', bpm: 142, duration: '2:20', audioUrl: '/beats/power-move.mp3' },
-      { id: 'beat-5', name: 'Street Kings', bpm: 136, duration: '2:55', audioUrl: '/beats/street-kings.mp3' },
-    ],
-  },
-  {
-    id: 'funny',
-    name: '搞笑',
-    icon: 'sentiment_very_satisfied',
-    beats: [
-      { id: 'beat-6', name: 'Bouncy Town', bpm: 110, duration: '2:10', audioUrl: '/beats/bouncy-town.mp3' },
-      { id: 'beat-7', name: 'Goofy Groove', bpm: 105, duration: '2:25', audioUrl: '/beats/goofy-groove.mp3' },
-      { id: 'beat-8', name: 'Happy Days', bpm: 115, duration: '2:00', audioUrl: '/beats/happy-days.mp3' },
-      { id: 'beat-9', name: 'Silly Walk', bpm: 108, duration: '2:35', audioUrl: '/beats/silly-walk.mp3' },
-      { id: 'beat-10', name: 'Comedy Club', bpm: 112, duration: '2:15', audioUrl: '/beats/comedy-club.mp3' },
-    ],
-  },
-  {
-    id: 'lyrical',
-    name: '抒情',
-    icon: 'favorite',
-    beats: [
-      { id: 'beat-11', name: 'Moonlit Path', bpm: 85, duration: '3:30', audioUrl: '/beats/moonlit-path.mp3' },
-      { id: 'beat-12', name: 'Gentle Rain', bpm: 80, duration: '3:15', audioUrl: '/beats/gentle-rain.mp3' },
-      { id: 'beat-13', name: 'Memory Lane', bpm: 88, duration: '3:00', audioUrl: '/beats/memory-lane.mp3' },
-      { id: 'beat-14', name: 'Soft Dreams', bpm: 82, duration: '3:45', audioUrl: '/beats/soft-dreams.mp3' },
-      { id: 'beat-15', name: 'Heartsong', bpm: 86, duration: '3:20', audioUrl: '/beats/heartsong.mp3' },
-    ],
-  },
-  {
-    id: 'general',
-    name: '通用',
-    icon: 'music_note',
-    beats: [
-      { id: 'beat-16', name: 'Classic Flow', bpm: 120, duration: '2:40', audioUrl: '/beats/classic-flow.mp3' },
-      { id: 'beat-17', name: 'Smooth Operator', bpm: 118, duration: '2:50', audioUrl: '/beats/smooth-operator.mp3' },
-      { id: 'beat-18', name: 'Urban Beat', bpm: 125, duration: '2:30', audioUrl: '/beats/urban-beat.mp3' },
-      { id: 'beat-19', name: 'Chill Vibes', bpm: 115, duration: '3:00', audioUrl: '/beats/chill-vibes.mp3' },
-      { id: 'beat-20', name: 'Night Cruise', bpm: 122, duration: '2:45', audioUrl: '/beats/night-cruise.mp3' },
-    ],
-  },
+// 抖音/小红书最火 BGM - 内置音频文件
+const trendingBeats: BeatInfo[] = [
+  { id: 'beat-1', name: '八方来财', file: '/beats/八方来财.mp3', bpm: 130, duration: '2:53' },
+  { id: 'beat-2', name: '因果', file: '/beats/因果.mp3', bpm: 140, duration: '2:30' },
+  { id: 'beat-3', name: 'APT.', file: '/beats/APT..mp3', bpm: 120, duration: '2:45' },
+  { id: 'beat-4', name: 'BRAZIL', file: '/beats/BRAZLI.mp3', bpm: 130, duration: '2:15' },
+  { id: 'beat-5', name: '暖灰', file: '/beats/暖灰.mp3', bpm: 110, duration: '3:10' },
+  { id: 'beat-6', name: '精彩01', file: '/beats/精彩01.mp3', bpm: 125, duration: '2:55' },
 ]
 
-// 获取所有 beat 的映射
-const allBeats = beatCategories.flatMap(c => c.beats).reduce((acc, beat) => {
-  acc[beat.id] = beat
-  return acc
-}, {} as Record<string, typeof beatCategories[0]['beats'][0] & { audioUrl: string }>)
+// 默认BGM - 八方来财（最火）
+const DEFAULT_BEAT = trendingBeats[0]
 
 export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
   const { state, setDialect, setBeat, setCustomBeat } = useCreateContext()
   const [playingBeat, setPlayingBeat] = useState<string | null>(null)
-  const [activeCategory, setActiveCategory] = useState('energetic')
-  const [audioProgress, setAudioProgress] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const animationFrameRef = useRef<number | null>(null)
+  const initializedRef = useRef(false)
 
   // 从 context 获取选中的方言和 beat
   const selectedDialect = state.dialect.selected
   const selectedBeat = state.beat.selected
 
-  // 初始化音频上下文
-  const initAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-      analyserRef.current = audioContextRef.current.createAnalyser()
-      analyserRef.current.fftSize = 256
+  // 自动选择默认BGM（只执行一次）
+  useEffect(() => {
+    if (!initializedRef.current && !state.beat.selected && !state.beat.customBeatFile) {
+      initializedRef.current = true
+      setBeat(DEFAULT_BEAT.id)
     }
-    return audioContextRef.current
-  }, [])
+  }, [setBeat, state.beat.selected, state.beat.customBeatFile])
 
-  // 播放 Beat
-  const handlePlayBeat = useCallback((beatId: string) => {
+  // 获取当前选中beat的信息
+  const getSelectedBeatInfo = useCallback(() => {
+    return trendingBeats.find(b => b.id === selectedBeat) || DEFAULT_BEAT
+  }, [selectedBeat])
+
+  // 播放/暂停 Beat
+  const handlePlayBeat = useCallback((beat: BeatInfo) => {
     // 如果正在播放同一个 beat，则暂停
-    if (playingBeat === beatId && audioRef.current) {
+    if (playingBeat === beat.id && audioRef.current) {
       audioRef.current.pause()
+      audioRef.current.currentTime = 0
       setPlayingBeat(null)
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
-      }
       return
     }
 
     // 停止之前的播放
     if (audioRef.current) {
       audioRef.current.pause()
-      audioRef.current = null
+      audioRef.current.currentTime = 0
     }
 
-    // 创建新的音频元素
-    const beat = allBeats[beatId]
-    if (!beat) return
+    // 播放新的音频
+    const audio = new Audio(beat.file)
+    audioRef.current = audio
+    audio.play()
+    setPlayingBeat(beat.id)
 
-    // 使用 Web Audio API 播放
-    try {
-      const audio = new Audio(beat.audioUrl)
-      audio.crossOrigin = 'anonymous'
-      audioRef.current = audio
-
-      // 连接到音频分析器
-      const ctx = initAudioContext()
-      if (ctx.state === 'suspended') {
-        ctx.resume()
-      }
-
-      const source = ctx.createMediaElementSource(audio)
-      source.connect(analyserRef.current!)
-      analyserRef.current!.connect(ctx.destination)
-
-      // 监听播放进度
-      audio.addEventListener('timeupdate', () => {
-        setAudioProgress((audio.currentTime / audio.duration) * 100)
-      })
-
-      audio.addEventListener('ended', () => {
-        setPlayingBeat(null)
-        setAudioProgress(0)
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current)
-        }
-      })
-
-      audio.addEventListener('error', (e) => {
-        console.warn('Audio load error, using fallback oscillator')
-        // 使用振荡器作为后备
-        playFallbackOscillator(beat.bpm, beatId)
-      })
-
-      audio.play().catch(() => {
-        // 如果播放失败，使用振荡器作为后备
-        playFallbackOscillator(beat.bpm, beatId)
-      })
-
-      setPlayingBeat(beatId)
-    } catch (error) {
-      console.warn('Audio playback failed, using fallback')
-      playFallbackOscillator(beat.bpm, beatId)
-    }
-  }, [playingBeat, initAudioContext])
-
-  // 后备振荡器播放（当音频文件不可用时）
-  const playFallbackOscillator = useCallback((bpm: number, beatId: string) => {
-    try {
-      const ctx = initAudioContext()
-      if (ctx.state === 'suspended') {
-        ctx.resume()
-      }
-
-      // 创建简单的节拍
-      const oscillator = ctx.createOscillator()
-      const gainNode = ctx.createGain()
-
-      oscillator.connect(gainNode)
-      gainNode.connect(ctx.destination)
-
-      // 根据 BPM 设置频率
-      oscillator.frequency.value = 220 + (bpm - 100) * 2
-      oscillator.type = 'sawtooth'
-
-      // 设置音量包络
-      gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5)
-
-      oscillator.start(ctx.currentTime)
-      oscillator.stop(ctx.currentTime + 0.5)
-
-      setPlayingBeat(beatId)
-
-      // 0.5秒后停止
-      setTimeout(() => {
-        if (playingBeat === beatId) {
-          setPlayingBeat(null)
-        }
-      }, 500)
-    } catch (e) {
-      console.error('Fallback oscillator failed:', e)
+    // 播放结束后重置
+    audio.onended = () => {
       setPlayingBeat(null)
     }
-  }, [initAudioContext, playingBeat])
+  }, [playingBeat])
 
   // 处理自定义 Beat 上传
   const handleCustomBeatUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       setCustomBeat(file)
-      setBeat(null) // 清除预设选择
+      setBeat(null)
     }
   }
 
-  // 检查是否可以进入下一步
+  // 检查是否可以进入下一步（现在总是可以，因为自动选择了BGM）
   const canProceed = selectedBeat || state.beat.customBeatFile
 
   // 清理音频播放
@@ -293,39 +167,22 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-white/40">graphic_eq</span>
               <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                Beat 库
+                抖音热门 Beat
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-white/[0.05] text-white/40 text-xs font-medium">
-                20 首预设
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
+                已自动选择
               </span>
-            </div>
-
-            {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {beatCategories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
-                    activeCategory === category.id
-                      ? 'bg-white/[0.08] text-white border border-white/[0.15]'
-                      : 'bg-white/[0.02] text-white/50 border border-white/[0.05] hover:bg-white/[0.04]'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-base">
-                    {category.icon}
-                  </span>
-                  {category.name}
-                </button>
-              ))}
             </div>
 
             {/* Beat List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {beatCategories.find(c => c.id === activeCategory)?.beats.map((beat) => (
+              {trendingBeats.map((beat) => (
                 <button
                   key={beat.id}
-                  onClick={() => { setBeat(beat.id); setCustomBeat(null); }}
+                  onClick={() => {
+                    setBeat(beat.id)
+                    setCustomBeat(null)
+                  }}
                   className={`group flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
                     selectedBeat === beat.id
                       ? 'bg-white/[0.05] border border-white/[0.15]'
@@ -341,7 +198,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                     }`}
                     onClick={(e) => {
                       e.stopPropagation()
-                      handlePlayBeat(beat.id)
+                      handlePlayBeat(beat)
                     }}
                   >
                     <span className="material-symbols-outlined text-base">
@@ -412,12 +269,6 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                     <p className="text-emerald-400/80 text-xs mt-2">✓ {state.beat.customBeatFile.name}</p>
                   )}
                 </div>
-                <div className="hidden sm:flex items-center gap-4 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05]">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-violet-400 text-sm">speed</span>
-                    <span className="text-xs text-white/50">自动检测 BPM</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -425,21 +276,21 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
 
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-5">
-          {/* Style Card */}
+          {/* Current Selection Card */}
           <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
             <div className="flex items-center justify-between mb-4">
               <span className="text-violet-400 text-xs font-medium tracking-wider uppercase">
-                当前风格
+                当前选择
               </span>
               <span className="material-symbols-outlined text-violet-400 text-2xl">
-                mood
+                music_note
               </span>
             </div>
             <h3 className="text-white font-semibold text-xl mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              幽默风
+              {getSelectedBeatInfo().name}
             </h3>
             <p className="text-white/40 text-sm leading-relaxed mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              系统将自动捕捉歌词中的梗点，利用方言韵律进行趣味化演绎。
+              抖音/小红书最火BGM，自动匹配最佳节奏
             </p>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-white/50">
@@ -462,8 +313,8 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                 </span>
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">实时分析</h4>
-                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">等待上传</p>
+                <h4 className="text-white font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">节拍分析</h4>
+                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif']">{getSelectedBeatInfo().bpm} BPM</p>
               </div>
             </div>
             {/* Waveform Placeholder */}
@@ -503,14 +354,9 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
         </div>
         <button
           onClick={onNext}
-          disabled={!canProceed}
-          className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-            canProceed
-              ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
-              : 'bg-white/10 text-white/40 cursor-not-allowed'
-          }`}
+          className="group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] bg-white text-black hover:shadow-lg hover:shadow-white/20"
         >
-          {canProceed ? '下一步' : '请选择 Beat'}
+          下一步
           <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
             arrow_forward
           </span>

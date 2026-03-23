@@ -311,17 +311,45 @@ export class CosyVoiceClient {
     let characters = 0
     const wordTimestamps: WordTimestamp[] = []
 
+    // 准备 WebSocket 选项
+    // 注意：阿里云 DashScope WebSocket 不需要代理，直连更快更稳定
+    // 保存当前代理设置并临时禁用
+    const savedProxy = {
+      HTTP_PROXY: process.env.HTTP_PROXY,
+      HTTPS_PROXY: process.env.HTTPS_PROXY,
+      http_proxy: process.env.http_proxy,
+      https_proxy: process.env.https_proxy,
+      ALL_PROXY: process.env.ALL_PROXY,
+      all_proxy: process.env.all_proxy,
+    }
+
+    // 临时禁用代理
+    delete process.env.HTTP_PROXY
+    delete process.env.HTTPS_PROXY
+    delete process.env.http_proxy
+    delete process.env.https_proxy
+    delete process.env.ALL_PROXY
+    delete process.env.all_proxy
+
+    const wsOptions: WebSocket.ClientOptions = {
+      headers: {
+        Authorization: `bearer ${this.config.apiKey}`,
+      },
+    }
+
     return new Promise((resolve, reject) => {
-      // 建立 WebSocket 连接
-      const ws = new WebSocket(this.config.wsUrl, {
-        headers: {
-          Authorization: `bearer ${this.config.apiKey}`,
-        },
-      })
+      // 建立 WebSocket 连接（直连，不使用代理）
+      const ws = new WebSocket(this.config.wsUrl, wsOptions)
+
+      // 连接完成后恢复代理设置
+      const restoreProxy = () => {
+        Object.assign(process.env, savedProxy)
+      }
 
       // 连接超时处理
       const timeoutId = setTimeout(() => {
         ws.close()
+        restoreProxy()
         reject(new Error('WebSocket connection timeout'))
       }, this.config.timeout)
 
@@ -447,6 +475,7 @@ export class CosyVoiceClient {
               console.log('[CosyVoice] Task finished')
               clearTimeout(timeoutId)
               ws.close()
+              restoreProxy()
 
               // 合并音频数据
               const audioBuffer = Buffer.concat(audioChunks)
@@ -468,6 +497,7 @@ export class CosyVoiceClient {
               console.error('[CosyVoice] Task failed:', message.header.error_message)
               clearTimeout(timeoutId)
               ws.close()
+              restoreProxy()
               reject(new Error(`CosyVoice task failed: ${message.header.error_message}`))
               break
           }
@@ -480,6 +510,7 @@ export class CosyVoiceClient {
       ws.on('error', (error: Error) => {
         console.error('[CosyVoice] WebSocket error:', error)
         clearTimeout(timeoutId)
+        restoreProxy()
         reject(error)
       })
 
@@ -487,6 +518,7 @@ export class CosyVoiceClient {
       ws.on('close', (code: number, reason: Buffer) => {
         console.log(`[CosyVoice] WebSocket closed: ${code} - ${reason.toString()}`)
         clearTimeout(timeoutId)
+        restoreProxy()
       })
     })
   }

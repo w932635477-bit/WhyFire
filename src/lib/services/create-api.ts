@@ -59,6 +59,11 @@ export interface MusicGenerateResponse {
   duration?: number
   provider?: string
   dialect?: string
+  wordTimestamps?: Array<{
+    text: string
+    beginTime: number
+    endTime: number
+  }>
 }
 
 // 音色克隆请求

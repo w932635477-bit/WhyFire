@@ -78,28 +78,6 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
     } finally {
       setIsGenerating(false)
     }
-    setTimeout(() => {
-      // 这里应该调用 API 生成歌词
-      const newLyrics = `(前奏)
-
-老铁们看过来，这产品真带劲
-遥遥领先的技术，用完都说行
-不管你是啥身份，咱都能搞定
-一键生成方言Rap，听完好心情
-
-(副歌)
-川渝的调调，带你去飘摇
-东北的味儿，老铁杠杠滴
-粤语的韵脚，听着真带感
-普通话的标准，全国都传遍
-
-(尾奏)
-这就是咱们的方言Rap
-独特的韵味，你值得拥有`
-      setLyrics(newLyrics)
-      setEditedLyrics(newLyrics)
-      setIsGenerating(false)
-    }, 2000)
   }
 
   const handleSaveEdit = () => {

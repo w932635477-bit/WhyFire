@@ -8,15 +8,37 @@ interface Step1VoiceCloningProps {
   onNext: () => void
 }
 
+// 声音克隆状态
+type CloningStatus = 'idle' | 'uploading' | 'training' | 'completed' | 'failed'
+
 export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
   const { state, setVoiceFile, setRecording, setUploadType, setVideoFile, setExtracting } = useCreateContext()
   const [isRecording, setIsRecording] = useState(false)
-  const [trainingProgress, setTrainingProgress] = useState(68)
   const [recordingTime, setRecordingTime] = useState(0)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const audioInputRef = useRef<HTMLInputElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+
+  // 声音克隆相关状态
+  const [cloningStatus, setCloningStatus] = useState<CloningStatus>('idle')
+  const [cloningProgress, setCloningProgress] = useState(0)
+  const [cloningError, setCloningError] = useState<string | null>(null)
+  const [voiceCloningEnabled, setVoiceCloningEnabled] = useState<boolean | null>(null) // null = 加载中
+
+  // 检查声音克隆服务是否可用
+  useEffect(() => {
+    const checkService = async () => {
+      try {
+        const response = await fetch('/api/music/generate')
+        const result = await response.json()
+        setVoiceCloningEnabled(result.data?.providers?.available?.includes('gpt_sovits') ?? false)
+      } catch {
+        setVoiceCloningEnabled(false)
+      }
+    }
+    checkService()
+  }, [])
 
   // 指定朗读文本
   const readingText = `今天天气很好，我出门散步。阳光洒在脸上，感觉特别温暖。
@@ -125,6 +147,62 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
 
   // 正在提取中
   const isExtracting = state.voiceCloning.isExtracting
+
+  // 启动声音克隆（调用 GPT-SoVITS API）
+  const startVoiceCloning = async () => {
+    const audioBlob = state.voiceCloning.recordingBlob || state.voiceCloning.audioFile
+    if (!audioBlob) return
+
+    setCloningStatus('uploading')
+    setCloningProgress(0)
+    setCloningError(null)
+
+    try {
+      // 准备 FormData
+      const formData = new FormData()
+      formData.append('audio', audioBlob instanceof Blob ? audioBlob : audioBlob)
+      formData.append('dialect', state.dialect.selected || 'cantonese')
+
+      setCloningStatus('training')
+
+      // 模拟训练进度（实际应该轮询 API 状态）
+      const progressInterval = setInterval(() => {
+        setCloningProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(progressInterval)
+            return prev
+          }
+          return prev + Math.random() * 5
+        })
+      }, 500)
+
+      // 调用声音克隆 API
+      const response = await fetch('/api/voice/clone', {
+        method: 'POST',
+        body: formData,
+      })
+
+      clearInterval(progressInterval)
+
+      const result = await response.json()
+
+      if (result.code === 0) {
+        setCloningProgress(100)
+        setCloningStatus('completed')
+      } else {
+        throw new Error(result.message || '声音克隆失败')
+      }
+    } catch (error) {
+      console.error('Voice cloning failed:', error)
+      setCloningStatus('failed')
+      setCloningError(error instanceof Error ? error.message : '声音克隆失败')
+    }
+  }
+
+  // 跳过声音克隆，直接使用默认音色
+  const handleSkipVoiceCloning = () => {
+    onNext()
+  }
 
   return (
     <div className="space-y-12">
@@ -451,37 +529,101 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </div>
       </div>
 
-      {/* Training Progress */}
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-white/60">model_training</span>
+      {/* Training Progress / Service Status */}
+      {voiceCloningEnabled === null ? (
+        // 加载中
+        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+          <div className="flex items-center justify-center gap-3 py-4">
+            <span className="material-symbols-outlined text-white/40 animate-spin">progress_activity</span>
+            <span className="text-white/50 text-sm">检测声音克隆服务...</span>
+          </div>
+        </div>
+      ) : voiceCloningEnabled ? (
+        // 服务可用 - 显示训练进度
+        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-white/60">model_training</span>
+              </div>
+              <div>
+                <h4 className="text-white font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  {cloningStatus === 'completed' ? '音色模型训练完成' :
+                   cloningStatus === 'training' ? '正在训练 AI 音色模型' :
+                   cloningStatus === 'uploading' ? '正在上传音频...' :
+                   'AI 音色模型训练'}
+                </h4>
+                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  GPT-SoVITS 神经网络优化中
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                正在训练 AI 音色模型
+            <div className="text-right">
+              <span className="text-2xl font-bold text-white">{Math.round(cloningProgress)}%</span>
+            </div>
+          </div>
+          <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden mb-3">
+            <div
+              className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${cloningProgress}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-white/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+            <span>
+              {cloningStatus === 'completed' ? '训练完成' :
+               cloningStatus === 'failed' ? '训练失败' :
+               `进度 ${Math.round(cloningProgress)}%`}
+            </span>
+            <span>
+              {cloningStatus === 'completed' ? '可以使用' :
+               cloningStatus === 'training' ? `预计剩余 ${Math.ceil((100 - cloningProgress) / 10)} 秒` : '-'}
+            </span>
+          </div>
+
+          {/* 错误提示 */}
+          {cloningError && (
+            <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+              <p className="text-red-400 text-xs">{cloningError}</p>
+            </div>
+          )}
+
+          {/* 开始训练按钮 */}
+          {cloningStatus === 'idle' && canProceed && (
+            <button
+              onClick={startVoiceCloning}
+              className="mt-4 w-full py-3 bg-gradient-to-r from-violet-500/20 to-emerald-500/20 text-white rounded-xl font-medium hover:from-violet-500/30 hover:to-emerald-500/30 transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+            >
+              开始训练音色模型
+            </button>
+          )}
+        </div>
+      ) : (
+        // 服务不可用 - 显示跳过选项
+        <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-amber-400">info</span>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-white font-medium mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                声音克隆服务暂未启用
               </h4>
-              <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                GPT-SoVITS 神经网络优化中
+              <p className="text-white/50 text-sm leading-relaxed mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                GPT-SoVITS 声音克隆服务正在配置中。您可以先跳过此步骤，使用系统默认音色创作方言 Rap。
               </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSkipVoiceCloning}
+                  className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/15 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                >
+                  使用默认音色继续
+                </button>
+                <span className="text-white/30 text-xs">您仍可上传音频，稍后启用训练</span>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold text-white">{trainingProgress}%</span>
-          </div>
         </div>
-        <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden mb-3">
-          <div
-            className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 rounded-full transition-all duration-500"
-            style={{ width: `${trainingProgress}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-white/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          <span>训练轮次 142 / 200</span>
-          <span>预计剩余时间 04:12</span>
-        </div>
-      </div>
+      )}
 
       {/* Navigation */}
       <div className="flex flex-col sm:flex-row justify-between items-end gap-4 pt-4">

@@ -1,9 +1,9 @@
 /* Material Symbols - Icon font styles */
 /* Font is loaded via <link> in layout.tsx for better reliability */
 
-/* Ensure Material Symbols render correctly */
+/* Ensure Material Symbols render correctly - 使用 !important 确保优先级 */
 .material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
+  font-family: 'Material Symbols Outlined' !important;
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -15,10 +15,11 @@
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: 'liga';
-  -webkit-font-feature-settings: 'liga';
-  -moz-font-feature-settings: 'liga';
+  font-feature-settings: 'liga' 1;
+  -webkit-font-feature-settings: 'liga' on;
+  -moz-font-feature-settings: 'liga' on;
 }
 
 /* Other fonts are loaded via Next.js font optimization in layout.tsx */
@@ -1194,9 +1195,9 @@ audio::-webkit-media-controls-timeline::-webkit-slider-thumb {
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Material Symbols Outlined */
+/* Material Symbols Outlined - 确保 ligature 生效 */
 .material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
+  font-family: 'Material Symbols Outlined' !important;
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -1208,11 +1209,11 @@ audio::-webkit-media-controls-timeline::-webkit-slider-thumb {
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
-  font-variation-settings:
-    'FILL' 0,
-    'wght' 300,
-    'GRAD' 0,
-    'opsz' 24;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga' 1;
+  -webkit-font-feature-settings: 'liga' on;
+  -moz-font-feature-settings: 'liga' on;
 }
 
 /* Sonic Gallery Animations */
