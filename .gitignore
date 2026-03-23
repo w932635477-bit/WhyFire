@@ -51,6 +51,24 @@ coverage/
 # 生成的音频文件
 public/audio/music-*.mp3
 
+# BGM 文件（大文件，不上传）
+public/beats/
+
 # 测试结果
 test-results/
+test-output/
+
+# 临时测试脚本
+test-*.mjs
+
+# 临时截图
+*.png
+!public/**/*.png
+
+# TypeScript 构建缓存
+*.tsbuildinfo
+
+# Claude Code worktrees
+.claude/worktrees/
+
 .gstack/
