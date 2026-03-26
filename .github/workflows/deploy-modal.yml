@@ -29,13 +29,22 @@ jobs:
           MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
           MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
         run: |
-          # Modal CLI 使用 ~/.modal.toml 进行认证
+          # Modal 使用环境变量进行认证
+          # 创建 modal 配置目录
+          mkdir -p ~/.modal
+
+          # 写入配置文件 (正确格式)
           cat > ~/.modal.toml << EOF
           [default]
           token_id = "${MODAL_TOKEN_ID}"
           token_secret = "${MODAL_TOKEN_SECRET}"
           EOF
+
           chmod 600 ~/.modal.toml
+
+          # 验证配置
+          echo "Verifying Modal config..."
+          cat ~/.modal.toml | grep -v token_secret | head -5
 
       - name: Deploy Seed-VC Mock
         run: |
@@ -55,4 +64,5 @@ jobs:
       - name: Test health endpoint
         run: |
           echo "🏥 Testing health endpoint..."
-          curl -s https://ac-l85cvzxpz5kmbbnuoo6iyx--seed-vc-mock.modal.run/health | head -20 || echo "Health check skipped"
+          sleep 5
+          curl -s https://ac-l85cvzxpz5kmbbnuoo6iyx--seed-vc-mock.modal.run/health || echo "Health check request sent"
