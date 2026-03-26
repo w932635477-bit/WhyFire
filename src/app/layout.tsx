@@ -52,7 +52,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
         />
       </head>
-      <body className="font-sans bg-dark-900 text-white min-h-screen antialiased">
+      <body className="font-sans bg-dark-900 text-white min-h-screen antialiased pb-8">
         <AuthProvider>
           {children}
         </AuthProvider>

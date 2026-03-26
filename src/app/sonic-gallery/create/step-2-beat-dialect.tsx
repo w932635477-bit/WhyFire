@@ -111,10 +111,10 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
           步骤二
         </span>
         <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          选择你的声音灵魂
+          选择你的声音风格
         </h2>
         <p className="text-white/40 text-base leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          每种方言都有独特的韵律魅力，选择一种方言来定义你的说唱风格
+          使用你的原声本色，或选择一种方言风格来演绎你的说唱
         </p>
       </div>
 
@@ -126,16 +126,69 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-white/40">language</span>
             <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              方言库
+              选择声音风格
             </h3>
             <span className="px-2 py-0.5 rounded-full bg-white/[0.05] text-white/40 text-xs font-medium">
               选择一种
             </span>
           </div>
 
-          {/* Dialect Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {state.dialect.dialects.map((dialect) => (
+          {/* Original Voice - 突出显示 */}
+          <div className="mb-4">
+            <button
+              onClick={() => setDialect('original')}
+              className={`group relative w-full flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 ${
+                selectedDialect === 'original'
+                  ? 'bg-gradient-to-r from-violet-500/20 to-emerald-500/20 border-2 border-violet-500/50 shadow-lg shadow-violet-500/10'
+                  : 'bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1]'
+              }`}
+            >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                selectedDialect === 'original'
+                  ? 'bg-gradient-to-br from-violet-500 to-emerald-500'
+                  : 'bg-white/[0.05] group-hover:bg-white/[0.08]'
+              }`}>
+                <span className={`material-symbols-outlined text-2xl ${
+                  selectedDialect === 'original' ? 'text-white' : 'text-white/50'
+                }`}>
+                  person
+                </span>
+              </div>
+              <div className="flex-1 text-left">
+                <span className={`text-xl font-semibold block mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+                  selectedDialect === 'original' ? 'text-white' : 'text-white/80 group-hover:text-white'
+                }`}>
+                  原声
+                </span>
+                <span className={`text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+                  selectedDialect === 'original' ? 'text-violet-300' : 'text-white/40'
+                }`}>
+                  使用你的原始声音本色，不添加方言口音
+                </span>
+              </div>
+              {selectedDialect === 'original' && (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-violet-500/30 text-violet-300 text-xs font-medium">
+                    推荐
+                  </span>
+                  <span className="material-symbols-outlined text-violet-400 text-2xl">check_circle</span>
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* Dialect Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-white/[0.06]" />
+            <span className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              或选择方言风格
+            </span>
+            <div className="flex-1 h-px bg-white/[0.06]" />
+          </div>
+
+          {/* Dialect Grid - 9种方言 */}
+          <div className="grid grid-cols-3 sm:grid-cols-3 gap-3">
+            {state.dialect.dialects.filter(d => d.id !== 'original').map((dialect) => (
               <button
                 key={dialect.id}
                 onClick={() => setDialect(dialect.id)}

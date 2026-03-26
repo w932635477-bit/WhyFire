@@ -100,7 +100,7 @@ const ENGLISH_PUNCTUATION = new Set([
   ',', '.', '!', '?', ';', ':', '"', "'", '(', ')', '[', ']', '<', '>',
 ])
 
-const ALL_PUNCTUATION = new Set([...CHINESE_PUNCTUATION, ...ENGLISH_PUNCTUATION])
+const ALL_PUNCTUATION = new Set(Array.from(CHINESE_PUNCTUATION).concat(Array.from(ENGLISH_PUNCTUATION)))
 
 // ============================================================================
 // Rhythm Adaptor 类

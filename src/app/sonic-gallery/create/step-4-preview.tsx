@@ -14,6 +14,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
   const [editedLyrics, setEditedLyrics] = useState(state.lyrics.generatedLyrics)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateProgress, setGenerateProgress] = useState(0)
+  const [generateStep, setGenerateStep] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -22,12 +23,20 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
     beginTime: number
     endTime: number
   }> | null>(null)
+  const [rapInfo, setRapInfo] = useState<{
+    bgmName?: string
+    bpm?: number
+    tempoAdjustment?: number
+    duration?: number
+  } | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // 从 context 获取状态
   const { speed, pitch, isPlaying } = state.preview
   const lyrics = state.lyrics.generatedLyrics
   const selectedDialect = state.dialect.dialects.find(d => d.id === state.dialect.selected)
+  const selectedBeat = state.beat.selected
+  const voiceId = state.voiceCloning.voiceId
 
   // 获取当前高亮的歌词行
   const getCurrentLyricLine = () => {
@@ -95,7 +104,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
     setPreviewParams({ speed: 1.0, pitch: 0 })
   }
 
-  // 生成音乐
+  // 生成音乐 (D-Lite 方案)
   const handleGenerateMusic = async () => {
     if (!lyrics) {
       setError('请先生成歌词')
@@ -105,25 +114,30 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
     setIsGenerating(true)
     setError(null)
     setGenerateProgress(0)
-
-    // 模拟进度
-    const progressInterval = setInterval(() => {
-      setGenerateProgress(prev => Math.min(prev + 5, 90))
-    }, 500)
+    setGenerateStep('初始化...')
 
     try {
       const result = await generateMusic({
         lyrics,
         dialect: state.dialect.selected as any,
         style: 'rap',
-        duration: 30,
+        bgmId: selectedBeat || undefined,  // 传递选中的 BGM ID
+        voiceId: voiceId || undefined,      // 传递克隆的音色 ID
       })
 
-      clearInterval(progressInterval)
       setGenerateProgress(100)
+      setGenerateStep('生成完成!')
 
       if (result.audioUrl) {
         setAudioUrl(result.audioUrl)
+
+        // 保存 Rap 信息
+        setRapInfo({
+          duration: result.duration,
+          bpm: (result as any).bpm,
+          bgmName: (result as any).bgmName,
+          tempoAdjustment: (result as any).tempoAdjustment,
+        })
 
         // 保存时间戳数据（如果有）
         if (result.wordTimestamps) {
@@ -148,13 +162,13 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
         })
       }
     } catch (err) {
-      clearInterval(progressInterval)
       console.error('音乐生成失败:', err)
       if (err instanceof ApiError) {
         setError(err.message)
       } else {
         setError('音乐生成失败，请稍后重试')
       }
+      setGenerateStep('')
     } finally {
       setIsGenerating(false)
     }

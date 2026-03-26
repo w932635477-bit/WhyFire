@@ -1,31 +1,22 @@
 /**
  * 方言类型定义
- * 支持 18+ 种中国方言
+ * 支持 9 种方言（原声 + 8 种阿里云 Qwen-TTS + CosyVoice 原生支持的方言）
  */
 
 /**
  * 方言代码
+ * original = 原声（不使用方言指令，保留用户原始声音特色，项目默认选项）
  */
 export type DialectCode =
-  | 'mandarin'      // 普通话
+  | 'original'      // 原声（用户声音本色，默认）
   | 'cantonese'     // 粤语
   | 'sichuan'       // 四川话
   | 'dongbei'       // 东北话
-  | 'shandong'      // 山东话
-  | 'henan'         // 河南话
-  | 'shaanxi'       // 陕西话
   | 'wu'            // 吴语（上海话）
+  | 'shaanxi'       // 陕西话
   | 'minnan'        // 闽南语
-  | 'hakka'         // 客家话
-  | 'xiang'         // 湘语（湖南话）
-  | 'gan'           // 赣语（江西话）
-  | 'jin'           // 晋语（山西话）
-  | 'lanyin'        // 兰银官话（甘肃、宁夏）
-  | 'jianghuai'     // 江淮官话
-  | 'xinan'         // 西南官话（云南、贵州）
-  | 'jiaoliao'      // 胶辽官话
-  | 'zhongyuan'     // 中原官话
-  | 'english'       // 英语
+  | 'tianjin'       // 天津话
+  | 'nanjing'       // 南京话
 
 /**
  * 方言配置
@@ -42,16 +33,16 @@ export interface DialectConfig {
 
 /**
  * 所有方言配置
- * Fish Audio Voice ID 参考: https://fish.audio
+ * 只包含阿里云 Qwen-TTS + CosyVoice 原生支持的方言
  */
 export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
-  mandarin: {
-    code: 'mandarin',
-    name: '普通话',
-    englishName: 'Mandarin',
-    region: '全国',
-    fishAudioVoiceId: '7f92f8f0-3d6c-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
+  original: {
+    code: 'original',
+    name: '原声',
+    englishName: 'Original Voice',
+    region: '本色',
+    fishAudioVoiceId: '00000000-0000-0000-0000-000000000000',
+    sampleText: '使用你的原始声音',
     enabled: true,
   },
   cantonese: {
@@ -81,22 +72,13 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     sampleText: '你好，欢迎来到WhyFire啊',
     enabled: true,
   },
-  shandong: {
-    code: 'shandong',
-    name: '山东话',
-    englishName: 'Shandong Dialect',
-    region: '山东',
-    fishAudioVoiceId: 'b5e7a9f0-3d6d-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  henan: {
-    code: 'henan',
-    name: '河南话',
-    englishName: 'Henan Dialect',
-    region: '河南',
-    fishAudioVoiceId: 'c8f0b1a0-3d6d-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
+  wu: {
+    code: 'wu',
+    name: '上海话',
+    englishName: 'Shanghainese (Wu Dialect)',
+    region: '上海、江苏、浙江',
+    fishAudioVoiceId: 'e3b2d3c0-3d6d-11ee-a7cf-73d704f9a6e0',
+    sampleText: '侬好，欢迎来到WhyFire',
     enabled: true,
   },
   shaanxi: {
@@ -108,15 +90,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     sampleText: '你好，欢迎来到WhyFire',
     enabled: true,
   },
-  wu: {
-    code: 'wu',
-    name: '吴语',
-    englishName: 'Wu Dialect (Shanghainese)',
-    region: '上海、江苏、浙江',
-    fishAudioVoiceId: 'e3b2d3c0-3d6d-11ee-a7cf-73d704f9a6e0',
-    sampleText: '侬好，欢迎来到WhyFire',
-    enabled: true,
-  },
   minnan: {
     code: 'minnan',
     name: '闽南语',
@@ -126,94 +99,22 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     sampleText: '你好，欢迎来到WhyFire',
     enabled: true,
   },
-  hakka: {
-    code: 'hakka',
-    name: '客家话',
-    englishName: 'Hakka Dialect',
-    region: '广东、江西、福建',
-    fishAudioVoiceId: '05d4f5e0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
+  tianjin: {
+    code: 'tianjin',
+    name: '天津话',
+    englishName: 'Tianjin Dialect',
+    region: '天津',
+    fishAudioVoiceId: 'a1b2c3d0-3d6e-11ee-a7cf-73d704f9a6e0',
+    sampleText: '您好，欢迎来到WhyFire',
     enabled: true,
   },
-  xiang: {
-    code: 'xiang',
-    name: '湘语',
-    englishName: 'Xiang Dialect (Hunanese)',
-    region: '湖南',
-    fishAudioVoiceId: '16e5a6f0-3d6e-11ee-a7cf-73d704f9a6e0',
+  nanjing: {
+    code: 'nanjing',
+    name: '南京话',
+    englishName: 'Nanjing Dialect',
+    region: '江苏南京',
+    fishAudioVoiceId: 'b2c3d4e0-3d6e-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  gan: {
-    code: 'gan',
-    name: '赣语',
-    englishName: 'Gan Dialect',
-    region: '江西',
-    fishAudioVoiceId: '27f6b7a0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  jin: {
-    code: 'jin',
-    name: '晋语',
-    englishName: 'Jin Dialect',
-    region: '山西',
-    fishAudioVoiceId: '38a7c8b0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  lanyin: {
-    code: 'lanyin',
-    name: '兰银官话',
-    englishName: 'Lanyin Mandarin',
-    region: '甘肃、宁夏',
-    fishAudioVoiceId: '49b8d9c0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  jianghuai: {
-    code: 'jianghuai',
-    name: '江淮官话',
-    englishName: 'Jianghuai Mandarin',
-    region: '江苏、安徽',
-    fishAudioVoiceId: '5ac9e0d0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  xinan: {
-    code: 'xinan',
-    name: '西南官话',
-    englishName: 'Southwestern Mandarin',
-    region: '云南、贵州、广西',
-    fishAudioVoiceId: '6bd0f1e0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  jiaoliao: {
-    code: 'jiaoliao',
-    name: '胶辽官话',
-    englishName: 'Jiaoliao Mandarin',
-    region: '山东、辽宁',
-    fishAudioVoiceId: '7ce1a2f0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  zhongyuan: {
-    code: 'zhongyuan',
-    name: '中原官话',
-    englishName: 'Zhongyuan Mandarin',
-    region: '河南、陕西、甘肃',
-    fishAudioVoiceId: '8df2b3a0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: '你好，欢迎来到WhyFire',
-    enabled: true,
-  },
-  english: {
-    code: 'english',
-    name: 'English',
-    englishName: 'English',
-    region: 'International',
-    fishAudioVoiceId: '9ea3c4b0-3d6e-11ee-a7cf-73d704f9a6e0',
-    sampleText: 'Hello, welcome to WhyFire',
     enabled: true,
   },
 }

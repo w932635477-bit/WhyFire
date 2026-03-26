@@ -2,17 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useCreateContext } from './create-context'
-import { extractAudioFromVideo, formatDuration } from '@/lib/audio/audio-extractor'
+import { extractAudioFromVideo } from '@/lib/audio/audio-extractor'
 
 interface Step1VoiceCloningProps {
   onNext: () => void
 }
 
-// 声音克隆状态
-type CloningStatus = 'idle' | 'uploading' | 'training' | 'completed' | 'failed'
+// 声音克隆服务状态
+interface ServiceStatus {
+  enabled: boolean
+  provider: string
+  message: string
+}
 
 export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
-  const { state, setVoiceFile, setRecording, setUploadType, setVideoFile, setExtracting } = useCreateContext()
+  const { state, setVoiceFile, setRecording, setUploadType, setVideoFile, setExtracting, setCloningStatus } = useCreateContext()
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const videoInputRef = useRef<HTMLInputElement>(null)
@@ -20,21 +24,31 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
 
-  // 声音克隆相关状态
-  const [cloningStatus, setCloningStatus] = useState<CloningStatus>('idle')
-  const [cloningProgress, setCloningProgress] = useState(0)
-  const [cloningError, setCloningError] = useState<string | null>(null)
-  const [voiceCloningEnabled, setVoiceCloningEnabled] = useState<boolean | null>(null) // null = 加载中
+  // 服务状态
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus | null>(null)
+
+  // 从 context 获取状态
+  const cloningStatus = state.voiceCloning.cloningStatus
+  const cloningError = state.voiceCloning.cloningError
+  const voiceId = state.voiceCloning.voiceId
 
   // 检查声音克隆服务是否可用
   useEffect(() => {
     const checkService = async () => {
       try {
-        const response = await fetch('/api/music/generate')
+        const response = await fetch('/api/voice/clone')
         const result = await response.json()
-        setVoiceCloningEnabled(result.data?.providers?.available?.includes('gpt_sovits') ?? false)
+        setServiceStatus({
+          enabled: result.data?.enabled ?? false,
+          provider: result.data?.provider ?? 'unknown',
+          message: result.data?.message ?? '',
+        })
       } catch {
-        setVoiceCloningEnabled(false)
+        setServiceStatus({
+          enabled: false,
+          provider: 'unknown',
+          message: '服务检测失败',
+        })
       }
     }
     checkService()
@@ -142,39 +156,25 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
     return () => clearInterval(interval)
   }, [isRecording])
 
-  // 检查是否可以进入下一步
-  const canProceed = state.voiceCloning.audioFile || state.voiceCloning.recordingBlob
+  // 检查是否可以进入下一步（需要音频 + 克隆完成或跳过）
+  const hasAudio = state.voiceCloning.audioFile || state.voiceCloning.recordingBlob
+  const canProceed = hasAudio && (cloningStatus === 'completed' || cloningStatus === 'idle')
 
   // 正在提取中
   const isExtracting = state.voiceCloning.isExtracting
 
-  // 启动声音克隆（调用 GPT-SoVITS API）
+  // 启动声音克隆（调用 CosyVoice API）
   const startVoiceCloning = async () => {
     const audioBlob = state.voiceCloning.recordingBlob || state.voiceCloning.audioFile
     if (!audioBlob) return
 
-    setCloningStatus('uploading')
-    setCloningProgress(0)
-    setCloningError(null)
+    setCloningStatus('pending')  // 显示"正在审核音频..."（API 会真实等待审核通过）
 
     try {
       // 准备 FormData
       const formData = new FormData()
       formData.append('audio', audioBlob instanceof Blob ? audioBlob : audioBlob)
-      formData.append('dialect', state.dialect.selected || 'cantonese')
-
-      setCloningStatus('training')
-
-      // 模拟训练进度（实际应该轮询 API 状态）
-      const progressInterval = setInterval(() => {
-        setCloningProgress(prev => {
-          if (prev >= 95) {
-            clearInterval(progressInterval)
-            return prev
-          }
-          return prev + Math.random() * 5
-        })
-      }, 500)
+      formData.append('dialect', state.dialect.selected || 'mandarin')
 
       // 调用声音克隆 API
       const response = await fetch('/api/voice/clone', {
@@ -182,26 +182,49 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         body: formData,
       })
 
-      clearInterval(progressInterval)
-
       const result = await response.json()
 
-      if (result.code === 0) {
-        setCloningProgress(100)
-        setCloningStatus('completed')
+      if (result.code === 0 && result.data?.voiceId) {
+        // API 已等待审核通过，直接标记完成
+        setCloningStatus('completed', result.data.voiceId)
       } else {
         throw new Error(result.message || '声音克隆失败')
       }
     } catch (error) {
       console.error('Voice cloning failed:', error)
-      setCloningStatus('failed')
-      setCloningError(error instanceof Error ? error.message : '声音克隆失败')
+      setCloningStatus('failed', undefined, error instanceof Error ? error.message : '声音克隆失败')
     }
   }
 
   // 跳过声音克隆，直接使用默认音色
   const handleSkipVoiceCloning = () => {
+    // 设置为完成状态（不使用自定义音色）
+    setCloningStatus('completed')
     onNext()
+  }
+
+  // 获取状态显示文本
+  const getStatusText = () => {
+    switch (cloningStatus) {
+      case 'uploading': return '正在上传音频...'
+      case 'cloning': return '正在创建复刻音色...'
+      case 'pending': return '正在审核音频（最长 5 分钟）...'
+      case 'completed': return voiceId ? '音色复刻完成！' : '已跳过声音克隆'
+      case 'failed': return cloningError || '声音克隆失败'
+      default: return '准备就绪'
+    }
+  }
+
+  // 获取进度百分比
+  const getProgressPercent = () => {
+    switch (cloningStatus) {
+      case 'uploading': return 20
+      case 'cloning': return 50
+      case 'pending': return 80
+      case 'completed': return 100
+      case 'failed': return 0
+      default: return 0
+    }
   }
 
   return (
@@ -215,7 +238,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
           建立你的数字声音身份
         </h2>
         <p className="text-white/40 text-base leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          提供 30 秒至 2 分钟的高质量人声样本，由 GPT-SoVITS 训练你的专属音色模型
+          提供至少 1 分钟的高质量人声样本，AI 将学习你的声音特点
         </p>
       </div>
 
@@ -510,7 +533,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             <ul className="space-y-2 text-white/40 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-violet-400" />
-                最少录制 30 秒，建议 1-2 分钟
+                最少录制 1 分钟，建议 1-2 分钟
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-violet-400" />
@@ -529,8 +552,8 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </div>
       </div>
 
-      {/* Training Progress / Service Status */}
-      {voiceCloningEnabled === null ? (
+      {/* Cloning Progress / Service Status */}
+      {serviceStatus === null ? (
         // 加载中
         <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
           <div className="flex items-center justify-center gap-3 py-4">
@@ -538,45 +561,38 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             <span className="text-white/50 text-sm">检测声音克隆服务...</span>
           </div>
         </div>
-      ) : voiceCloningEnabled ? (
-        // 服务可用 - 显示训练进度
+      ) : serviceStatus.enabled ? (
+        // 服务可用 - 显示克隆进度
         <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white/60">model_training</span>
+                <span className="material-symbols-outlined text-white/60">graphic_eq</span>
               </div>
               <div>
                 <h4 className="text-white font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  {cloningStatus === 'completed' ? '音色模型训练完成' :
-                   cloningStatus === 'training' ? '正在训练 AI 音色模型' :
-                   cloningStatus === 'uploading' ? '正在上传音频...' :
-                   'AI 音色模型训练'}
+                  {getStatusText()}
                 </h4>
                 <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  GPT-SoVITS 神经网络优化中
+                  CosyVoice 声音复刻技术
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-bold text-white">{Math.round(cloningProgress)}%</span>
+              <span className="text-2xl font-bold text-white">{getProgressPercent()}%</span>
             </div>
           </div>
           <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden mb-3">
             <div
               className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${cloningProgress}%` }}
+              style={{ width: `${getProgressPercent()}%` }}
             />
           </div>
           <div className="flex justify-between text-xs text-white/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-            <span>
-              {cloningStatus === 'completed' ? '训练完成' :
-               cloningStatus === 'failed' ? '训练失败' :
-               `进度 ${Math.round(cloningProgress)}%`}
-            </span>
+            <span>{getStatusText()}</span>
             <span>
               {cloningStatus === 'completed' ? '可以使用' :
-               cloningStatus === 'training' ? `预计剩余 ${Math.ceil((100 - cloningProgress) / 10)} 秒` : '-'}
+               cloningStatus === 'pending' ? '审核中...' : '-'}
             </span>
           </div>
 
@@ -587,13 +603,13 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             </div>
           )}
 
-          {/* 开始训练按钮 */}
-          {cloningStatus === 'idle' && canProceed && (
+          {/* 开始克隆按钮 */}
+          {cloningStatus === 'idle' && hasAudio && (
             <button
               onClick={startVoiceCloning}
               className="mt-4 w-full py-3 bg-gradient-to-r from-violet-500/20 to-emerald-500/20 text-white rounded-xl font-medium hover:from-violet-500/30 hover:to-emerald-500/30 transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
             >
-              开始训练音色模型
+              创建我的声音模型
             </button>
           )}
         </div>
@@ -609,7 +625,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 声音克隆服务暂未启用
               </h4>
               <p className="text-white/50 text-sm leading-relaxed mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                GPT-SoVITS 声音克隆服务正在配置中。您可以先跳过此步骤，使用系统默认音色创作方言 Rap。
+                CosyVoice 声音复刻服务需要配置 DASHSCOPE_API_KEY。您可以跳过此步骤，使用系统默认音色创作方言 Rap。
               </p>
               <div className="flex items-center gap-3">
                 <button

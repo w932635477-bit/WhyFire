@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useReducer, useCallback, ReactNode } from 'react'
 
-// 方言类型
+// 方言类型（9种原生方言）
 export interface Dialect {
   id: string
   name: string
@@ -40,6 +40,10 @@ export interface CreateState {
     videoUrl: string | null
     isExtracting: boolean
     extractProgress: number
+    // 声音复刻相关（CosyVoice）
+    voiceId: string | null
+    cloningStatus: 'idle' | 'uploading' | 'cloning' | 'pending' | 'completed' | 'failed'
+    cloningError: string | null
   }
 
   // Step 2: 方言 + Beat
@@ -85,18 +89,25 @@ const initialState: CreateState = {
     videoUrl: null,
     isExtracting: false,
     extractProgress: 0,
+    voiceId: null,
+    cloningStatus: 'idle',
+    cloningError: null,
   },
   dialect: {
-    selected: 'cantonese',
+    selected: 'original',
     dialects: [
+      // 原声选项 - 使用用户原始声音，不添加方言指令
+      { id: 'original', name: '原声', region: '本色' },
+      // 9种方言 - Qwen-TTS + CosyVoice 方言指令
       { id: 'mandarin', name: '普通话', region: '标准' },
       { id: 'cantonese', name: '粤语', region: '广东' },
       { id: 'sichuan', name: '四川话', region: '川渝' },
       { id: 'dongbei', name: '东北话', region: '东北' },
-      { id: 'shandong', name: '山东话', region: '齐鲁' },
-      { id: 'shanghai', name: '上海话', region: '吴语' },
-      { id: 'henan', name: '河南话', region: '中原' },
-      { id: 'hunan', name: '湖南话', region: '湘语' },
+      { id: 'wu', name: '上海话', region: '吴语' },
+      { id: 'shaanxi', name: '陕西话', region: '秦腔' },
+      { id: 'minnan', name: '闽南语', region: '福建' },
+      { id: 'tianjin', name: '天津话', region: '津门' },
+      { id: 'nanjing', name: '南京话', region: '金陵' },
     ],
   },
   beat: {
@@ -126,6 +137,7 @@ type CreateAction =
   | { type: 'SET_UPLOAD_TYPE'; payload: 'record' | 'upload' | 'video' | null }
   | { type: 'SET_VIDEO_FILE'; payload: { file: File | null; url: string | null } }
   | { type: 'SET_EXTRACTING'; payload: { isExtracting: boolean; progress: number } }
+  | { type: 'SET_CLONING_STATUS'; payload: { status: CreateState['voiceCloning']['cloningStatus']; voiceId?: string; error?: string } }
   | { type: 'SET_DIALECT'; payload: string }
   | { type: 'SET_BEAT'; payload: string | null }
   | { type: 'SET_CUSTOM_BEAT'; payload: File | null }
@@ -148,6 +160,7 @@ interface CreateContextType {
   setUploadType: (type: 'record' | 'upload' | 'video' | null) => void
   setVideoFile: (file: File | null, url: string | null) => void
   setExtracting: (isExtracting: boolean, progress: number) => void
+  setCloningStatus: (status: CreateState['voiceCloning']['cloningStatus'], voiceId?: string, error?: string) => void
   setDialect: (dialectId: string) => void
   setBeat: (beatId: string | null) => void
   setCustomBeat: (file: File | null) => void
@@ -209,6 +222,16 @@ function createReducer(state: CreateState, action: CreateAction): CreateState {
           ...state.voiceCloning,
           isExtracting: action.payload.isExtracting,
           extractProgress: action.payload.progress,
+        },
+      }
+    case 'SET_CLONING_STATUS':
+      return {
+        ...state,
+        voiceCloning: {
+          ...state.voiceCloning,
+          cloningStatus: action.payload.status,
+          voiceId: action.payload.voiceId ?? state.voiceCloning.voiceId,
+          cloningError: action.payload.error ?? null,
         },
       }
     case 'SET_DIALECT':
@@ -321,6 +344,14 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_EXTRACTING', payload: { isExtracting, progress } })
   }, [])
 
+  const setCloningStatus = useCallback((
+    status: CreateState['voiceCloning']['cloningStatus'],
+    voiceId?: string,
+    error?: string
+  ) => {
+    dispatch({ type: 'SET_CLONING_STATUS', payload: { status, voiceId, error } })
+  }, [])
+
   const setDialect = useCallback((dialectId: string) => {
     dispatch({ type: 'SET_DIALECT', payload: dialectId })
   }, [])
@@ -373,6 +404,7 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     setUploadType,
     setVideoFile,
     setExtracting,
+    setCloningStatus,
     setDialect,
     setBeat,
     setCustomBeat,

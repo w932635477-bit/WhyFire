@@ -3,8 +3,20 @@
  * 使用 EvoLink 国内代理访问 Claude API (OpenAI 兼容格式)
  */
 
+import { ProxyAgent } from 'undici'
+
 const EVOLINK_BASE_URL = 'https://api.evolink.ai/v1'
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514'
+
+// 获取代理配置
+function getProxyAgent(): ProxyAgent | undefined {
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy
+  if (proxyUrl) {
+    console.log('[Claude] 使用代理:', proxyUrl)
+    return new ProxyAgent(proxyUrl)
+  }
+  return undefined
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -38,6 +50,9 @@ export async function generateWithClaude(prompt: string, options?: {
     model = DEFAULT_MODEL
   } = options || {}
 
+  // 获取代理配置
+  const proxyAgent = getProxyAgent()
+
   const response = await fetch(`${EVOLINK_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -55,6 +70,8 @@ export async function generateWithClaude(prompt: string, options?: {
         },
       ],
     }),
+    // 添加代理支持
+    ...(proxyAgent && { dispatcher: proxyAgent }),
   })
 
   if (!response.ok) {

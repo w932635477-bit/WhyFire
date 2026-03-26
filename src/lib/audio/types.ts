@@ -14,6 +14,10 @@ export interface BeatAnalysisResult {
   beatInterval: number
   /** 检测置信度 (0-1) - 由应用根据 BPM 合理性计算 */
   confidence?: number
+  /** 节拍时间点数组 (秒) - 可选，由应用根据 offset 和 beatInterval 生成 */
+  beats?: number[]
+  /** 音频总时长 (秒) */
+  duration?: number
 }
 
 /**

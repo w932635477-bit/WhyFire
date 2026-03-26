@@ -42,6 +42,9 @@ export interface LyricsGenerateResponse {
   }
 }
 
+// Rap 增强预设类型
+export type RapPresetCode = 'subtle' | 'balanced' | 'energetic' | 'aggressive' | 'melodic'
+
 // 音乐生成请求
 export interface MusicGenerateRequest {
   lyrics: string
@@ -49,6 +52,9 @@ export interface MusicGenerateRequest {
   style?: MusicStyle
   duration?: number
   voiceId?: string
+  bgmId?: string  // D-Lite BGM ID (beat-1 to beat-6)
+  rapPreset?: RapPresetCode  // Rap 增强预设
+  enableRapEnhance?: boolean  // 是否启用 Rap 增强，默认 true
 }
 
 // 音乐生成响应
@@ -152,15 +158,43 @@ export async function generateLyrics(
 }
 
 /**
- * 音乐生成 API
+ * 音乐生成 API (D-Lite 方案)
  */
 export async function generateMusic(
   params: MusicGenerateRequest
 ): Promise<MusicGenerateResponse> {
-  return request<MusicGenerateResponse>('/api/music/generate', {
+  // 使用 D-Lite Rap 生成 API
+  const response = await fetch('/api/rap/generate', {
     method: 'POST',
-    body: JSON.stringify(params),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      lyrics: params.lyrics,
+      dialect: params.dialect,
+      bgmId: params.bgmId,
+      voiceId: params.voiceId,
+      rapPreset: params.rapPreset || 'aggressive',  // 默认使用 aggressive 预设
+      enableRapEnhance: params.enableRapEnhance !== false,  // 默认启用
+    }),
   })
+
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || '生成失败')
+  }
+
+  // 转换 D-Lite 响应格式为标准格式
+  return {
+    taskId: result.data.taskId,
+    status: result.data.status,
+    audioUrl: result.data.audioUrl,
+    duration: result.data.duration,
+    provider: 'd-lite',
+    dialect: result.data.dialect,
+    wordTimestamps: undefined, // D-Lite 不提供字级别时间戳
+  }
 }
 
 /**

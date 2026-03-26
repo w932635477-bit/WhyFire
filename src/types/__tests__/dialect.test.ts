@@ -12,9 +12,9 @@ import {
 
 describe('dialect types', () => {
   describe('DIALECT_CONFIGS', () => {
-    it('应该包含 19 种方言（18种中文 + 英语）', () => {
+    it('应该包含 9 种方言（原声 + 8 种方言）', () => {
       const dialectCodes = Object.keys(DIALECT_CONFIGS) as DialectCode[]
-      expect(dialectCodes.length).toBe(19)
+      expect(dialectCodes.length).toBe(9)
     })
 
     it('每种方言应该有完整的配置', () => {
@@ -37,11 +37,12 @@ describe('dialect types', () => {
 
     it('应该包含主要方言', () => {
       const codes = Object.keys(DIALECT_CONFIGS) as DialectCode[]
-      expect(codes).toContain('mandarin')
+      expect(codes).toContain('original')
       expect(codes).toContain('cantonese')
       expect(codes).toContain('sichuan')
       expect(codes).toContain('dongbei')
-      expect(codes).toContain('english')
+      expect(codes).toContain('wu')
+      expect(codes).toContain('shaanxi')
     })
 
     it('Fish Audio Voice ID 应该是有效的 UUID 格式', () => {
@@ -53,7 +54,7 @@ describe('dialect types', () => {
     })
 
     it('每种方言应该有对应的区域说明', () => {
-      const dialects = ['mandarin', 'cantonese', 'sichuan', 'dongbei', 'wu', 'minnan']
+      const dialects = ['original', 'cantonese', 'sichuan', 'dongbei', 'wu', 'minnan']
 
       for (const code of dialects) {
         const config = DIALECT_CONFIGS[code as DialectCode]
@@ -65,7 +66,7 @@ describe('dialect types', () => {
   describe('getEnabledDialects', () => {
     it('应该返回所有启用的方言', () => {
       const enabled = getEnabledDialects()
-      expect(enabled.length).toBe(19)
+      expect(enabled.length).toBe(9)
     })
 
     it('返回的方言应该都是启用的', () => {
@@ -89,10 +90,10 @@ describe('dialect types', () => {
 
   describe('getDialectConfig', () => {
     it('应该返回有效的方言配置', () => {
-      const config = getDialectConfig('mandarin')
+      const config = getDialectConfig('original')
       expect(config).toBeDefined()
-      expect(config?.name).toBe('普通话')
-      expect(config?.code).toBe('mandarin')
+      expect(config?.name).toBe('原声')
+      expect(config?.code).toBe('original')
     })
 
     it('对于无效的方言代码应该返回 undefined', () => {
@@ -124,11 +125,11 @@ describe('dialect types', () => {
 
   describe('DIALECT_LABELS', () => {
     it('应该包含所有方言的中文名称', () => {
-      expect(DIALECT_LABELS.mandarin).toBe('普通话')
+      expect(DIALECT_LABELS.original).toBe('原声')
       expect(DIALECT_LABELS.cantonese).toBe('粤语')
       expect(DIALECT_LABELS.sichuan).toBe('四川话')
       expect(DIALECT_LABELS.dongbei).toBe('东北话')
-      expect(DIALECT_LABELS.english).toBe('English')
+      expect(DIALECT_LABELS.wu).toBe('上海话')
     })
 
     it('标签数量应该与配置数量一致', () => {
@@ -147,7 +148,7 @@ describe('dialect types', () => {
   describe('DIALECT_VOICE_MAP', () => {
     it('应该包含所有方言的 Voice ID', () => {
       const codes = Object.keys(DIALECT_VOICE_MAP) as DialectCode[]
-      expect(codes.length).toBe(19)
+      expect(codes.length).toBe(9)
     })
 
     it('Voice ID 应该与配置中的 ID 一致', () => {
@@ -167,7 +168,7 @@ describe('dialect types', () => {
 
   describe('方言分类', () => {
     it('官话方言应该被正确分类', () => {
-      const mandarinDialects = ['mandarin', 'dongbei', 'shandong', 'henan', 'shaanxi', 'lanyin', 'jianghuai', 'xinan', 'jiaoliao', 'zhongyuan']
+      const mandarinDialects = ['dongbei', 'shaanxi', 'tianjin', 'nanjing']
 
       for (const code of mandarinDialects) {
         const config = DIALECT_CONFIGS[code as DialectCode]
@@ -176,7 +177,7 @@ describe('dialect types', () => {
     })
 
     it('非官话方言应该被正确分类', () => {
-      const nonMandarinDialects = ['cantonese', 'wu', 'minnan', 'hakka', 'xiang', 'gan', 'jin']
+      const nonMandarinDialects = ['cantonese', 'sichuan', 'wu', 'minnan']
 
       for (const code of nonMandarinDialects) {
         const config = DIALECT_CONFIGS[code as DialectCode]

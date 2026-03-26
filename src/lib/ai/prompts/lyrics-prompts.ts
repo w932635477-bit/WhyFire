@@ -26,26 +26,20 @@ interface PromptContext {
 /**
  * 语言描述映射
  */
+/**
+ * 语言描述映射（9种原生方言）
+ */
 const DIALECT_DESCRIPTIONS: Record<DialectType, string> = {
+  original: 'Original Voice (原声本色)',
   mandarin: 'Mandarin Chinese (普通话)',
   cantonese: 'Cantonese (粤语)',
   sichuan: 'Sichuan Dialect (四川话)',
   dongbei: 'Northeastern Mandarin (东北话)',
-  shandong: 'Shandong Dialect (山东话)',
-  henan: 'Henan Dialect (河南话)',
+  wu: 'Shanghainese (上海话)',
   shaanxi: 'Shaanxi Dialect (陕西话)',
-  lanyin: 'Lanyin Mandarin (兰银官话)',
-  jianghuai: 'Jianghuai Mandarin (江淮官话)',
-  xinan: 'Southwestern Mandarin (西南官话)',
-  jiaoliao: 'Jiaoliao Mandarin (胶辽官话)',
-  zhongyuan: 'Central Plains Mandarin (中原官话)',
-  wu: 'Wu Dialect (吴语)',
   minnan: 'Min Nan Dialect (闽南语)',
-  hakka: 'Hakka Dialect (客家话)',
-  xiang: 'Xiang Dialect (湘语)',
-  gan: 'Gan Dialect (赣语)',
-  jin: 'Jin Dialect (晋语)',
-  english: 'English',
+  tianjin: 'Tianjin Dialect (天津话)',
+  nanjing: 'Nanjing Dialect (南京话)',
 }
 
 /**
@@ -66,33 +60,7 @@ function buildProductPrompt(ctx: PromptContext): string {
   const productName = ctx.productName || 'Product'
   const sellingPoints = ctx.sellingPoints?.join(', ') || ''
   const humorGuide = getSceneHumorGuide('product')
-  const example = getSceneExample('product', ctx.dialect === 'english' ? 'english' : 'chinese')
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('product')
-    return `You are a professional Rap lyricist specializing in humorous, catchy product promotion.
-
-【Task】Create a 30-second Rap lyrics for product promotion
-
-Language: English
-Product: ${productName}
-Selling Points: ${sellingPoints}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- Natural rhythm and rhyming
-- Naturally incorporate selling points without feeling like a hard ad
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
+  const example = getSceneExample('product', 'chinese')
 
   return `你是专业的Rap歌词创作专家，擅长用幽默搞笑的方式做产品推广。
 
@@ -127,34 +95,7 @@ function buildFunnyPrompt(ctx: PromptContext): string {
   const theme = ctx.theme || 'Daily Life'
   const keywords = ctx.keywords?.join(', ') || ''
   const humorGuide = getSceneHumorGuide('funny')
-  const example = getSceneExample('funny', ctx.dialect === 'english' ? 'english' : 'chinese')
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('funny')
-    return `You are a professional Rap lyricist specializing in viral, comedic content.
-
-【Task】Create a 30-second funny/viral Rap lyrics
-
-Language: English
-Theme: ${theme}
-Keywords: ${keywords}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- Viral potential, catchy, humorous
-- Use internet memes/slang if appropriate
-- Exaggerated and entertaining
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
+  const example = getSceneExample('funny', 'chinese')
 
   return `你是专业的Rap歌词创作专家，擅长创作魔性洗脑、病毒传播的搞笑内容。
 
@@ -191,34 +132,7 @@ function buildIPPrompt(ctx: PromptContext): string {
   const coreElements = ctx.coreElements?.join(', ') || ''
   const mood = ctx.mood || 'Epic'
   const humorGuide = getSceneHumorGuide('ip')
-  const example = getSceneExample('ip', ctx.dialect === 'english' ? 'english' : 'chinese')
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('ip')
-    return `You are a professional Rap lyricist specializing in IP/Brand mashup content.
-
-【Task】Create a 30-second Rap lyrics for IP/Brand mashup
-
-Language: English
-IP/Brand: ${ipName}
-Core Elements: ${coreElements}
-Mood: ${mood}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- ${mood} and powerful, resonate with fans
-- Stay true to the IP's essence
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
+  const example = getSceneExample('ip', 'chinese')
 
   return `你是专业的Rap歌词创作专家，擅长为IP/品牌混剪创作燃炸的歌词。
 
@@ -256,35 +170,7 @@ function buildVlogPrompt(ctx: PromptContext): string {
   const location = ctx.location || ''
   const mood = ctx.mood || 'Chill'
   const humorGuide = getSceneHumorGuide('vlog')
-  const example = getSceneExample('vlog', ctx.dialect === 'english' ? 'english' : 'chinese')
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('vlog')
-    return `You are a professional Rap lyricist specializing in relatable, authentic daily life content.
-
-【Task】Create a 30-second Rap lyrics for daily vlog
-
-Language: English
-Activities: ${activities}
-Location: ${location || 'Unknown'}
-Mood: ${mood}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- Lifestyle-focused, relatable
-- ${mood} and casual vibe
-- Authentic and personal
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
+  const example = getSceneExample('vlog', 'chinese')
 
   return `你是专业的Rap歌词创作专家，擅长创作真实接地气、引发共情的日常内容。
 

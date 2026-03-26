@@ -139,8 +139,11 @@ export async function POST(
       )
     }
 
-    // 验证语言类型
-    const validDialects: DialectType[] = ['mandarin', 'cantonese', 'english']
+    // 验证语言类型（9种原生方言）
+    const validDialects: DialectType[] = [
+      'mandarin', 'cantonese', 'sichuan', 'dongbei',
+      'wu', 'shaanxi', 'minnan', 'tianjin', 'nanjing'
+    ]
     if (!validDialects.includes(dialect)) {
       return NextResponse.json(
         {

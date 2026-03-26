@@ -37,20 +37,18 @@ export interface EnhancedPromptContext {
 }
 
 /**
- * 语言描述映射（扩展版）
+ * 语言描述映射（9种原生方言）
  */
 const DIALECT_DESCRIPTIONS: Partial<Record<DialectCode, string>> = {
   mandarin: 'Mandarin Chinese (普通话)',
   cantonese: 'Cantonese (粤语)',
   sichuan: 'Sichuan Dialect (四川话)',
   dongbei: 'Northeastern Dialect (东北话)',
-  shandong: 'Shandong Dialect (山东话)',
-  henan: 'Henan Dialect (河南话)',
+  wu: 'Shanghainese (上海话)',
   shaanxi: 'Shaanxi Dialect (陕西话)',
-  wu: 'Wu Dialect (吴语/上海话)',
   minnan: 'Minnan Dialect (闽南语)',
-  hakka: 'Hakka Dialect (客家话)',
-  english: 'English',
+  tianjin: 'Tianjin Dialect (天津话)',
+  nanjing: 'Nanjing Dialect (南京话)',
 }
 
 /**
@@ -121,42 +119,12 @@ function buildEnhancedProductPrompt(ctx: EnhancedPromptContext): string {
   const productName = ctx.productName || 'Product'
   const sellingPoints = ctx.sellingPoints?.join(', ') || ''
   const humorGuide = getSceneHumorGuide('product')
-  const example = getSceneExample('product', ctx.dialect === 'english' ? 'english' : 'chinese')
+  const example = getSceneExample('product', 'chinese')
 
   // 构建增强部分
   const festivalSection = buildFestivalSection(ctx.timeContext)
   const trendingSection = buildTrendingSection(ctx.trendingTopics)
   const memeSection = buildMemeSection(ctx.memes)
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('product')
-    return `You are a professional Rap lyricist specializing in humorous, catchy product promotion.
-
-【Task】Create a 30-second Rap lyrics for product promotion
-
-Language: English
-Product: ${productName}
-Selling Points: ${sellingPoints}
-
-${festivalSection.en}
-
-${trendingSection.en}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- Natural rhythm and rhyming
-- Naturally incorporate selling points without feeling like a hard ad
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
 
   return `你是专业的Rap歌词创作专家，擅长用幽默搞笑的方式做产品推广。
 
@@ -198,42 +166,11 @@ function buildEnhancedFunnyPrompt(ctx: EnhancedPromptContext): string {
   const theme = ctx.theme || 'Daily Life'
   const keywords = ctx.keywords?.join(', ') || ''
   const humorGuide = getSceneHumorGuide('funny')
-  const example = getSceneExample('funny', ctx.dialect === 'english' ? 'english' : 'chinese')
+  const example = getSceneExample('funny', 'chinese')
 
   const festivalSection = buildFestivalSection(ctx.timeContext)
   const trendingSection = buildTrendingSection(ctx.trendingTopics)
   const memeSection = buildMemeSection(ctx.memes)
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('funny')
-    return `You are a professional Rap lyricist specializing in viral, comedic content.
-
-【Task】Create a 30-second funny/viral Rap lyrics
-
-Language: English
-Theme: ${theme}
-Keywords: ${keywords}
-
-${festivalSection.en}
-
-${trendingSection.en}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- Viral potential, catchy, humorous
-- Use internet memes/slang if appropriate
-- Exaggerated and entertaining
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
 
   return `你是专业的Rap歌词创作专家，擅长创作魔性洗脑、病毒传播的搞笑内容。
 
@@ -276,39 +213,10 @@ function buildEnhancedIPPrompt(ctx: EnhancedPromptContext): string {
   const coreElements = ctx.coreElements?.join(', ') || ''
   const mood = ctx.mood || 'Epic'
   const humorGuide = getSceneHumorGuide('ip')
-  const example = getSceneExample('ip', ctx.dialect === 'english' ? 'english' : 'chinese')
+  const example = getSceneExample('ip', 'chinese')
 
   const festivalSection = buildFestivalSection(ctx.timeContext)
   const trendingSection = buildTrendingSection(ctx.trendingTopics)
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('ip')
-    return `You are a professional Rap lyricist specializing in IP/Brand mashup content.
-
-【Task】Create a 30-second Rap lyrics for IP/Brand mashup
-
-Language: English
-IP/Brand: ${ipName}
-Core Elements: ${coreElements}
-Mood: ${mood}
-
-${festivalSection.en}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- ${mood} and powerful, resonate with fans
-- Stay true to the IP's essence
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
 
   return `你是专业的Rap歌词创作专家，擅长为IP/品牌混剪创作燃炸的歌词。
 
@@ -350,43 +258,11 @@ function buildEnhancedVlogPrompt(ctx: EnhancedPromptContext): string {
   const location = ctx.location || ''
   const mood = ctx.mood || 'Chill'
   const humorGuide = getSceneHumorGuide('vlog')
-  const example = getSceneExample('vlog', ctx.dialect === 'english' ? 'english' : 'chinese')
+  const example = getSceneExample('vlog', 'chinese')
 
   const festivalSection = buildFestivalSection(ctx.timeContext)
   const trendingSection = buildTrendingSection(ctx.trendingTopics)
   const memeSection = buildMemeSection(ctx.memes)
-
-  if (ctx.dialect === 'english') {
-    const humorGuideEn = getSceneHumorGuideEnglish('vlog')
-    return `You are a professional Rap lyricist specializing in relatable, authentic daily life content.
-
-【Task】Create a 30-second Rap lyrics for daily vlog
-
-Language: English
-Activities: ${activities}
-Location: ${location || 'Unknown'}
-Mood: ${mood}
-
-${festivalSection.en}
-
-${trendingSection.en}
-
-【Humor Techniques to Use】
-${humorGuideEn}
-
-【Quality Requirements】
-- Use at least 2-3 humor techniques from above
-- Include 1-2 "golden lines" (memorable, shareable quotes)
-- Lifestyle-focused, relatable
-- ${mood} and casual vibe
-- Authentic and personal
-- About 80-120 words
-
-【Example for Reference】
-${example}
-
-【IMPORTANT】Output ONLY the lyrics, no explanations or descriptions.`
-  }
 
   return `你是专业的Rap歌词创作专家，擅长创作真实接地气、引发共情的日常内容。
 
@@ -491,19 +367,18 @@ Please naturally incorporate 1-2 slang terms to increase viral potential!`,
 }
 
 /**
- * 获取方言特定要求
+ * 获取方言特定要求（9种原生方言）
  */
 function getDialectSpecificRequirements(dialect: DialectCode): string {
   const requirements: Partial<Record<DialectCode, string>> = {
     cantonese: '- 使用粤语俚语，港式幽默',
     sichuan: '- 使用四川方言特色表达，麻辣风格',
     dongbei: '- 使用东北方言特色表达，豪爽幽默',
-    shandong: '- 使用山东方言特色表达',
-    henan: '- 使用河南方言特色表达',
     shaanxi: '- 使用陕西方言特色表达',
-    wu: '- 使用吴语特色表达',
+    wu: '- 使用上海话特色表达',
     minnan: '- 使用闽南语特色表达',
-    hakka: '- 使用客家话特色表达',
+    tianjin: '- 使用天津方言特色表达',
+    nanjing: '- 使用南京方言特色表达',
   }
 
   return requirements[dialect] || '- 适度使用网络热梗'

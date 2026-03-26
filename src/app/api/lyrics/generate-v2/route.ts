@@ -252,11 +252,13 @@ export async function POST(
     })
   } catch (error) {
     console.error('歌词生成失败:', error)
+    console.error('错误详情:', error instanceof Error ? error.message : String(error))
+    console.error('错误堆栈:', error instanceof Error ? error.stack : 'N/A')
 
     const errorMessage =
       error instanceof Error && error.message.includes('EVOLINK_API_KEY')
         ? '服务配置错误: EVOLINK_API_KEY 未配置'
-        : '歌词生成失败，请稍后重试'
+        : error instanceof Error ? error.message : '歌词生成失败，请稍后重试'
 
     return NextResponse.json(
       {

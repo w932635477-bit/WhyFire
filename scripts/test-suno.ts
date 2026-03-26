@@ -10,7 +10,7 @@ import { config } from 'dotenv'
 import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
-import { getSunoClient } from '../src/lib/music/suno-client'
+import { getSunoClient } from '../src/lib/music/suno-client.js'
 
 async function testSuno() {
   console.log('=== Suno API 测试 ===\n')

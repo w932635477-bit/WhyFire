@@ -77,9 +77,11 @@ export const FESTIVAL_CONFIGS: Record<FestivalType, FestivalConfig> = {
       cantonese: '恭喜发财，利是逗来',
       sichuan: '过年好嘛，恭喜发财',
       dongbei: '过年好啊，给您拜年啦',
-      shandong: '过年好，给您磕头啦',
       wu: '新年好，恭喜发财',
+      shaanxi: '过年好，给您拜年啦',
       minnan: '新年快乐，万事如意',
+      tianjin: '过年好，给您拜年啦',
+      nanjing: '过年好，恭喜发财',
     },
   },
   lantern_festival: {

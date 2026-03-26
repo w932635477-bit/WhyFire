@@ -1,5 +1,17 @@
 /**
  * GPT-SoVITS 声音克隆客户端
+ *
+ * @deprecated 已废弃
+ * 请使用 CosyVoice 声音复刻客户端代替: src/lib/tts/cosyvoice-clone-client.ts
+ *
+ * 原因：
+ * - GPT-SoVITS 是独立模型，需要自部署
+ * - CosyVoice 声音复刻 + TTS 使用同一平台，更容易打通
+ * - CosyVoice 支持 instruction 参数控制方言发音
+ *
+ * 新方案流程：
+ * 用户录音 → CosyVoice 声音复刻 → 复刻音色 + instruction(方言) → 方言语音
+ *
  * 支持用户录音 -> 训练模型 -> 克隆声音
  *
  * 功能：
