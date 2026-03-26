@@ -91,6 +91,7 @@ async function getOSSClient(): Promise<OSS | null> {
         accessKeyId,
         accessKeySecret,
         secure: true,
+        // @ts-expect-error httpsAgent is valid but not in types
         httpsAgent: httpsAgent,
       })
       return ossClient

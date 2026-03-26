@@ -31,7 +31,6 @@ interface PromptContext {
  */
 const DIALECT_DESCRIPTIONS: Record<DialectType, string> = {
   original: 'Original Voice (原声本色)',
-  mandarin: 'Mandarin Chinese (普通话)',
   cantonese: 'Cantonese (粤语)',
   sichuan: 'Sichuan Dialect (四川话)',
   dongbei: 'Northeastern Mandarin (东北话)',

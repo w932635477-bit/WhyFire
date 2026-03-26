@@ -73,7 +73,7 @@ export const FESTIVAL_CONFIGS: Record<FestivalType, FestivalConfig> = {
     keywords: ['新年快乐', '恭喜发财', '龙年大吉', '万事如意', '财源广进'],
     advanceDays: 14,
     dialectGreetings: {
-      mandarin: '新年好呀，恭喜发财',
+      original: '新年好呀，恭喜发财',
       cantonese: '恭喜发财，利是逗来',
       sichuan: '过年好嘛，恭喜发财',
       dongbei: '过年好啊，给您拜年啦',
@@ -92,7 +92,7 @@ export const FESTIVAL_CONFIGS: Record<FestivalType, FestivalConfig> = {
     keywords: ['元宵快乐', '团团圆圆', '灯火辉煌'],
     advanceDays: 3,
     dialectGreetings: {
-      mandarin: '元宵节快乐，团团圆圆',
+      original: '元宵节快乐，团团圆圆',
       cantonese: '元宵节快乐，甜甜蜜蜜',
     },
   },

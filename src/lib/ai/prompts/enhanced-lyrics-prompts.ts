@@ -40,7 +40,7 @@ export interface EnhancedPromptContext {
  * 语言描述映射（9种原生方言）
  */
 const DIALECT_DESCRIPTIONS: Partial<Record<DialectCode, string>> = {
-  mandarin: 'Mandarin Chinese (普通话)',
+  original: 'Original Voice (原声本色)',
   cantonese: 'Cantonese (粤语)',
   sichuan: 'Sichuan Dialect (四川话)',
   dongbei: 'Northeastern Dialect (东北话)',

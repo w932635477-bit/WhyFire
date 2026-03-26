@@ -158,24 +158,49 @@ export async function generateLyrics(
 }
 
 /**
- * 音乐生成 API (D-Lite 方案)
+ * UI Beat ID 到 BGM Library ID 的映射
+ */
+const BEAT_TO_BGM_MAP: Record<string, string> = {
+  'beat-1': 'fortune-flow',      // 八方来财
+  'beat-2': 'karma-dark',        // 因果
+  'beat-3': 'apt-remix',         // APT.
+  'beat-4': 'brazilian-phonk',   // BRAZIL
+  'beat-5': 'warm-gray',         // 暖灰
+  'beat-6': 'wonderful-01',      // 精彩01
+}
+
+/**
+ * 转换 UI Beat ID 为 BGM Library ID
+ */
+function convertToBgmId(beatId: string | undefined): string | undefined {
+  if (!beatId) return undefined
+  // 如果已经是 bgm-library 格式，直接返回
+  if (!beatId.startsWith('beat-')) return beatId
+  return BEAT_TO_BGM_MAP[beatId]
+}
+
+/**
+ * 音乐生成 API (Suno + RVC 方案)
  */
 export async function generateMusic(
   params: MusicGenerateRequest
 ): Promise<MusicGenerateResponse> {
-  // 使用 D-Lite Rap 生成 API
-  const response = await fetch('/api/rap/generate', {
+  // 转换 bgmId（UI beat-1~6 → bgm-library ID）
+  const bgmId = convertToBgmId(params.bgmId)
+
+  // 使用 Suno + RVC 生成 API
+  const response = await fetch('/api/rap/generate-v2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      userId: 'web-user',  // 默认用户 ID
+      userDescription: '',  // 用户描述（可选）
       lyrics: params.lyrics,
       dialect: params.dialect,
-      bgmId: params.bgmId,
-      voiceId: params.voiceId,
-      rapPreset: params.rapPreset || 'aggressive',  // 默认使用 aggressive 预设
-      enableRapEnhance: params.enableRapEnhance !== false,  // 默认启用
+      bgmId: bgmId,
+      voiceModelId: params.voiceId,
     }),
   })
 
@@ -185,15 +210,15 @@ export async function generateMusic(
     throw new ApiError(result.code, result.message || '生成失败')
   }
 
-  // 转换 D-Lite 响应格式为标准格式
+  // 转换 V2 API 响应格式为标准格式
   return {
     taskId: result.data.taskId,
     status: result.data.status,
     audioUrl: result.data.audioUrl,
     duration: result.data.duration,
-    provider: 'd-lite',
+    provider: 'suno-rvc',
     dialect: result.data.dialect,
-    wordTimestamps: undefined, // D-Lite 不提供字级别时间戳
+    wordTimestamps: undefined,
   }
 }
 

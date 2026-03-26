@@ -11,23 +11,36 @@ interface Step2BeatDialectProps {
 interface BeatInfo {
   id: string
   name: string
-  file: string
+  url: string
   bpm: number
   duration: string
+  styleTags: string
+  energy: 'low' | 'medium' | 'high'
+  mood: string[]
 }
 
-// 抖音/小红书最火 BGM - 内置音频文件
-const trendingBeats: BeatInfo[] = [
-  { id: 'beat-1', name: '八方来财', file: '/beats/八方来财.mp3', bpm: 130, duration: '2:53' },
-  { id: 'beat-2', name: '因果', file: '/beats/因果.mp3', bpm: 140, duration: '2:30' },
-  { id: 'beat-3', name: 'APT.', file: '/beats/APT..mp3', bpm: 120, duration: '2:45' },
-  { id: 'beat-4', name: 'BRAZIL', file: '/beats/BRAZLI.mp3', bpm: 130, duration: '2:15' },
-  { id: 'beat-5', name: '暖灰', file: '/beats/暖灰.mp3', bpm: 110, duration: '3:10' },
-  { id: 'beat-6', name: '精彩01', file: '/beats/精彩01.mp3', bpm: 125, duration: '2:55' },
+// UI 显示名称映射
+const BGM_DISPLAY_NAMES: Record<string, string> = {
+  'fortune-flow': '八方来财',
+  'karma-dark': '因果',
+  'apt-remix': 'APT.',
+  'brazilian-phonk': 'BRAZIL',
+  'warm-gray': '暖灰',
+  'wonderful-01': '精彩01',
+}
+
+// BGM 列表（从 API 动态加载，这里作为 fallback）
+const FALLBACK_BEATS: BeatInfo[] = [
+  { id: 'fortune-flow', name: '八方来财', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/八方来财.mp3', bpm: 137, duration: '1:45', styleTags: 'pop rap, upbeat, positive', energy: 'high', mood: ['happy', 'confident'] },
+  { id: 'karma-dark', name: '因果', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/因果-改.mp3', bpm: 110, duration: '2:28', styleTags: 'dark trap, drill, mysterious', energy: 'medium', mood: ['dark', 'mysterious'] },
+  { id: 'apt-remix', name: 'APT.', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/apt-改.mp3', bpm: 99, duration: '2:08', styleTags: 'trap, dark, heavy 808', energy: 'high', mood: ['aggressive', 'confident'] },
+  { id: 'brazilian-phonk', name: 'BRAZIL', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/brazli-改.mp3', bpm: 70, duration: '2:13', styleTags: 'brazilian phonk, drill, heavy bass', energy: 'high', mood: ['intense', 'energetic'] },
+  { id: 'warm-gray', name: '暖灰', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/暖灰-改.mp3', bpm: 78, duration: '1:41', styleTags: 'lo-fi, chill, ambient, smooth', energy: 'low', mood: ['relaxed', 'dreamy'] },
+  { id: 'wonderful-01', name: '精彩01', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/精彩01.mp3', bpm: 120, duration: '2:16', styleTags: 'pop rap, upbeat, positive', energy: 'high', mood: ['happy', 'confident'] },
 ]
 
 // 默认BGM - 八方来财（最火）
-const DEFAULT_BEAT = trendingBeats[0]
+const DEFAULT_BEAT = FALLBACK_BEATS[0]
 
 export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
   const { state, setDialect, setBeat, setCustomBeat } = useCreateContext()
@@ -50,7 +63,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
 
   // 获取当前选中beat的信息
   const getSelectedBeatInfo = useCallback(() => {
-    return trendingBeats.find(b => b.id === selectedBeat) || DEFAULT_BEAT
+    return FALLBACK_BEATS.find(b => b.id === selectedBeat) || DEFAULT_BEAT
   }, [selectedBeat])
 
   // 播放/暂停 Beat
@@ -69,8 +82,8 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
       audioRef.current.currentTime = 0
     }
 
-    // 播放新的音频
-    const audio = new Audio(beat.file)
+    // 播放新的音频（使用 OSS URL）
+    const audio = new Audio(beat.url)
     audioRef.current = audio
     audio.play()
     setPlayingBeat(beat.id)
@@ -220,7 +233,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-white/40">graphic_eq</span>
               <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                抖音热门 Beat
+                精选伴奏
               </h3>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
                 已自动选择
@@ -229,7 +242,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
 
             {/* Beat List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {trendingBeats.map((beat) => (
+              {FALLBACK_BEATS.map((beat) => (
                 <button
                   key={beat.id}
                   onClick={() => {
@@ -343,7 +356,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
               {getSelectedBeatInfo().name}
             </h3>
             <p className="text-white/40 text-sm leading-relaxed mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              抖音/小红书最火BGM，自动匹配最佳节奏
+              精选热门伴奏，自动匹配最佳节奏
             </p>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-white/50">
