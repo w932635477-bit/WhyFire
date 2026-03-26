@@ -72,3 +72,14 @@ test-*.mjs
 .claude/worktrees/
 
 .gstack/
+
+# 临时输出目录
+temp/
+
+# 本地测试文件
+test-video.MP4
+test-voice-audio.mp3
+*.MP4
+
+# 本地服务配置（仅根目录）
+/services/

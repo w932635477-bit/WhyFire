@@ -19,6 +19,18 @@ import { getBGMById, getDefaultBGM, type BGMMetadata } from '@/lib/music/bgm-lib
 import type { DialectCode } from '@/types/dialect'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import { ProxyAgent, setGlobalDispatcher } from 'undici'
+
+// 初始化全局代理（如果配置了代理）
+function initProxy(): void {
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy ||
+                   process.env.HTTP_PROXY || process.env.http_proxy
+  if (proxyUrl) {
+    console.log(`[RapGenerator] Setting up global proxy: ${proxyUrl}`)
+    setGlobalDispatcher(new ProxyAgent(proxyUrl))
+  }
+}
+initProxy()
 
 // ============================================================================
 // 类型定义
