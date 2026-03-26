@@ -7,4 +7,5 @@ export * from './audio-extractor'
 export * from './rhythm-adaptor'
 export * from './ffmpeg-processor'
 export * from './demucs-client'
-export * from './rvc-client'
+export * from './seed-vc-client'
+

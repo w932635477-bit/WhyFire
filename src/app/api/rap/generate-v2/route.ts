@@ -1,22 +1,23 @@
 /**
  * Rap 生成 API V2
- * 使用 Suno + RVC 方案生成方言 Rap
+ * 使用 Suno + Seed-VC 方案生成方言 Rap
  *
  * 5 步流程：
  * 1. 歌词生成（Claude API）
  * 2. Suno 生成 Rap（AI 音色）
  * 3. Demucs 人声分离
- * 4. RVC 音色替换
+ * 4. Seed-VC 零样本音色替换
  * 5. FFmpeg 混音合成
  *
  * POST /api/rap/generate-v2
- * Body: { userId, userDescription, dialect, voiceModelId, bgmId?, lyrics? }
+ * Body: { userId, userDescription, dialect, referenceAudioId, bgmId?, lyrics? }
  * Response: { taskId, status, audioUrl?, duration?, lyrics?, dialect? }
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getRapGenerator, type GenerationProgress } from '@/lib/services/rap-generator-suno-rvc'
+import { getRapGenerator, type GenerationProgress } from '@/lib/services/rap-generator'
 import { getBGMById, listAllBGM } from '@/lib/music/bgm-library'
+import { withOptionalAuth } from '@/lib/middleware/auth'
 import type { DialectCode } from '@/types/dialect'
 
 export const runtime = 'nodejs'
@@ -29,8 +30,8 @@ interface RapGenerateV2Request {
   userDescription: string
   /** 方言 */
   dialect: DialectCode
-  /** 用户 RVC 模型 ID */
-  voiceModelId: string
+  /** 用户参考音频 ID（Seed-VC 零样本克隆） */
+  referenceAudioId: string
   /** BGM ID（从 BGM 库选择，可选） */
   bgmId?: string
   /** 歌词（可选，如果不提供则自动生成） */
@@ -51,7 +52,18 @@ interface RapGenerateV2Response {
   message?: string
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse<RapGenerateV2Response>> {
+/**
+ * Rap 生成 API（受认证保护）
+ *
+ * 认证方式：
+ * - 开发环境：跳过认证
+ * - 生产环境：需要 X-API-Key 或 Authorization: Bearer <token>
+ *
+ * 环境变量配置：
+ * - API_KEYS: 逗号分隔的 API Keys
+ * - BEARER_TOKENS: 逗号分隔的 Bearer Tokens
+ */
+export const POST = withOptionalAuth(async (request: NextRequest): Promise<NextResponse<RapGenerateV2Response>> => {
   try {
     const body: RapGenerateV2Request = await request.json()
 
@@ -70,9 +82,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<RapGenera
       )
     }
 
-    if (!body.voiceModelId) {
+    if (!body.referenceAudioId) {
       return NextResponse.json(
-        { code: 400, message: '声音模型 ID 不能为空' },
+        { code: 400, message: '参考音频 ID 不能为空' },
         { status: 400 }
       )
     }
@@ -93,14 +105,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<RapGenera
       console.log(`[API V2] Using BGM: ${body.bgmId}`)
     }
 
-    console.log(`[API V2] Rap 生成请求: userId=${body.userId}, dialect=${body.dialect}, voiceModelId=${body.voiceModelId}`)
+    console.log(`[API V2] Rap 生成请求: userId=${body.userId}, dialect=${body.dialect}, referenceAudioId=${body.referenceAudioId}`)
 
     // 获取生成器
     const generator = getRapGenerator()
 
     // 检查服务状态
     const services = await generator.checkServices()
-    console.log(`[API V2] 服务状态: Suno=${services.suno}, RVC=${services.rvc}, Demucs=${services.demucs}, FFmpeg=${services.ffmpeg}`)
+    console.log(`[API V2] 服务状态: Suno=${services.suno}, SeedVC=${services.seedvc}, Demucs=${services.demucs}, FFmpeg=${services.ffmpeg}`)
 
     if (!services.suno) {
       return NextResponse.json(
@@ -127,7 +139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RapGenera
         userId: body.userId,
         userDescription: body.userDescription || '',
         dialect: body.dialect,
-        voiceModelId: body.voiceModelId,
+        referenceAudioId: body.referenceAudioId,
         bgmId: body.bgmId,
         lyrics: body.lyrics,
       },
@@ -158,7 +170,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RapGenera
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * GET /api/rap/generate-v2?action=bgm-list
@@ -203,10 +215,10 @@ export async function GET(request: NextRequest) {
             name: 'Suno AI',
             description: 'AI 音乐生成服务',
           },
-          rvc: {
-            available: services.rvc,
-            name: 'RVC',
-            description: '声音克隆和音色转换',
+          seedvc: {
+            available: services.seedvc,
+            name: 'Seed-VC',
+            description: '零样本声音克隆',
           },
           demucs: {
             available: services.demucs,
@@ -219,7 +231,7 @@ export async function GET(request: NextRequest) {
             description: '音频处理和混音',
           },
         },
-        allAvailable: services.suno && services.rvc && services.demucs && services.ffmpeg,
+        allAvailable: services.suno && services.seedvc && services.demucs && services.ffmpeg,
         minRequired: services.suno && services.demucs, // 最小需要 Suno + Demucs
       },
     })

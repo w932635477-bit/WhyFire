@@ -11,14 +11,60 @@
  * 依赖: FFmpeg 4.0+
  */
 
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import { spawn } from 'child_process'
 import { readFile, writeFile, unlink } from 'fs/promises'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 
-const execAsync = promisify(exec)
+/**
+ * 安全执行 FFmpeg 命令
+ * 使用 spawn 避免命令注入漏洞
+ *
+ * @param command 可执行文件路径
+ * @param args 命令行参数数组
+ * @param timeout 超时时间（毫秒）
+ */
+async function execFFmpegSafe(
+  command: string,
+  args: string[],
+  timeout: number = 120000
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(command, args, {
+      shell: false,  // 关键：不使用 shell，避免注入
+      windowsHide: true
+    })
+
+    let stdout = ''
+    let stderr = ''
+    let timeoutId: NodeJS.Timeout | null = null
+
+    proc.stdout.on('data', (data) => { stdout += data.toString() })
+    proc.stderr.on('data', (data) => { stderr += data.toString() })
+
+    proc.on('error', (err) => {
+      if (timeoutId) clearTimeout(timeoutId)
+      reject(err)
+    })
+
+    proc.on('close', (code) => {
+      if (timeoutId) clearTimeout(timeoutId)
+      if (code === 0) {
+        resolve({ stdout, stderr })
+      } else {
+        const error = new Error(`FFmpeg exited with code ${code}: ${stderr || stdout}`)
+        reject(error)
+      }
+    })
+
+    // 超时处理
+    timeoutId = setTimeout(() => {
+      proc.kill('SIGTERM')
+      reject(new Error(`FFmpeg process timed out after ${timeout}ms`))
+    }, timeout)
+  })
+}
 
 // ============================================================================
 // 类型定义
@@ -134,7 +180,7 @@ export class FFmpegProcessor {
    */
   async isAvailable(): Promise<boolean> {
     try {
-      await execAsync(`${this.config.ffmpegPath} -version`)
+      await execFFmpegSafe(this.config.ffmpegPath, ['-version'], 5000)
       return true
     } catch {
       return false
@@ -193,14 +239,21 @@ export class FFmpegProcessor {
       // 获取原始时长
       const originalDuration = await this.getAudioDuration(inputFile)
 
-      // 执行 FFmpeg 命令
-      const command = `"${this.config.ffmpegPath}" -y -i "${inputFile}" -filter:a "${atempoFilter}" -c:a libmp3lame -q:a 2 "${outputFile}"`
+      // 执行 FFmpeg 命令 - 使用 spawn 避免命令注入
+      const args = [
+        '-y',
+        '-i', inputFile,
+        '-filter:a', atempoFilter,
+        '-c:a', 'libmp3lame',
+        '-q:a', '2',
+        outputFile
+      ]
 
       if (this.config.debug) {
-        console.log(`[FFmpegProcessor] Executing: ${command}`)
+        console.log(`[FFmpegProcessor] Executing: ${this.config.ffmpegPath} ${args.join(' ')}`)
       }
 
-      await execAsync(command, { timeout: this.config.timeout })
+      await execFFmpegSafe(this.config.ffmpegPath, args, this.config.timeout)
 
       // 读取输出文件
       const audioBuffer = await readFile(outputFile)
@@ -257,20 +310,30 @@ export class FFmpegProcessor {
 
       // 构建 amix 滤镜
       // 输入顺序: 0 = vocal, 1 = bgm
-      let filterComplex: string
 
       if (loopBgm && bgmDuration < vocalDuration) {
         // 需要循环 BGM：使用 -stream_loop 循环 BGM 输入
         // 注意: stream_loop 放在 -i 之前
         const loopsNeeded = Math.ceil(vocalDuration / bgmDuration)
 
-        const command = `"${this.config.ffmpegPath}" -y -i "${vocalFile}" -stream_loop ${loopsNeeded} -i "${bgmFile}" -filter_complex "[0:a]volume=${vocalVolume}[v];[1:a]volume=${bgmVolume},atrim=0:${vocalDuration.toFixed(2)}[b];[v][b]amix=inputs=2:duration=first:dropout_transition=2" -c:a libmp3lame -q:a 2 "${outputFile}"`
+        // 使用 spawn 安全执行
+        const args = [
+          '-y',
+          '-i', vocalFile,
+          '-stream_loop', String(loopsNeeded),
+          '-i', bgmFile,
+          '-filter_complex',
+            `[0:a]volume=${vocalVolume}[v];[1:a]volume=${bgmVolume},atrim=0:${vocalDuration.toFixed(2)}[b];[v][b]amix=inputs=2:duration=first:dropout_transition=2`,
+          '-c:a', 'libmp3lame',
+          '-q:a', '2',
+          outputFile
+        ]
 
         if (this.config.debug) {
-          console.log(`[FFmpegProcessor] Executing: ${command}`)
+          console.log(`[FFmpegProcessor] Executing: ${this.config.ffmpegPath} ${args.join(' ')}`)
         }
 
-        await execAsync(command, { timeout: this.config.timeout })
+        await execFFmpegSafe(this.config.ffmpegPath, args, this.config.timeout)
 
         // 读取输出文件
         const audioBuffer = await readFile(outputFile)
@@ -286,15 +349,23 @@ export class FFmpegProcessor {
       }
 
       // 普通混音（无需循环）
-      filterComplex = `[0:a]volume=${vocalVolume}[v];[1:a]volume=${bgmVolume}[b];[v][b]amix=inputs=2:duration=first:dropout_transition=2`
+      const filterComplex = `[0:a]volume=${vocalVolume}[v];[1:a]volume=${bgmVolume}[b];[v][b]amix=inputs=2:duration=first:dropout_transition=2`
 
-      const command = `"${this.config.ffmpegPath}" -y -i "${vocalFile}" -i "${bgmFile}" -filter_complex "${filterComplex}" -c:a libmp3lame -q:a 2 "${outputFile}"`
+      const args = [
+        '-y',
+        '-i', vocalFile,
+        '-i', bgmFile,
+        '-filter_complex', filterComplex,
+        '-c:a', 'libmp3lame',
+        '-q:a', '2',
+        outputFile
+      ]
 
       if (this.config.debug) {
-        console.log(`[FFmpegProcessor] Executing: ${command}`)
+        console.log(`[FFmpegProcessor] Executing: ${this.config.ffmpegPath} ${args.join(' ')}`)
       }
 
-      await execAsync(command, { timeout: this.config.timeout })
+      await execFFmpegSafe(this.config.ffmpegPath, args, this.config.timeout)
 
       // 读取输出文件
       const audioBuffer = await readFile(outputFile)
@@ -367,13 +438,21 @@ export class FFmpegProcessor {
 
       const originalDuration = await this.getAudioDuration(inputFile)
 
-      const command = `"${this.config.ffmpegPath}" -y -i "${inputFile}" -filter:a "${filters.join(',')}" -c:a libmp3lame -q:a 2 "${outputFile}"`
+      // 使用 spawn 安全执行
+      const args = [
+        '-y',
+        '-i', inputFile,
+        '-filter:a', filters.join(','),
+        '-c:a', 'libmp3lame',
+        '-q:a', '2',
+        outputFile
+      ]
 
       if (this.config.debug) {
-        console.log(`[FFmpegProcessor] Executing: ${command}`)
+        console.log(`[FFmpegProcessor] Executing: ${this.config.ffmpegPath} ${args.join(' ')}`)
       }
 
-      await execAsync(command, { timeout: this.config.timeout })
+      await execFFmpegSafe(this.config.ffmpegPath, args, this.config.timeout)
 
       const audioBuffer = await readFile(outputFile)
       const processedDuration = await this.getAudioDuration(outputFile)
@@ -475,9 +554,15 @@ export class FFmpegProcessor {
     }
 
     try {
-      const command = `"${this.config.ffprobePath}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputFile}"`
+      // 使用 spawn 安全执行，避免命令注入
+      const args = [
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        inputFile
+      ]
 
-      const { stdout } = await execAsync(command, { timeout: 10000 })
+      const { stdout } = await execFFmpegSafe(this.config.ffprobePath, args, 10000)
       const duration = parseFloat(stdout.trim())
 
       if (isNaN(duration)) {
@@ -497,7 +582,7 @@ export class FFmpegProcessor {
    */
   async checkAvailability(): Promise<{ available: boolean; version?: string; error?: string }> {
     try {
-      const { stdout } = await execAsync(`"${this.config.ffmpegPath}" -version`, { timeout: 5000 })
+      const { stdout } = await execFFmpegSafe(this.config.ffmpegPath, ['-version'], 5000)
       const versionMatch = stdout.match(/ffmpeg version (\S+)/)
       return {
         available: true,

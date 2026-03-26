@@ -2,29 +2,12 @@
  * Suno Music Generation Client
  * 通过 Evolink API 调用 Suno AI 音乐生成
  * 文档: https://docs.evolink.ai
+ *
+ * 代理配置: 由 src/lib/proxy.ts 统一管理
  */
 
-import { ProxyAgent } from 'undici'
 import type { DialectCode } from '@/types/dialect'
 import { toSunoStyle } from './bgm-library'
-
-/**
- * 获取代理 Agent
- */
-function getProxyAgent(): ProxyAgent | undefined {
-  const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy ||
-                   process.env.HTTP_PROXY || process.env.http_proxy ||
-                   process.env.ALL_PROXY || process.env.all_proxy
-
-  if (proxyUrl) {
-    console.log(`[Suno] Using proxy: ${proxyUrl}`)
-    return new ProxyAgent(proxyUrl)
-  }
-  return undefined
-}
-
-// 全局代理 agent
-const proxyAgent = getProxyAgent()
 
 /**
  * Suno 模型类型
@@ -225,6 +208,53 @@ export class SunoClient {
   }
 
   /**
+   * 获取任务状态（公共方法）
+   * 用于外部轮询任务状态
+   */
+  async getStatus(taskId: string): Promise<SunoGenerationResult> {
+    const task = await this.getTaskStatus(taskId)
+
+    if (task.status === 'completed') {
+      // 返回第一个结果
+      if (task.result_data && task.result_data.length > 0) {
+        const firstResult = task.result_data[0]
+        return {
+          taskId,
+          status: 'completed',
+          audioUrl: firstResult.audio_url,
+          duration: firstResult.duration,
+          title: firstResult.title,
+          style: firstResult.tags,
+        }
+      }
+      // 兼容旧格式
+      if (task.results && task.results.length > 0) {
+        return {
+          taskId,
+          status: 'completed',
+          audioUrl: task.results[0],
+        }
+      }
+      return {
+        taskId,
+        status: 'failed',
+      }
+    }
+
+    if (task.status === 'failed') {
+      return {
+        taskId,
+        status: 'failed',
+      }
+    }
+
+    return {
+      taskId,
+      status: task.status as 'pending' | 'processing',
+    }
+  }
+
+  /**
    * 创建生成任务
    */
   private async createTask(params: {
@@ -246,8 +276,6 @@ export class SunoClient {
       },
       body: JSON.stringify(params),
       signal: AbortSignal.timeout(30000),
-      // @ts-expect-error Node.js fetch dispatcher for proxy support
-      dispatcher: proxyAgent,
     })
 
     if (!response.ok) {
@@ -315,8 +343,6 @@ export class SunoClient {
         'Authorization': `Bearer ${this.apiKey}`,
       },
       signal: AbortSignal.timeout(10000),
-      // @ts-expect-error Node.js fetch dispatcher for proxy support
-      dispatcher: proxyAgent,
     })
 
     if (!response.ok) {

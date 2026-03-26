@@ -635,7 +635,7 @@ if __name__ == "__main__":
 ### 5.2 API 调用示例
 
 ```typescript
-// src/lib/services/rap-generator-suno-rvc.ts
+// src/lib/services/rap-generator.ts
 
 import { getSunoClient } from '@/lib/music/suno-client'
 import { callRvcService } from '@/lib/services/rvc-client'

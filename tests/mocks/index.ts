@@ -27,8 +27,7 @@ export {
 } from './demucs-mock.js'
 
 export {
-  mockRVCTrain,
-  mockRVCConvert,
-  mockRVCStatus,
-  type RVCMockResponse,
-} from './rvc-mock.js'
+  mockSeedVCConvert,
+  mockSeedVCStatus,
+  type SeedVCMockResponse,
+} from './seed-vc-mock.js'

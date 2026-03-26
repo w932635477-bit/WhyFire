@@ -7,11 +7,15 @@
 import { simulateDelay, maybeFail, getMockConfig } from './service-mocks.ts'
 
 export interface DemucsMockResponse {
+  taskId: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
   vocals?: string
+  accompaniment?: string
   drums?: string
   bass?: string
   other?: string
   duration?: number
+  error?: string
 }
 
 // 预分离的示例音频 URL
@@ -34,8 +38,13 @@ export async function mockDemucsSeparate(params: {
   await simulateDelay(config.delay)
   maybeFail(config.failRate, 'Demucs separation')
 
+  const taskId = `mock-demucs-${Date.now()}`
+
   return {
+    taskId,
+    status: 'completed',
     vocals: SEPARATED_AUDIO_URLS.vocals,
+    accompaniment: SEPARATED_AUDIO_URLS.other, // 使用 other 作为伴奏
     drums: SEPARATED_AUDIO_URLS.drums,
     bass: SEPARATED_AUDIO_URLS.bass,
     other: SEPARATED_AUDIO_URLS.other,

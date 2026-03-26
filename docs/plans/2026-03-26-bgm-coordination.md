@@ -321,8 +321,8 @@ git commit -m "feat(suno): support BGM metadata injection in style parameter"
 **目标：** 使用 BGM 库，注入 BGM 信息到 Suno，混音时使用指定 BGM
 
 **Files:**
-- Modify: `src/lib/services/rap-generator-suno-rvc.ts:29-42` (RapGenerationParams 接口)
-- Modify: `src/lib/services/rap-generator-suno-rvc.ts:109-279` (generate 方法)
+- Modify: `src/lib/services/rap-generator.ts:29-42` (RapGenerationParams 接口)
+- Modify: `src/lib/services/rap-generator.ts:109-279` (generate 方法)
 
 **Step 1: 导入 BGM 库**
 
@@ -461,14 +461,14 @@ const mixResult = await this.ffmpegProcessor.mixTracks(rvcAudioBuffer, bgmBuffer
 
 **Step 6: 验证类型检查通过**
 
-Run: `npx tsc --noEmit src/lib/services/rap-generator-suno-rvc.ts`
+Run: `npx tsc --noEmit src/lib/services/rap-generator.ts`
 
 Expected: 无类型错误
 
 **Step 7: Commit**
 
 ```bash
-git add src/lib/services/rap-generator-suno-rvc.ts
+git add src/lib/services/rap-generator.ts
 git commit -m "feat(rap-generator): use BGM library and inject style to Suno"
 ```
 
@@ -604,8 +604,8 @@ import { config } from 'dotenv'
 import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
-import { getRapGenerator } from '../src/lib/services/rap-generator-suno-rvc.js'
-import type { GenerationProgress } from '../src/lib/services/rap-generator-suno-rvc.js'
+import { getRapGenerator } from '../src/lib/services/rap-generator.js'
+import type { GenerationProgress } from '../src/lib/services/rap-generator.js'
 
 async function testBGCoordination() {
   console.log('BGM 协调方案端到端测试')

@@ -185,7 +185,7 @@ describe('FestivalService', () => {
 
     it('should have dialect greetings for spring festival', () => {
       const springFestival = FESTIVAL_CONFIGS.spring_festival
-      expect(springFestival.dialectGreetings.mandarin).toBeTruthy()
+      expect(springFestival.dialectGreetings.original).toBeTruthy()
       expect(springFestival.dialectGreetings.cantonese).toBeTruthy()
       expect(springFestival.dialectGreetings.sichuan).toBeTruthy()
     })

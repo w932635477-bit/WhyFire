@@ -3,7 +3,12 @@
  *
  * 用于克隆用户声音，生成可用于 TTS 的音色
  * API 文档: https://help.aliyun.com/zh/model-studio/cosyvoice-clone-design-api
+ *
+ * 代理配置: 由 src/lib/proxy.ts 统一管理
  */
+
+// 导入全局代理配置（必须在其他模块之前）
+import '@/lib/proxy'
 
 // ============================================================================
 // 类型定义
@@ -54,7 +59,8 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
 
   constructor() {
     this.apiKey = process.env.DASHSCOPE_API_KEY
-    this.baseUrl = 'https://dashscope.aliyuncs.com/api/v1/services/audio/tts/v2'
+    // 官方文档: https://help.aliyun.com/zh/model-studio/cosyvoice-clone-design-api
+    this.baseUrl = 'https://dashscope.aliyuncs.com/api/v1/services/audio/tts/customization'
   }
 
   isConfigured(): boolean {
@@ -67,22 +73,29 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/voices`, {
+      console.log('[CosyVoice] Creating voice with prefix:', options.prefix)
+
+      const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: options.targetModel || 'cosyvoice-v3-flash',
-          voice_prefix: options.prefix,
-          ref_audio_urls: [options.audioUrl],
-          language_hints: options.languageHints || ['zh'],
+          model: 'voice-enrollment',
+          input: {
+            action: 'create_voice',
+            target_model: options.targetModel || 'cosyvoice-v3.5-plus',
+            prefix: options.prefix,
+            url: options.audioUrl,
+            language_hints: options.languageHints || ['zh'],
+          },
         }),
       })
 
       if (!response.ok) {
         const errorText = await response.text()
+        console.error('[CosyVoice] API error:', response.status, errorText)
         return { success: false, error: `API 错误: ${response.status} - ${errorText}` }
       }
 
@@ -90,11 +103,14 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
       const voiceId = data.output?.voice_id || data.data?.voice_id
 
       if (!voiceId) {
+        console.error('[CosyVoice] No voice_id in response:', data)
         return { success: false, error: '未返回 voice_id' }
       }
 
+      console.log('[CosyVoice] Voice created:', voiceId)
       return { success: true, voiceId }
     } catch (error) {
+      console.error('[CosyVoice] createVoice error:', error)
       return { success: false, error: error instanceof Error ? error.message : '未知错误' }
     }
   }
@@ -112,10 +128,19 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
 
     while (Date.now() - startTime < timeout) {
       try {
-        const response = await fetch(`${this.baseUrl}/voices/${voiceId}`, {
+        const response = await fetch(this.baseUrl, {
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            model: 'voice-enrollment',
+            input: {
+              action: 'query_voice',
+              voice_id: voiceId,
+            },
+          }),
         })
 
         if (!response.ok) {
@@ -125,19 +150,22 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
         const data = await response.json()
         const status = data.output?.status || data.data?.status
 
-        if (status === 'completed' || status === 'ready') {
+        console.log(`[CosyVoice] Voice ${voiceId} status: ${status}`)
+
+        // 阿里云返回的状态可能是: completed, ready, OK
+        if (status === 'completed' || status === 'ready' || status === 'OK') {
           return { ready: true, status: 'completed' }
         }
 
         if (status === 'failed') {
           return { ready: false, status: 'failed', error: '审核未通过' }
         }
-
-        // 等待后重试
-        await new Promise(resolve => setTimeout(resolve, interval))
       } catch (error) {
         return { ready: false, error: error instanceof Error ? error.message : '查询错误' }
       }
+
+      // 等待后重试
+      await new Promise(resolve => setTimeout(resolve, interval))
     }
 
     return { ready: false, error: '等待超时' }
@@ -149,11 +177,19 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/voices/${voiceId}`, {
-        method: 'DELETE',
+      const response = await fetch(this.baseUrl, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          model: 'voice-enrollment',
+          input: {
+            action: 'delete_voice',
+            voice_id: voiceId,
+          },
+        }),
       })
 
       if (!response.ok) {

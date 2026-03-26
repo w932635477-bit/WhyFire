@@ -8,7 +8,7 @@ import { config } from 'dotenv'
 import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
-import { RapGeneratorSunoRvc, type GenerationProgress } from '../src/lib/services/rap-generator-suno-rvc.js'
+import { RapGeneratorSunoRvc, type GenerationProgress } from '../src/lib/services/rap-generator.js'
 import fs from 'fs'
 
 async function testFullFlow() {
@@ -23,16 +23,16 @@ async function testFullFlow() {
   const services = await generator.checkServices()
   console.log('   Suno:', services.suno ? '✓' : '✗')
   console.log('   Demucs:', services.demucs ? '✓' : '✗')
-  console.log('   RVC:', services.rvc ? '✓' : '✗')
+  console.log('   SeedVC:', services.seedvc ? '✓' : '✗')
   console.log('   FFmpeg:', services.ffmpeg ? '✓' : '✗')
 
-  if (!services.suno || !services.demucs || !services.rvc) {
+  if (!services.suno || !services.demucs || !services.seedvc) {
     console.error('\n❌ 必需服务未启动')
     if (!services.demucs) {
       console.error('   启动 Demucs: cd services/demucs && python3 api_server.py')
     }
-    if (!services.rvc) {
-      console.error('   启动 RVC: cd services/rvc && python3 api_server.py')
+    if (!services.seedvc) {
+      console.error('   SeedVC 使用 Mock 模式，无需启动服务')
     }
     process.exit(1)
   }
@@ -53,8 +53,8 @@ async function testFullFlow() {
         userId: 'test-user',
         userDescription: '我是一名程序员，喜欢写代码和喝咖啡',
         dialect: 'original',
-        voiceModelId: 'test-model',
-        bgmUrl: '', // 将使用分离出的伴奏
+        referenceAudioId: 'test-reference',  // Seed-VC 参考音频 ID
+        // bgmId: 'fortune-flow',  // 可选：指定 BGM ID
         lyrics: `[Verse 1]
 程序员的生活很简单
 代码敲到深夜两点半
@@ -84,7 +84,17 @@ Bug 修完又来一个
     // 下载最终音频
     if (result.audioUrl) {
       console.log('\n3. 下载最终音频...')
-      const audioRes = await fetch(result.audioUrl.replace('file://', 'http://localhost:8001'))
+
+      // 处理不同类型的 URL
+      let audioUrl = result.audioUrl
+      if (audioUrl.startsWith('file://')) {
+        audioUrl = audioUrl.replace('file://', 'http://localhost:8001')
+      } else if (audioUrl.startsWith('/api/')) {
+        // 代理 URL，需要完整路径
+        audioUrl = `http://localhost:3000${audioUrl}`
+      }
+
+      const audioRes = await fetch(audioUrl)
       if (audioRes.ok) {
         const buffer = await audioRes.arrayBuffer()
         const outputPath = `temp/final-rap-${Date.now()}.mp3`

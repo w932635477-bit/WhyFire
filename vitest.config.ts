@@ -15,14 +15,6 @@ export default defineConfig({
       ".claude/worktrees/**",
       "**/*.spec.ts", // Exclude Playwright e2e tests (they use different runner)
     ],
-    // 分层测试配置
-    pool: "threads",
-    poolOptions: {
-      threads: {
-        singleThread: process.env.E2E_REAL === "true",  // 真实 E2E 用单线程
-      },
-    },
-    timeout: process.env.E2E_REAL === "true" ? 300000 : 30000,  // 真实 E2E 5分钟超时
     // 覆盖率配置
     coverage: {
       provider: "v8",

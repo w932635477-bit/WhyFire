@@ -14,7 +14,15 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "USE_MOCK_SERVICES=true vitest run tests/e2e",
-    "test:e2e:real": "FORCE_REAL_SERVICES=true E2E_REAL=true vitest run tests/e2e --single-thread"
+    "test:e2e:real": "FORCE_REAL_SERVICES=true E2E_REAL=true vitest run tests/e2e --single-thread",
+    "modal:setup": "npx tsx scripts/setup-modal.ts",
+    "modal:verify": "npx tsx scripts/verify-modal-api.ts",
+    "modal:deploy": "python3 -m modal deploy modal/seed_vc_mock.py",
+    "modal:serve": "python3 -m modal serve modal/seed_vc_mock.py",
+    "modal:logs": "python3 -m modal app logs seed-vc-mock",
+    "modal:info": "python3 -m modal app show seed-vc-mock",
+    "modal:token": "npx tsx scripts/configure-modal-token.ts",
+    "seedvc:test": "npx tsx scripts/test-seedvc-mock.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -31,6 +39,7 @@
     "global-agent": "^4.1.3",
     "https-proxy-agent": "^8.0.0",
     "lucide-react": "^0.577.0",
+    "music-metadata": "^11.12.3",
     "next": "^15.2.0",
     "pitchfinder": "^2.3.4",
     "react": "^18.3.1",

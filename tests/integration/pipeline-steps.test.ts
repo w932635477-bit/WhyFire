@@ -2,11 +2,11 @@
  * 管道步骤集成测试
  *
  * 测试各个步骤之间的数据流转：
- * Step 1: 声音克隆 → voiceModelId
- * Step 2: 歌词生成 → lyrics
- * Step 3: Suno 演唱 → audioUrl
- * Step 4: Demucs 分离 → vocals, accompaniment
- * Step 5: RVC + 混音 → finalAudioUrl
+ * Step 1: 歌词生成 → lyrics
+ * Step 2: Suno 演唱 → audioUrl
+ * Step 3: Demucs 分离 → vocals, accompaniment
+ * Step 4: Seed-VC 音色替换 → convertedAudioUrl
+ * Step 5: 混音 → finalAudioUrl
  *
  * 运行方式：
  * - Mock 模式: USE_MOCK_SERVICES=true npx vitest run tests/integration/pipeline-steps.test.ts
@@ -21,32 +21,32 @@ config({ path: resolve(process.cwd(), '.env.local') })
 
 import { getSunoClient } from '@/lib/music/suno-client.js'
 import { getDemucsClient } from '@/lib/audio/demucs-client.js'
-import { getRVCClient } from '@/lib/audio/rvc-client.js'
+import { getSeedVCClient } from '@/lib/audio/seed-vc-client.js'
 import { FFmpegProcessor } from '@/lib/audio/ffmpeg-processor.js'
 import { getBGMById, listAllBGM } from '@/lib/music/bgm-library.js'
 import {
   shouldUseMock,
   mockSunoGenerate,
   mockDemucsSeparate,
-  mockRVCConvert,
+  mockSeedVCConvert,
 } from '../mocks/index.js'
 
 describe('Pipeline Steps Integration', () => {
   const sunoClient = getSunoClient()
   const demucsClient = getDemucsClient()
-  const rvcClient = getRVCClient()
+  const seedVCClient = getSeedVCClient()
   const ffmpegProcessor = new FFmpegProcessor()
 
   const useMock = shouldUseMock('suno')
 
   // 存储中间结果
   const pipelineState = {
-    voiceModelId: '',
+    referenceAudioId: '',
     lyrics: '',
     sunoAudioUrl: '',
     vocalsUrl: '',
     bgmUrl: '',
-    rvcAudioUrl: '',
+    convertedAudioUrl: '',  // Seed-VC 转换后的音频
     finalAudioUrl: '',
   }
 
@@ -55,17 +55,17 @@ describe('Pipeline Steps Integration', () => {
     console.log(`模式: ${useMock ? 'Mock' : '真实 API'}`)
 
     // 检查所有服务
-    const [suno, demucs, rvc, ffmpeg] = await Promise.all([
+    const [suno, demucs, seedvc, ffmpeg] = await Promise.all([
       sunoClient.isConfigured(),
       demucsClient.isAvailable(),
-      rvcClient.isAvailable(),
+      seedVCClient.isAvailable(),
       ffmpegProcessor.isAvailable(),
     ])
 
     console.log('服务状态:')
     console.log(`  Suno: ${suno ? '✓' : '✗'}`)
     console.log(`  Demucs: ${demucs ? '✓' : '✗'}`)
-    console.log(`  RVC: ${rvc ? '✓' : '✗'}`)
+    console.log(`  SeedVC: ${seedvc ? '✓' : '✗'}`)
     console.log(`  FFmpeg: ${ffmpeg ? '✓' : '✗'}`)
 
     // 检查 BGM 库
@@ -76,32 +76,25 @@ describe('Pipeline Steps Integration', () => {
 
   afterAll(() => {
     console.log('\n=== 管道状态汇总 ===')
-    console.log(`Voice Model: ${pipelineState.voiceModelId || '(未设置)'}`)
+    console.log(`Reference Audio: ${pipelineState.referenceAudioId || '(未设置)'}`)
     console.log(`Lyrics: ${pipelineState.lyrics.slice(0, 50)}...`)
     console.log(`Suno Audio: ${pipelineState.sunoAudioUrl || '(未生成)'}`)
     console.log(`Vocals: ${pipelineState.vocalsUrl || '(未分离)'}`)
     console.log(`BGM: ${pipelineState.bgmUrl || '(未选择)'}`)
-    console.log(`RVC Audio: ${pipelineState.rvcAudioUrl || '(未转换)'}`)
+    console.log(`Converted Audio: ${pipelineState.convertedAudioUrl || '(未转换)'}`)
     console.log(`Final Audio: ${pipelineState.finalAudioUrl || '(未合成)'}`)
   })
 
-  describe('Step 1: 声音克隆', () => {
-    it('should have voice model available', async () => {
-      if (useMock) {
-        pipelineState.voiceModelId = 'mock-voice-model'
-      } else {
-        const models = await rvcClient.listModels()
-        if (models.length > 0) {
-          pipelineState.voiceModelId = models[0].name
-        } else {
-          // 使用默认模型
-          pipelineState.voiceModelId = 'default'
-        }
-      }
+  describe('Step 1: 参考音频准备', () => {
+    it('should have reference audio available', async () => {
+      // Seed-VC 需要参考音频 URL
+      pipelineState.referenceAudioId = useMock
+        ? 'https://example.com/mock-reference.mp3'
+        : 'https://test-bucket.oss-cn-beijing.aliyuncs.com/voice-references/test-ref.mp3'
 
-      expect(pipelineState.voiceModelId).toBeDefined()
-      expect(pipelineState.voiceModelId).not.toBe('')
-      console.log(`  ✓ 声音模型: ${pipelineState.voiceModelId}`)
+      expect(pipelineState.referenceAudioId).toBeDefined()
+      expect(pipelineState.referenceAudioId).not.toBe('')
+      console.log(`  ✓ 参考音频: ${pipelineState.referenceAudioId}`)
     })
   })
 
@@ -149,16 +142,10 @@ Bug 修复，功能上线
           model: 'suno-v4.5-beta',
         })
 
-        // 等待完成
-        if (result.status !== 'completed') {
-          let attempts = 0
-          while (attempts < 60) {
-            await new Promise(r => setTimeout(r, 2000))
-            result = await sunoClient.getStatus(result.taskId)
-            if (result.status === 'completed') break
-            if (result.status === 'failed') throw new Error('Suno generation failed')
-            attempts++
-          }
+        // SunoClient.generate() 已包含轮询逻辑，直接返回 completed 状态
+        // 如果返回其他状态，表示失败或超时
+        if (result.status === 'failed') {
+          throw new Error('Suno generation failed')
         }
       }
 
@@ -185,16 +172,10 @@ Bug 修复，功能上线
           model: 'htdemucs',
         })
 
-        // 等待完成
-        if (result.status !== 'completed') {
-          let attempts = 0
-          while (attempts < 60) {
-            await new Promise(r => setTimeout(r, 2000))
-            result = await demucsClient.getStatus(result.taskId)
-            if (result.status === 'completed') break
-            if (result.status === 'failed') throw new Error('Demucs separation failed')
-            attempts++
-          }
+        // DemucsClient.separate() 是同步调用，直接返回 completed 状态
+        // 如果返回其他状态，表示失败
+        if (result.status === 'failed') {
+          throw new Error('Demucs separation failed')
         }
       }
 
@@ -219,46 +200,45 @@ Bug 修复，功能上线
       console.log(`  ✓ BGM: ${bgm!.id} (${bgm!.bpm} BPM)`)
     })
 
-    it('should convert voice with RVC', async () => {
+    it('should convert voice with Seed-VC', async () => {
       let result
 
       if (useMock) {
-        result = await mockRVCConvert({
-          inputAudio: pipelineState.vocalsUrl,
-          voiceModel: pipelineState.voiceModelId,
-        })
+        result = await mockSeedVCConvert(
+          pipelineState.vocalsUrl,
+          pipelineState.referenceAudioId
+        )
       } else {
-        result = await rvcClient.convert({
-          inputAudio: pipelineState.vocalsUrl,
-          voiceModel: pipelineState.voiceModelId,
-          f0Method: 'crepe',
-          f0UpKey: 0,
+        result = await seedVCClient.convert({
+          sourceAudio: pipelineState.vocalsUrl,
+          referenceAudio: pipelineState.referenceAudioId,
+          f0Condition: true,  // Rap 模式
         })
       }
 
       expect(result.outputAudio).toBeDefined()
 
-      pipelineState.rvcAudioUrl = result.outputAudio!
-      console.log(`  ✓ RVC 音频: ${result.outputAudio}`)
+      pipelineState.convertedAudioUrl = result.outputAudio!
+      console.log(`  ✓ Seed-VC 音频: ${result.outputAudio}`)
     }, 120000)
 
-    it.skipIf(useMock)('should mix RVC vocals with BGM', async () => {
+    it.skipIf(useMock)('should mix Seed-VC vocals with BGM', async () => {
       if (useMock) {
         console.log('  ⊘ Mock 模式跳过混音测试')
         return
       }
 
       // 下载音频文件
-      const [rvcResponse, bgmResponse] = await Promise.all([
-        fetch(pipelineState.rvcAudioUrl),
+      const [convertedResponse, bgmResponse] = await Promise.all([
+        fetch(pipelineState.convertedAudioUrl),
         fetch(pipelineState.bgmUrl),
       ])
 
-      const rvcBuffer = Buffer.from(await rvcResponse.arrayBuffer())
+      const convertedBuffer = Buffer.from(await convertedResponse.arrayBuffer())
       const bgmBuffer = Buffer.from(await bgmResponse.arrayBuffer())
 
       // 混音
-      const mixResult = await ffmpegProcessor.mixTracks(rvcBuffer, bgmBuffer, {
+      const mixResult = await ffmpegProcessor.mixTracks(convertedBuffer, bgmBuffer, {
         vocalVolume: 1.0,
         bgmVolume: 0.3,
         loopBgm: false,
@@ -274,12 +254,12 @@ Bug 修复，功能上线
 
   describe('完整流程验证', () => {
     it('should have all pipeline steps completed', () => {
-      expect(pipelineState.voiceModelId).not.toBe('')
+      expect(pipelineState.referenceAudioId).not.toBe('')
       expect(pipelineState.lyrics).not.toBe('')
       expect(pipelineState.sunoAudioUrl).not.toBe('')
       expect(pipelineState.vocalsUrl).not.toBe('')
       expect(pipelineState.bgmUrl).not.toBe('')
-      expect(pipelineState.rvcAudioUrl).not.toBe('')
+      expect(pipelineState.convertedAudioUrl).not.toBe('')
 
       console.log('\n✓ 所有管道步骤已完成')
     })

@@ -4,8 +4,8 @@ import { config } from 'dotenv'
 import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
-import { getRapGenerator } from '../src/lib/services/rap-generator-suno-rvc.js'
-import type { GenerationProgress } from '../src/lib/services/rap-generator-suno-rvc.js'
+import { getRapGenerator } from '../src/lib/services/rap-generator.js'
+import type { GenerationProgress } from '../src/lib/services/rap-generator.js'
 import { listAllBGM } from '../src/lib/music/bgm-library.js'
 
 async function testBGCoordination() {

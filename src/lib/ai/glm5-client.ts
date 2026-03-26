@@ -2,22 +2,12 @@
  * GLM-5 API 客户端封装
  * 智谱AI新一代旗舰基座模型，面向 Agentic Engineering 打造
  * 文档: https://docs.bigmodel.cn/
+ *
+ * 代理配置: 由 src/lib/proxy.ts 统一管理
  */
-
-import { ProxyAgent } from 'undici'
 
 const GLM5_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4'
 const DEFAULT_MODEL = 'glm-5'
-
-// 获取代理配置
-function getProxyAgent(): ProxyAgent | undefined {
-  const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy
-  if (proxyUrl) {
-    console.log('[GLM-5] 使用代理:', proxyUrl)
-    return new ProxyAgent(proxyUrl)
-  }
-  return undefined
-}
 
 export interface GLM5ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -77,8 +67,6 @@ export async function generateWithGLM5(
     stop,
   } = options || {}
 
-  const proxyAgent = getProxyAgent()
-
   const requestBody: Record<string, unknown> = {
     model,
     messages,
@@ -105,7 +93,6 @@ export async function generateWithGLM5(
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify(requestBody),
-    ...(proxyAgent && { dispatcher: proxyAgent }),
   })
 
   if (!response.ok) {
@@ -145,8 +132,6 @@ export async function streamWithGLM5(
     stop,
   } = options || {}
 
-  const proxyAgent = getProxyAgent()
-
   const requestBody: Record<string, unknown> = {
     model,
     messages,
@@ -173,7 +158,6 @@ export async function streamWithGLM5(
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify(requestBody),
-    ...(proxyAgent && { dispatcher: proxyAgent }),
   })
 
   if (!response.ok) {
