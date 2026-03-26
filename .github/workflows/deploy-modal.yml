@@ -1,0 +1,52 @@
+name: Deploy to Modal
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'modal/**'
+      - '.github/workflows/deploy-modal.yml'
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Modal
+        run: |
+          pip install modal
+
+      - name: Configure Modal credentials
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          mkdir -p ~/.modal
+          cat > ~/.modal.toml << EOF
+          [default]
+          token_id = "${MODAL_TOKEN_ID}"
+          token_secret = "${MODAL_TOKEN_SECRET}"
+          EOF
+
+      - name: Deploy Seed-VC Mock
+        run: |
+          echo "🚀 Deploying Seed-VC Mock to Modal..."
+          modal deploy modal/seed_vc_mock.py
+
+      - name: Verify deployment
+        run: |
+          echo "📋 Getting deployment info..."
+          modal app show seed-vc-mock || echo "App info not available"
+
+          echo ""
+          echo "✅ Deployment complete!"
+          echo "Web Endpoint URL: https://<workspace>--seed-vc-mock.modal.run"
