@@ -41,16 +41,60 @@ export function toSunoStyle(bgm: BGMMetadata): string {
  * 5. 添加到此数组
  */
 export const BGM_LIBRARY: BGMMetadata[] = [
-  // 示例（替换为实际的 BGM）:
-  // {
-  //   id: 'trap-dark-140',
-  //   url: 'https://your-oss.com/bgm/trap-dark-140.mp3',
-  //   bpm: 140,
-  //   styleTags: 'trap, dark, heavy 808, southern hip-hop',
-  //   energy: 'high',
-  //   mood: ['aggressive', 'confident'],
-  //   duration: 180,
-  // },
+  {
+    id: 'apt-remix',
+    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/apt-改.mp3',
+    bpm: 99,
+    styleTags: 'trap, dark, heavy 808, southern hip-hop',
+    energy: 'high',
+    mood: ['aggressive', 'confident'],
+    duration: 128,
+  },
+  {
+    id: 'brazilian-phonk',
+    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/brazli-改.mp3',
+    bpm: 70,
+    styleTags: 'brazilian phonk, drill, heavy bass, funk carioca',
+    energy: 'high',
+    mood: ['intense', 'energetic'],
+    duration: 133,
+  },
+  {
+    id: 'fortune-flow',
+    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/八方来财.mp3',
+    bpm: 137,
+    styleTags: 'pop rap, upbeat, positive, chinese style',
+    energy: 'high',
+    mood: ['happy', 'confident'],
+    duration: 105,
+  },
+  {
+    id: 'karma-dark',
+    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/因果-改.mp3',
+    bpm: 110,
+    styleTags: 'dark trap, drill, mysterious, heavy bass',
+    energy: 'medium',
+    mood: ['dark', 'mysterious'],
+    duration: 148,
+  },
+  {
+    id: 'warm-gray',
+    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/暖灰-改.mp3',
+    bpm: 78,
+    styleTags: 'lo-fi, chill, ambient, smooth, jazz',
+    energy: 'low',
+    mood: ['relaxed', 'dreamy'],
+    duration: 101,
+  },
+  {
+    id: 'wonderful-01',
+    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/精彩01.mp3',
+    bpm: 120,
+    styleTags: 'pop rap, upbeat, positive, energetic',
+    energy: 'high',
+    mood: ['happy', 'confident'],
+    duration: 136,
+  },
 ]
 
 /**
