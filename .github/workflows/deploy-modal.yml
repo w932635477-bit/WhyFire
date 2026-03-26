@@ -8,6 +8,11 @@ on:
       - '.github/workflows/deploy-modal.yml'
   workflow_dispatch:  # 手动触发
 
+env:
+  # Modal 认证环境变量
+  MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+  MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,27 +29,15 @@ jobs:
       - name: Install Modal
         run: pip install modal
 
-      - name: Configure Modal credentials
-        env:
-          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
-          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+      - name: Verify Modal credentials
         run: |
-          # Modal 使用环境变量进行认证
-          # 创建 modal 配置目录
-          mkdir -p ~/.modal
-
-          # 写入配置文件 (正确格式)
-          cat > ~/.modal.toml << EOF
-          [default]
-          token_id = "${MODAL_TOKEN_ID}"
-          token_secret = "${MODAL_TOKEN_SECRET}"
-          EOF
-
-          chmod 600 ~/.modal.toml
-
-          # 验证配置
-          echo "Verifying Modal config..."
-          cat ~/.modal.toml | grep -v token_secret | head -5
+          echo "Checking Modal credentials..."
+          if [ -z "$MODAL_TOKEN_ID" ] || [ -z "$MODAL_TOKEN_SECRET" ]; then
+            echo "❌ Modal credentials not configured!"
+            echo "Please add MODAL_TOKEN_ID and MODAL_TOKEN_SECRET to GitHub Secrets"
+            exit 1
+          fi
+          echo "✅ Modal credentials found"
 
       - name: Deploy Seed-VC Mock
         run: |
