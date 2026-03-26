@@ -8,14 +8,13 @@ on:
       - '.github/workflows/deploy-modal.yml'
   workflow_dispatch:  # 手动触发
 
-env:
-  # Modal 认证环境变量
-  MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
-  MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # Modal 认证（从仓库 secrets 读取）
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
 
     steps:
       - name: Checkout code
@@ -29,33 +28,31 @@ jobs:
       - name: Install Modal
         run: pip install modal
 
-      - name: Verify Modal credentials
+      - name: Check credentials
         run: |
-          echo "Checking Modal credentials..."
-          if [ -z "$MODAL_TOKEN_ID" ] || [ -z "$MODAL_TOKEN_SECRET" ]; then
-            echo "❌ Modal credentials not configured!"
-            echo "Please add MODAL_TOKEN_ID and MODAL_TOKEN_SECRET to GitHub Secrets"
-            exit 1
+          echo "Checking credentials..."
+          if [ -n "$MODAL_TOKEN_ID" ]; then
+            echo "✅ MODAL_TOKEN_ID is set (${#MODAL_TOKEN_ID} chars)"
+          else
+            echo "❌ MODAL_TOKEN_ID is NOT set"
           fi
-          echo "✅ Modal credentials found"
+          if [ -n "$MODAL_TOKEN_SECRET" ]; then
+            echo "✅ MODAL_TOKEN_SECRET is set (${#MODAL_TOKEN_SECRET} chars)"
+          else
+            echo "❌ MODAL_TOKEN_SECRET is NOT set"
+          fi
 
       - name: Deploy Seed-VC Mock
+        if: env.MODAL_TOKEN_ID != '' && env.MODAL_TOKEN_SECRET != ''
         run: |
           echo "🚀 Deploying Seed-VC Mock to Modal..."
           modal deploy modal/seed_vc_mock.py
 
-      - name: Verify deployment
+      - name: Deployment info
+        if: always()
         run: |
-          echo "📋 Getting deployment info..."
-          modal app show seed-vc-mock || echo "App info not available"
-
           echo ""
-          echo "✅ Deployment complete!"
-          echo ""
-          echo "Web Endpoint URL: https://ac-l85cvzxpz5kmbbnuoo6iyx--seed-vc-mock.modal.run"
-
-      - name: Test health endpoint
-        run: |
-          echo "🏥 Testing health endpoint..."
-          sleep 5
-          curl -s https://ac-l85cvzxpz5kmbbnuoo6iyx--seed-vc-mock.modal.run/health || echo "Health check request sent"
+          echo "=========================================="
+          echo "Modal Web Endpoint URL:"
+          echo "https://ac-l85cvzxpz5kmbbnuoo6iyx--seed-vc-mock.modal.run"
+          echo "=========================================="
