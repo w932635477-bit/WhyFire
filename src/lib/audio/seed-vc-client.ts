@@ -145,27 +145,46 @@ export class SeedVCModalClient implements ISeedVCClient {
     const startTime = Date.now()
 
     try {
-      // 调用 Modal Web Endpoint
-      const result = await this.modalClient.invoke({
-        functionName: 'convert',
-        args: {
+      // 直接使用 MODAL_WEB_ENDPOINT_URL 作为完整的 convert endpoint
+      const endpointUrl = process.env.MODAL_WEB_ENDPOINT_URL
+
+      if (!endpointUrl) {
+        throw new Error('MODAL_WEB_ENDPOINT_URL not configured')
+      }
+
+      // 构建请求
+      const response = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           source_audio_url: request.sourceAudio,
           reference_audio_url: request.referenceAudio,
           f0_condition: request.f0Condition ?? true,
           fp16: request.fp16 ?? true,
-          diffusion_steps: request.diffusionSteps ?? 30,
-          chunk_length: request.chunkLength ?? 30,
-        },
-        timeout: 180000, // 3 分钟
+          diffusion_steps: request.diffusionSteps ?? 25,
+          length_adjust: 1.0,
+          inference_cfg_rate: 0.7,
+        }),
+        signal: AbortSignal.timeout(600000), // 10 分钟超时（GPU 推理较慢）
       })
 
-      const modalResult = result as ModalTaskStatus
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Modal API error: ${response.status} - ${errorText}`)
+      }
 
+      const result = await response.json()
+
+      // Modal 返回的格式: { status, task_id, output_audio, duration, processing_time, error }
       return {
-        taskId: modalResult.taskId,
-        status: modalResult.status,
-        outputAudio: modalResult.result as string | undefined,
+        taskId: result.task_id || `vc-${Date.now()}`,
+        status: result.status || 'completed',
+        outputAudio: result.output_audio,
+        duration: result.duration,
         processingTime: Date.now() - startTime,
+        error: result.error,
       }
     } catch (error) {
       console.error('[SeedVC-Modal] Conversion failed:', error)
@@ -179,7 +198,7 @@ export class SeedVCModalClient implements ISeedVCClient {
   }
 
   async isAvailable(): Promise<boolean> {
-    return this.modalClient.isConfigured()
+    return !!process.env.MODAL_WEB_ENDPOINT_URL
   }
 
   async getStatus(taskId: string): Promise<SeedVCConversionResult> {
