@@ -200,6 +200,7 @@ export async function POST(
       code: 0,
       data: {
         voiceId: result.voiceId,
+        referenceAudioId: audioUrl,  // OSS 音频 URL，用于 Seed-VC 零样本克隆
         status: 'completed',
         message: '声音复刻完成，可以使用',
       },

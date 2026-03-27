@@ -186,7 +186,8 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
 
       if (result.code === 0 && result.data?.voiceId) {
         // API 已等待审核通过，直接标记完成
-        setCloningStatus('completed', result.data.voiceId)
+        // 保存 CosyVoice voiceId 和 OSS referenceAudioId (用于 Seed-VC)
+        setCloningStatus('completed', result.data.voiceId, undefined, result.data.referenceAudioId)
       } else {
         throw new Error(result.message || '声音克隆失败')
       }

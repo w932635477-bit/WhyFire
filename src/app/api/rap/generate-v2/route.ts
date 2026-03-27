@@ -82,11 +82,12 @@ export const POST = withOptionalAuth(async (request: NextRequest): Promise<NextR
       )
     }
 
+    // 默认参考音频（用于跳过声音克隆的用户）
+    const DEFAULT_REFERENCE_AUDIO = 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/default-voice/reference-male-1.mp3'
+
     if (!body.referenceAudioId) {
-      return NextResponse.json(
-        { code: 400, message: '参考音频 ID 不能为空' },
-        { status: 400 }
-      )
+      body.referenceAudioId = DEFAULT_REFERENCE_AUDIO
+      console.log('[API V2] No referenceAudioId provided, using default voice')
     }
 
     // 验证 bgmId（如果提供）
