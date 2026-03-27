@@ -1,13 +1,13 @@
 /**
- * 增强版歌词生成 API
+ * 爆款歌词生成 API
  * POST /api/lyrics/generate-v2
- * 支持节日 + 热点 + 网络热梗融合
+ * 基于《八方来财》《野狼disco》爆款分析 + 节日/热点/热梗融合
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { generateWithClaude } from '@/lib/ai/claude-client'
-import { buildEnhancedLyricsPrompt, countWords, estimateDuration } from '@/lib/ai/prompts/enhanced-lyrics-prompts'
+import { buildViralLyricsPrompt, countWords, estimateDuration } from '@/lib/ai/prompts/viral-lyrics-prompts'
 import { getTimeContext, getTrendingService } from '@/lib/ai/context'
 import type { SceneType } from '@/types'
 import type { DialectCode } from '@/types/dialect'
@@ -162,8 +162,8 @@ export async function POST(
       )
     }
 
-    // 根据场景提取输入参数
-    const inputs = extractInputs(scene, productInfo, funnyInfo, ipInfo, vlogInfo)
+    // 根据场景构建用户描述
+    const description = composeDescription(scene, body)
 
     // 获取时效性上下文
     const includeFestival = timeOptions.includeFestival !== false
@@ -193,22 +193,19 @@ export async function POST(
       }
     }
 
-    // 构建增强 Prompt
-    const prompt = buildEnhancedLyricsPrompt(
-      scene,
+    // 构建爆款歌词 Prompt
+    const prompt = buildViralLyricsPrompt({
+      description,
       dialect,
-      inputs,
-      {
-        timeContext,
-        trendingTopics,
-        memes,
-      }
-    )
+      timeContext,
+      trendingTopics,
+      memes,
+    })
 
     // 调用 Claude API 生成歌词
     const rawContent = await generateWithClaude(prompt, {
-      maxTokens: 1024,
-      temperature: 0.8,
+      maxTokens: 2048,
+      temperature: 0.9,
     })
 
     // 清理歌词内容
@@ -278,39 +275,32 @@ export async function POST(
 }
 
 /**
- * 根据场景类型提取输入参数
+ * 根据场景类型构建用户描述字符串
  */
-function extractInputs(
+function composeDescription(
   scene: SceneType,
-  productInfo?: LyricsGenerateV2Request['productInfo'],
-  funnyInfo?: LyricsGenerateV2Request['funnyInfo'],
-  ipInfo?: LyricsGenerateV2Request['ipInfo'],
-  vlogInfo?: LyricsGenerateV2Request['vlogInfo']
-) {
+  body: LyricsGenerateV2Request
+): string {
+  const parts: string[] = []
+
   switch (scene) {
     case 'product':
-      return {
-        productName: productInfo?.name || '',
-        sellingPoints: productInfo?.sellingPoints || [],
-      }
+      if (body.productInfo?.name) parts.push(`推广产品：${body.productInfo.name}`)
+      if (body.productInfo?.sellingPoints?.length) parts.push(`卖点：${body.productInfo.sellingPoints.join('、')}`)
+      break
     case 'funny':
-      return {
-        theme: funnyInfo?.theme || '',
-        keywords: funnyInfo?.keywords || [],
-      }
+      if (body.funnyInfo?.theme) parts.push(body.funnyInfo.theme)
+      if (body.funnyInfo?.keywords?.length) parts.push(body.funnyInfo.keywords.join('、'))
+      break
     case 'ip':
-      return {
-        ipName: ipInfo?.name || '',
-        coreElements: ipInfo?.coreElements || [],
-        mood: ipInfo?.mood,
-      }
+      if (body.ipInfo?.name) parts.push(`IP：${body.ipInfo.name}`)
+      if (body.ipInfo?.coreElements?.length) parts.push(`核心元素：${body.ipInfo.coreElements.join('、')}`)
+      break
     case 'vlog':
-      return {
-        activities: vlogInfo?.activities || [],
-        location: vlogInfo?.location,
-        mood: vlogInfo?.mood,
-      }
-    default:
-      return {}
+      if (body.vlogInfo?.activities?.length) parts.push(`活动：${body.vlogInfo.activities.join('、')}`)
+      if (body.vlogInfo?.location) parts.push(`地点：${body.vlogInfo.location}`)
+      break
   }
+
+  return parts.join('，') || '日常生活'
 }

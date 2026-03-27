@@ -3,9 +3,11 @@
  * 封装所有创作相关的 API 调用
  */
 
+import type { DialectCode } from '@/types/dialect'
+
 // 类型定义
 export type SceneType = 'product' | 'funny' | 'ip' | 'vlog'
-export type DialectCode = 'mandarin' | 'cantonese' | 'sichuan' | 'dongbei' | 'shandong' | 'shanghai' | 'henan' | 'hunan' | 'fujian' | 'jiangsu' | 'zhejiang' | 'anhui' | 'jiangxi' | 'hubei' | 'guangxi' | 'hainan' | 'sichaun' | 'chongqing'
+export { DialectCode }
 export type MusicStyle = 'rap' | 'pop' | 'electronic' | 'rock' | 'chill'
 
 // API 响应类型
@@ -51,8 +53,8 @@ export interface MusicGenerateRequest {
   dialect: DialectCode
   style?: MusicStyle
   duration?: number
-  voiceId?: string
-  bgmId?: string  // D-Lite BGM ID (beat-1 to beat-6)
+  referenceAudioId?: string  // Seed-VC 零样本克隆参考音频 URL
+  bgmId?: string  // UI Beat ID (beat-1 to beat-6)
   rapPreset?: RapPresetCode  // Rap 增强预设
   enableRapEnhance?: boolean  // 是否启用 Rap 增强，默认 true
 }
@@ -81,6 +83,7 @@ export interface VoiceCloneRequest {
 // 音色克隆响应
 export interface VoiceCloneResponse {
   voiceId: string
+  referenceAudioId?: string  // OSS 音频 URL，用于 Seed-VC 零样本克隆
   status: 'completed' | 'failed' | 'processing'
   message?: string
 }
@@ -180,7 +183,7 @@ function convertToBgmId(beatId: string | undefined): string | undefined {
 }
 
 /**
- * 音乐生成 API (Suno + RVC 方案)
+ * 音乐生成 API (Suno + Seed-VC 方案)
  */
 export async function generateMusic(
   params: MusicGenerateRequest
@@ -200,7 +203,7 @@ export async function generateMusic(
       lyrics: params.lyrics,
       dialect: params.dialect,
       bgmId: bgmId,
-      referenceAudioId: params.voiceId,  // Seed-VC 零样本克隆使用参考音频 ID
+      referenceAudioId: params.referenceAudioId,
     }),
   })
 

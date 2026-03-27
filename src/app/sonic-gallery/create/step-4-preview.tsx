@@ -24,9 +24,6 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
     endTime: number
   }> | null>(null)
   const [rapInfo, setRapInfo] = useState<{
-    bgmName?: string
-    bpm?: number
-    tempoAdjustment?: number
     duration?: number
   } | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -119,10 +116,10 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
     try {
       const result = await generateMusic({
         lyrics,
-        dialect: state.dialect.selected as any,
+        dialect: state.dialect.selected,
         style: 'rap',
         bgmId: selectedBeat || undefined,  // 传递选中的 BGM ID
-        voiceId: referenceAudioId || undefined,  // Seed-VC 零样本克隆使用参考音频 ID
+        referenceAudioId: referenceAudioId || undefined,
       })
 
       setGenerateProgress(100)
@@ -134,9 +131,6 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
         // 保存 Rap 信息
         setRapInfo({
           duration: result.duration,
-          bpm: (result as any).bpm,
-          bgmName: (result as any).bgmName,
-          tempoAdjustment: (result as any).tempoAdjustment,
         })
 
         // 保存时间戳数据（如果有）

@@ -55,7 +55,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
       // 调用实际 API
       const result = await generateLyrics({
         scene: 'funny',
-        dialect: state.dialect.selected as any,
+        dialect: state.dialect.selected,
         selfDescription: state.lyrics.selfDescription,
         selectedTopics: state.lyrics.selectedTopics,
         selectedMemes: state.lyrics.selectedMemes,

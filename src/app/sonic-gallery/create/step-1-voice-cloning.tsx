@@ -174,7 +174,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
       // 准备 FormData
       const formData = new FormData()
       formData.append('audio', audioBlob instanceof Blob ? audioBlob : audioBlob)
-      formData.append('dialect', state.dialect.selected || 'mandarin')
+      formData.append('dialect', state.dialect.selected || 'original')
 
       // 调用声音克隆 API
       const response = await fetch('/api/voice/clone', {

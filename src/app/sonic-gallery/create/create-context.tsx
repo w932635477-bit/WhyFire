@@ -1,10 +1,11 @@
 'use client'
 
 import { createContext, useContext, useReducer, useCallback, ReactNode } from 'react'
+import type { DialectCode } from '@/types/dialect'
 
 // 方言类型（9种原生方言）
 export interface Dialect {
-  id: string
+  id: DialectCode
   name: string
   region: string
 }
@@ -50,7 +51,7 @@ export interface CreateState {
 
   // Step 2: 方言 + Beat
   dialect: {
-    selected: string
+    selected: DialectCode
     dialects: Dialect[]
   }
   beat: {
@@ -140,7 +141,7 @@ type CreateAction =
   | { type: 'SET_EXTRACTING'; payload: { isExtracting: boolean; progress: number } }
   | { type: 'SET_CLONING_STATUS'; payload: { status: CreateState['voiceCloning']['cloningStatus']; voiceId?: string; error?: string; referenceAudioId?: string } }
   | { type: 'SET_REFERENCE_AUDIO_ID'; payload: string | null }
-  | { type: 'SET_DIALECT'; payload: string }
+  | { type: 'SET_DIALECT'; payload: DialectCode }
   | { type: 'SET_BEAT'; payload: string | null }
   | { type: 'SET_SELF_DESCRIPTION'; payload: string }
   | { type: 'SET_TOPICS'; payload: string[] }
@@ -163,7 +164,7 @@ interface CreateContextType {
   setExtracting: (isExtracting: boolean, progress: number) => void
   setCloningStatus: (status: CreateState['voiceCloning']['cloningStatus'], voiceId?: string, error?: string, referenceAudioId?: string) => void
   setReferenceAudioId: (referenceAudioId: string | null) => void
-  setDialect: (dialectId: string) => void
+  setDialect: (dialectId: DialectCode) => void
   setBeat: (beatId: string | null) => void
   setSelfDescription: (text: string) => void
   setTopics: (topics: string[]) => void
@@ -359,7 +360,7 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_REFERENCE_AUDIO_ID', payload: referenceAudioId })
   }, [])
 
-  const setDialect = useCallback((dialectId: string) => {
+  const setDialect = useCallback((dialectId: DialectCode) => {
     dispatch({ type: 'SET_DIALECT', payload: dialectId })
   }, [])
 

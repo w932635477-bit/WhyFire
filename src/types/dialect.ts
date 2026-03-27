@@ -1,6 +1,6 @@
 /**
  * 方言类型定义
- * 支持 9 种方言（原声 + 8 种阿里云 Qwen-TTS + CosyVoice 原生支持的方言）
+ * 支持 10 种方言（原声 + 普通话 + 8 种方言）
  */
 
 /**
@@ -9,6 +9,7 @@
  */
 export type DialectCode =
   | 'original'      // 原声（用户声音本色，默认）
+  | 'mandarin'      // 普通话
   | 'cantonese'     // 粤语
   | 'sichuan'       // 四川话
   | 'dongbei'       // 东北话
@@ -32,7 +33,6 @@ export interface DialectConfig {
 
 /**
  * 所有方言配置
- * 只包含阿里云 Qwen-TTS + CosyVoice 原生支持的方言
  */
 export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
   original: {
@@ -41,6 +41,14 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     englishName: 'Original Voice',
     region: '本色',
     sampleText: '使用你的原始声音',
+    enabled: true,
+  },
+  mandarin: {
+    code: 'mandarin',
+    name: '普通话',
+    englishName: 'Mandarin',
+    region: '标准',
+    sampleText: '你好，欢迎来到WhyFire',
     enabled: true,
   },
   cantonese: {
