@@ -4,7 +4,7 @@
  * 模拟 Suno AI 音乐生成 API 的响应
  */
 
-import { simulateDelay, maybeFail, getMockConfig } from './service-mocks.ts'
+import { simulateDelay, maybeFail, getMockConfig } from './service-mocks.js'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 

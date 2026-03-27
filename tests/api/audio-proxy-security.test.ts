@@ -4,7 +4,7 @@
  * 安全测试：路径遍历攻击防护
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET } from '@/app/api/audio-proxy/route'
 

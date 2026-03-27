@@ -13,7 +13,12 @@ import { POST, GET } from '@/app/api/voice/reference/route'
 
 // 设置测试环境变量
 beforeAll(() => {
-  process.env.NODE_ENV = 'development'
+  // 使用 Object.defineProperty 来安全地设置 NODE_ENV
+  Object.defineProperty(process.env, 'NODE_ENV', {
+    value: 'development',
+    writable: true,
+    configurable: true,
+  })
   process.env.OSS_BUCKET = 'test-bucket'
   process.env.OSS_REGION = 'oss-cn-beijing'
 })

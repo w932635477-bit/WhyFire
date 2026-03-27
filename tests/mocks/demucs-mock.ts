@@ -4,7 +4,7 @@
  * 模拟音频分离 API 的响应
  */
 
-import { simulateDelay, maybeFail, getMockConfig } from './service-mocks.ts'
+import { simulateDelay, maybeFail, getMockConfig } from './service-mocks.js'
 
 export interface DemucsMockResponse {
   taskId: string
@@ -61,6 +61,8 @@ export async function mockDemucsStatus(taskId: string): Promise<DemucsMockRespon
   await simulateDelay(config.delay / 2)
 
   return {
+    taskId,
+    status: 'completed',
     vocals: SEPARATED_AUDIO_URLS.vocals,
     duration: 120,
   }
