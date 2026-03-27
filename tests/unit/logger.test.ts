@@ -49,7 +49,7 @@ class TestLogger implements Logger {
   error(ctx: LogContext | string, msg?: string) { this.log('error', ctx, msg) }
   fatal(ctx: LogContext | string, msg?: string) { this.log('fatal', ctx, msg) }
 
-  child(context: LogContext): Logger {
+  child(context: LogContext): TestLogger {
     return new TestLogger(
       Object.entries(this.levels).find(([, v]) => v === this.minLevel)?.[0] as LogLevel || 'info',
       { ...this.context, ...context }
