@@ -461,64 +461,60 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             </div>
           )}
 
-          {/* Quality Analysis Panel */}
-          <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-white text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  声音质量分析
-                </h3>
-                <p className="text-white/30 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  自动检测音频质量指标
-                </p>
-              </div>
-              <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                <span className="text-emerald-400 text-xs font-medium">
-                  分析就绪
-                </span>
-              </div>
-            </div>
-
-            {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">信噪比</span>
-                  <span className="text-white font-semibold">38.2 dB</span>
+          {/* Quality Analysis Panel - 仅在用户上传音频后显示 */}
+          {hasAudio && (
+            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-white text-lg font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    音频已就绪
+                  </h3>
+                  <p className="text-white/30 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    音频文件已上传，可以进行声音克隆
+                  </p>
                 </div>
-                <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
-                  <div className="h-full w-[85%] bg-gradient-to-r from-violet-500 to-violet-400 rounded-full" />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">清晰度</span>
-                  <span className="text-white font-semibold">94%</span>
-                </div>
-                <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
-                  <div className="h-full w-[94%] bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Quality Checks */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { icon: 'check_circle', label: '无削波' },
-                { icon: 'check_circle', label: '环境安静' },
-                { icon: 'check_circle', label: '采样率 44.1k' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03]">
-                  <span className="material-symbols-outlined text-emerald-400 text-lg">
-                    {item.icon}
-                  </span>
-                  <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    {item.label}
+                <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                  <span className="text-emerald-400 text-xs font-medium">
+                    ✓ 就绪
                   </span>
                 </div>
-              ))}
+              </div>
+
+              {/* Audio Info */}
+              <div className="flex flex-wrap gap-3">
+                {state.voiceCloning.uploadType === 'upload' && state.voiceCloning.audioFile && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03]">
+                    <span className="material-symbols-outlined text-white/50 text-base">
+                      audio_file
+                    </span>
+                    <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                      {state.voiceCloning.audioFile.name}
+                    </span>
+                  </div>
+                )}
+                {state.voiceCloning.uploadType === 'record' && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03]">
+                    <span className="material-symbols-outlined text-white/50 text-base">
+                      mic
+                    </span>
+                    <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                      录制完成
+                    </span>
+                  </div>
+                )}
+                {state.voiceCloning.uploadType === 'video' && state.voiceCloning.videoFile && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03]">
+                    <span className="material-symbols-outlined text-white/50 text-base">
+                      movie
+                    </span>
+                    <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                      从视频提取
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Tips Card */}
           <div className="p-5 rounded-2xl bg-gradient-to-br from-violet-500/5 to-emerald-500/5 border border-white/[0.04]">
@@ -574,7 +570,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                   {getStatusText()}
                 </h4>
                 <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  CosyVoice 声音复刻技术
+                  Seed-VC 零样本声音克隆
                 </p>
               </div>
             </div>

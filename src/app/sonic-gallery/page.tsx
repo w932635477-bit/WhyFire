@@ -231,9 +231,9 @@ export default function SonicGalleryHome() {
                       核心技术
                     </h3>
                     <p className="text-white/40 text-sm leading-relaxed">
-                      集成 <span className="text-white/60">GPT-SoVITS</span> 情感合成与{' '}
-                      <span className="text-white/60">Demucs</span>{' '}
-                      音轨分离技术。仅需 5 秒样本，捕捉细微咬字特征。
+                      集成 <span className="text-white/60">Suno AI</span> 音乐生成与{' '}
+                      <span className="text-white/60">Seed-VC</span>{' '}
+                      零样本声音克隆技术。仅需 5 秒样本，捕捉细微咬字特征。
                     </p>
                   </div>
                 </div>
@@ -323,10 +323,10 @@ export default function SonicGalleryHome() {
                   </span>
                 </div>
                 <h4 className="text-white font-semibold text-lg mb-2 tracking-tight">
-                  八种方言
+                  九种方言
                 </h4>
                 <p className="text-white/50 text-sm leading-relaxed">
-                  粤语、川渝、东北、闽南等核心语系，内置地道韵脚库。
+                  粤语、川渝、东北、闽南等核心语系，支持原声本色，内置地道韵脚库。
                 </p>
               </div>
             </div>

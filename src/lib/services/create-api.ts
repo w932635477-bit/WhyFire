@@ -188,7 +188,7 @@ export async function generateMusic(
   // 转换 bgmId（UI beat-1~6 → bgm-library ID）
   const bgmId = convertToBgmId(params.bgmId)
 
-  // 使用 Suno + RVC 生成 API
+  // 使用 Suno + Seed-VC 生成 API
   const response = await fetch('/api/rap/generate-v2', {
     method: 'POST',
     headers: {
@@ -200,7 +200,7 @@ export async function generateMusic(
       lyrics: params.lyrics,
       dialect: params.dialect,
       bgmId: bgmId,
-      voiceModelId: params.voiceId,
+      referenceAudioId: params.voiceId,  // Seed-VC 零样本克隆使用参考音频 ID
     }),
   })
 

@@ -44,6 +44,8 @@ export interface CreateState {
     voiceId: string | null
     cloningStatus: 'idle' | 'uploading' | 'cloning' | 'pending' | 'completed' | 'failed'
     cloningError: string | null
+    // Seed-VC 零样本克隆（OSS 参考音频 URL）
+    referenceAudioId: string | null
   }
 
   // Step 2: 方言 + Beat
@@ -92,6 +94,7 @@ const initialState: CreateState = {
     voiceId: null,
     cloningStatus: 'idle',
     cloningError: null,
+    referenceAudioId: null,
   },
   dialect: {
     selected: 'original',
@@ -137,7 +140,8 @@ type CreateAction =
   | { type: 'SET_UPLOAD_TYPE'; payload: 'record' | 'upload' | 'video' | null }
   | { type: 'SET_VIDEO_FILE'; payload: { file: File | null; url: string | null } }
   | { type: 'SET_EXTRACTING'; payload: { isExtracting: boolean; progress: number } }
-  | { type: 'SET_CLONING_STATUS'; payload: { status: CreateState['voiceCloning']['cloningStatus']; voiceId?: string; error?: string } }
+  | { type: 'SET_CLONING_STATUS'; payload: { status: CreateState['voiceCloning']['cloningStatus']; voiceId?: string; error?: string; referenceAudioId?: string } }
+  | { type: 'SET_REFERENCE_AUDIO_ID'; payload: string | null }
   | { type: 'SET_DIALECT'; payload: string }
   | { type: 'SET_BEAT'; payload: string | null }
   | { type: 'SET_CUSTOM_BEAT'; payload: File | null }
@@ -160,7 +164,8 @@ interface CreateContextType {
   setUploadType: (type: 'record' | 'upload' | 'video' | null) => void
   setVideoFile: (file: File | null, url: string | null) => void
   setExtracting: (isExtracting: boolean, progress: number) => void
-  setCloningStatus: (status: CreateState['voiceCloning']['cloningStatus'], voiceId?: string, error?: string) => void
+  setCloningStatus: (status: CreateState['voiceCloning']['cloningStatus'], voiceId?: string, error?: string, referenceAudioId?: string) => void
+  setReferenceAudioId: (referenceAudioId: string | null) => void
   setDialect: (dialectId: string) => void
   setBeat: (beatId: string | null) => void
   setCustomBeat: (file: File | null) => void
@@ -232,6 +237,15 @@ function createReducer(state: CreateState, action: CreateAction): CreateState {
           cloningStatus: action.payload.status,
           voiceId: action.payload.voiceId ?? state.voiceCloning.voiceId,
           cloningError: action.payload.error ?? null,
+          referenceAudioId: action.payload.referenceAudioId ?? state.voiceCloning.referenceAudioId,
+        },
+      }
+    case 'SET_REFERENCE_AUDIO_ID':
+      return {
+        ...state,
+        voiceCloning: {
+          ...state.voiceCloning,
+          referenceAudioId: action.payload,
         },
       }
     case 'SET_DIALECT':
@@ -347,9 +361,14 @@ export function CreateProvider({ children }: { children: ReactNode }) {
   const setCloningStatus = useCallback((
     status: CreateState['voiceCloning']['cloningStatus'],
     voiceId?: string,
-    error?: string
+    error?: string,
+    referenceAudioId?: string
   ) => {
-    dispatch({ type: 'SET_CLONING_STATUS', payload: { status, voiceId, error } })
+    dispatch({ type: 'SET_CLONING_STATUS', payload: { status, voiceId, error, referenceAudioId } })
+  }, [])
+
+  const setReferenceAudioId = useCallback((referenceAudioId: string | null) => {
+    dispatch({ type: 'SET_REFERENCE_AUDIO_ID', payload: referenceAudioId })
   }, [])
 
   const setDialect = useCallback((dialectId: string) => {
@@ -405,6 +424,7 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     setVideoFile,
     setExtracting,
     setCloningStatus,
+    setReferenceAudioId,
     setDialect,
     setBeat,
     setCustomBeat,

@@ -36,7 +36,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
   const lyrics = state.lyrics.generatedLyrics
   const selectedDialect = state.dialect.dialects.find(d => d.id === state.dialect.selected)
   const selectedBeat = state.beat.selected
-  const voiceId = state.voiceCloning.voiceId
+  const referenceAudioId = state.voiceCloning.referenceAudioId  // Seed-VC 零样本克隆使用参考音频 ID
 
   // 获取当前高亮的歌词行
   const getCurrentLyricLine = () => {
@@ -122,7 +122,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
         dialect: state.dialect.selected as any,
         style: 'rap',
         bgmId: selectedBeat || undefined,  // 传递选中的 BGM ID
-        voiceId: voiceId || undefined,      // 传递克隆的音色 ID
+        voiceId: referenceAudioId || undefined,  // Seed-VC 零样本克隆使用参考音频 ID
       })
 
       setGenerateProgress(100)
