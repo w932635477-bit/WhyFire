@@ -6,7 +6,6 @@ import { describe, it, expect } from 'vitest'
 import {
   DIALECT_CONFIGS,
   DIALECT_LABELS,
-  DIALECT_VOICE_MAP,
   getEnabledDialects,
   getDialectConfig,
   type DialectCode,
@@ -29,6 +28,7 @@ describe('Dialect Types', () => {
         expect(config.name).toBeDefined()
         expect(config.englishName).toBeDefined()
         expect(config.region).toBeDefined()
+        expect(config.sampleText).toBeDefined()
         expect(typeof config.enabled).toBe('boolean')
       })
     })
@@ -71,24 +71,6 @@ describe('Dialect Types', () => {
 
     it('cantonese label should be 粤语', () => {
       expect(DIALECT_LABELS.cantonese).toBe('粤语')
-    })
-  })
-
-  describe('DIALECT_VOICE_MAP', () => {
-    it('should have voice IDs for all dialects', () => {
-      const dialectCodes = Object.keys(DIALECT_CONFIGS) as DialectCode[]
-
-      dialectCodes.forEach(code => {
-        expect(DIALECT_VOICE_MAP[code]).toBeDefined()
-      })
-    })
-
-    it('voice IDs should be UUID format', () => {
-      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-      Object.values(DIALECT_VOICE_MAP).forEach(voiceId => {
-        expect(voiceId).toMatch(uuidPattern)
-      })
     })
   })
 

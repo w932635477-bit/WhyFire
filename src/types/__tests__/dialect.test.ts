@@ -4,7 +4,6 @@ import { describe, it, expect } from 'vitest'
 import {
   DIALECT_CONFIGS,
   DIALECT_LABELS,
-  DIALECT_VOICE_MAP,
   getEnabledDialects,
   getDialectConfig,
   type DialectCode,
@@ -23,7 +22,6 @@ describe('dialect types', () => {
         expect(config.name).toBeTruthy()
         expect(config.englishName).toBeTruthy()
         expect(config.region).toBeTruthy()
-        expect(config.fishAudioVoiceId).toBeTruthy()
         expect(config.sampleText).toBeTruthy()
         expect(typeof config.enabled).toBe('boolean')
       }
@@ -43,14 +41,6 @@ describe('dialect types', () => {
       expect(codes).toContain('dongbei')
       expect(codes).toContain('wu')
       expect(codes).toContain('shaanxi')
-    })
-
-    it('Fish Audio Voice ID 应该是有效的 UUID 格式', () => {
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-      for (const [code, config] of Object.entries(DIALECT_CONFIGS)) {
-        expect(config.fishAudioVoiceId).toMatch(uuidRegex)
-      }
     })
 
     it('每种方言应该有对应的区域说明', () => {
@@ -141,27 +131,6 @@ describe('dialect types', () => {
     it('每个标签都应该与对应配置的 name 一致', () => {
       for (const [code, label] of Object.entries(DIALECT_LABELS)) {
         expect(label).toBe(DIALECT_CONFIGS[code as DialectCode].name)
-      }
-    })
-  })
-
-  describe('DIALECT_VOICE_MAP', () => {
-    it('应该包含所有方言的 Voice ID', () => {
-      const codes = Object.keys(DIALECT_VOICE_MAP) as DialectCode[]
-      expect(codes.length).toBe(9)
-    })
-
-    it('Voice ID 应该与配置中的 ID 一致', () => {
-      for (const [code, voiceId] of Object.entries(DIALECT_VOICE_MAP)) {
-        expect(voiceId).toBe(DIALECT_CONFIGS[code as DialectCode].fishAudioVoiceId)
-      }
-    })
-
-    it('每个方言都应该有对应的 Voice ID', () => {
-      const dialectCodes = Object.keys(DIALECT_CONFIGS) as DialectCode[]
-      for (const code of dialectCodes) {
-        expect(DIALECT_VOICE_MAP[code]).toBeDefined()
-        expect(DIALECT_VOICE_MAP[code].length).toBeGreaterThan(0)
       }
     })
   })

@@ -26,7 +26,6 @@ export interface DialectConfig {
   name: string
   englishName: string
   region: string
-  fishAudioVoiceId: string
   sampleText: string
   enabled: boolean
 }
@@ -41,7 +40,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '原声',
     englishName: 'Original Voice',
     region: '本色',
-    fishAudioVoiceId: '00000000-0000-0000-0000-000000000000',
     sampleText: '使用你的原始声音',
     enabled: true,
   },
@@ -50,7 +48,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '粤语',
     englishName: 'Cantonese',
     region: '广东、香港、澳门',
-    fishAudioVoiceId: '54a01c20-3d6d-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎嚟到WhyFire',
     enabled: true,
   },
@@ -59,7 +56,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '四川话',
     englishName: 'Sichuan Dialect',
     region: '四川、重庆',
-    fishAudioVoiceId: '8f3b5f10-3d6d-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎来到WhyFire嘛',
     enabled: true,
   },
@@ -68,7 +64,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '东北话',
     englishName: 'Northeastern Dialect',
     region: '东北三省',
-    fishAudioVoiceId: 'a1c4d8e0-3d6d-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎来到WhyFire啊',
     enabled: true,
   },
@@ -77,7 +72,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '上海话',
     englishName: 'Shanghainese (Wu Dialect)',
     region: '上海、江苏、浙江',
-    fishAudioVoiceId: 'e3b2d3c0-3d6d-11ee-a7cf-73d704f9a6e0',
     sampleText: '侬好，欢迎来到WhyFire',
     enabled: true,
   },
@@ -86,7 +80,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '陕西话',
     englishName: 'Shaanxi Dialect',
     region: '陕西',
-    fishAudioVoiceId: 'd2a1c2b0-3d6d-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎来到WhyFire',
     enabled: true,
   },
@@ -95,7 +88,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '闽南语',
     englishName: 'Minnan Dialect',
     region: '福建、台湾',
-    fishAudioVoiceId: 'f4c3e4d0-3d6d-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎来到WhyFire',
     enabled: true,
   },
@@ -104,7 +96,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '天津话',
     englishName: 'Tianjin Dialect',
     region: '天津',
-    fishAudioVoiceId: 'a1b2c3d0-3d6e-11ee-a7cf-73d704f9a6e0',
     sampleText: '您好，欢迎来到WhyFire',
     enabled: true,
   },
@@ -113,7 +104,6 @@ export const DIALECT_CONFIGS: Record<DialectCode, DialectConfig> = {
     name: '南京话',
     englishName: 'Nanjing Dialect',
     region: '江苏南京',
-    fishAudioVoiceId: 'b2c3d4e0-3d6e-11ee-a7cf-73d704f9a6e0',
     sampleText: '你好，欢迎来到WhyFire',
     enabled: true,
   },
@@ -138,11 +128,4 @@ export function getDialectConfig(code: DialectCode): DialectConfig | undefined {
  */
 export const DIALECT_LABELS: Record<DialectCode, string> = Object.fromEntries(
   Object.entries(DIALECT_CONFIGS).map(([code, config]) => [code, config.name])
-) as Record<DialectCode, string>
-
-/**
- * Fish Audio Voice ID 映射
- */
-export const DIALECT_VOICE_MAP: Record<DialectCode, string> = Object.fromEntries(
-  Object.entries(DIALECT_CONFIGS).map(([code, config]) => [code, config.fishAudioVoiceId])
 ) as Record<DialectCode, string>

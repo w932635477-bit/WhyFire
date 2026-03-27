@@ -11,7 +11,7 @@ export type SceneType = 'product' | 'funny' | 'ip' | 'vlog';
 
 // 语言/方言类型 - 从 dialect.ts 导入完整定义
 export type { DialectCode, DialectConfig } from './dialect'
-export { DIALECT_CONFIGS, DIALECT_LABELS, DIALECT_VOICE_MAP, getEnabledDialects, getDialectConfig } from './dialect'
+export { DIALECT_CONFIGS, DIALECT_LABELS, getEnabledDialects, getDialectConfig } from './dialect'
 // 兼容旧的 DialectType 名称
 export type { DialectCode as DialectType } from './dialect'
 
