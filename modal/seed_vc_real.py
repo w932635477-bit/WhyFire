@@ -109,7 +109,7 @@ class ConvertResponse(BaseModel):
     timeout=600,  # 10 分钟超时
     memory=16384,  # 16GB 内存
     volumes={MODEL_DIR: volume},
-    container_idle_timeout=120,  # 2 分钟无请求后停止
+    scaledown_window=120,  # 2 分钟无请求后停止
 )
 class SeedVC:
     """Seed-VC 声音转换服务"""
