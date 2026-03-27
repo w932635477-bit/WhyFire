@@ -352,41 +352,45 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4 pt-6 border-t border-white/[0.04]">
-        <div className="w-full sm:w-auto">
-          <button
-            onClick={onPrev}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-          >
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
-            上一步
-          </button>
-        </div>
-        {/* 下一步预览 */}
-        <div className="hidden md:block text-right">
-          <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
-          <div className="flex items-center justify-end gap-2">
-            <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              生成你的方言 Rap，听到自己的声音！
-            </span>
-            <span className="material-symbols-outlined text-emerald-400 text-lg">play_circle</span>
+      {/* Navigation - 固定在底部 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4">
+            <div className="w-full sm:w-auto">
+              <button
+                onClick={onPrev}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              >
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                上一步
+              </button>
+            </div>
+            {/* 下一步预览 */}
+            <div className="hidden md:block text-right">
+              <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
+              <div className="flex items-center justify-end gap-2">
+                <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  生成你的方言 Rap，听到自己的声音！
+                </span>
+                <span className="material-symbols-outlined text-emerald-400 text-lg">play_circle</span>
+              </div>
+            </div>
+            <button
+              onClick={onNext}
+              disabled={!canProceed}
+              className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+                canProceed
+                  ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20 animate-pulse-subtle'
+                  : 'bg-white/10 text-white/40 cursor-not-allowed'
+              }`}
+            >
+              {canProceed ? '下一步：生成音乐' : '请先生成歌词'}
+              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            </button>
           </div>
         </div>
-        <button
-          onClick={onNext}
-          disabled={!canProceed}
-          className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-            canProceed
-              ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
-              : 'bg-white/10 text-white/40 cursor-not-allowed'
-          }`}
-        >
-          {canProceed ? '下一步：生成音乐' : '请先生成歌词'}
-          <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-            arrow_forward
-          </span>
-        </button>
       </div>
     </div>
   )

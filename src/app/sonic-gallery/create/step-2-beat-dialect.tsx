@@ -43,10 +43,9 @@ const FALLBACK_BEATS: BeatInfo[] = [
 const DEFAULT_BEAT = FALLBACK_BEATS[0]
 
 export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
-  const { state, setDialect, setBeat, setCustomBeat } = useCreateContext()
+  const { state, setDialect, setBeat } = useCreateContext()
   const [playingBeat, setPlayingBeat] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const initializedRef = useRef(false)
 
   // 从 context 获取选中的方言和 beat
@@ -55,11 +54,11 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
 
   // 自动选择默认BGM（只执行一次）
   useEffect(() => {
-    if (!initializedRef.current && !state.beat.selected && !state.beat.customBeatFile) {
+    if (!initializedRef.current && !state.beat.selected) {
       initializedRef.current = true
       setBeat(DEFAULT_BEAT.id)
     }
-  }, [setBeat, state.beat.selected, state.beat.customBeatFile])
+  }, [setBeat, state.beat.selected])
 
   // 获取当前选中beat的信息
   const getSelectedBeatInfo = useCallback(() => {
@@ -94,17 +93,8 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
     }
   }, [playingBeat])
 
-  // 处理自定义 Beat 上传
-  const handleCustomBeatUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setCustomBeat(file)
-      setBeat(null)
-    }
-  }
-
   // 检查是否可以进入下一步（现在总是可以，因为自动选择了BGM）
-  const canProceed = selectedBeat || state.beat.customBeatFile
+  const canProceed = !!selectedBeat
 
   // 清理音频播放
   useEffect(() => {
@@ -245,10 +235,7 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
               {FALLBACK_BEATS.map((beat) => (
                 <button
                   key={beat.id}
-                  onClick={() => {
-                    setBeat(beat.id)
-                    setCustomBeat(null)
-                  }}
+                  onClick={() => setBeat(beat.id)}
                   className={`group flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
                     selectedBeat === beat.id
                       ? 'bg-white/[0.05] border border-white/[0.15]'
@@ -294,48 +281,6 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
                   )}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Beat Upload - 或上传自定义伴奏 */}
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-white/30 text-xs">或者</span>
-              <div className="flex-1 h-px bg-white/[0.05]" />
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="audio/*"
-              onChange={handleCustomBeatUpload}
-              className="hidden"
-            />
-            <div
-              className={`p-5 rounded-2xl transition-colors cursor-pointer group ${
-                state.beat.customBeatFile
-                  ? 'bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border-2 border-violet-500/30'
-                  : 'bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-white/[0.1]'
-              }`}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-white/50 text-lg">
-                    cloud_upload
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-white/80 font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    上传自定义伴奏
-                  </h4>
-                  <p className="text-white/35 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    拖拽音频文件或点击浏览（支持 MP3、WAV、FLAC）
-                  </p>
-                  {state.beat.customBeatFile && (
-                    <p className="text-emerald-400/80 text-xs mt-2">✓ {state.beat.customBeatFile.name}</p>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -397,36 +342,40 @@ export function Step2BeatDialect({ onNext, onPrev }: Step2BeatDialectProps) {
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4 pt-6 border-t border-white/[0.04]">
-        <div className="w-full sm:w-auto">
-          <button
-            onClick={onPrev}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-          >
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
-            上一步
-          </button>
-        </div>
-        {/* 下一步预览 */}
-        <div className="hidden md:block text-right">
-          <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
-          <div className="flex items-center justify-end gap-2">
-            <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              AI 帮你生成个性化歌词
-            </span>
-            <span className="material-symbols-outlined text-violet-400 text-lg">lyrics</span>
+      {/* Navigation - 固定在底部 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4">
+            <div className="w-full sm:w-auto">
+              <button
+                onClick={onPrev}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              >
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                上一步
+              </button>
+            </div>
+            {/* 下一步预览 */}
+            <div className="hidden md:block text-right">
+              <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
+              <div className="flex items-center justify-end gap-2">
+                <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  AI 帮你生成个性化歌词
+                </span>
+                <span className="material-symbols-outlined text-violet-400 text-lg">lyrics</span>
+              </div>
+            </div>
+            <button
+              onClick={onNext}
+              className="group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] bg-white text-black hover:shadow-lg hover:shadow-white/20"
+            >
+              下一步
+              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            </button>
           </div>
         </div>
-        <button
-          onClick={onNext}
-          className="group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] bg-white text-black hover:shadow-lg hover:shadow-white/20"
-        >
-          下一步
-          <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-            arrow_forward
-          </span>
-        </button>
       </div>
     </div>
   )

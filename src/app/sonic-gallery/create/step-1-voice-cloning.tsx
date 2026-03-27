@@ -638,32 +638,36 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 pt-4">
-        {/* 下一步预览 */}
-        <div className="hidden md:block">
-          <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-emerald-400 text-lg">graphic_eq</span>
-            <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              选择方言风格和背景音乐
-            </span>
+      {/* Navigation - 固定在底部 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-end gap-4">
+            {/* 下一步预览 */}
+            <div className="hidden md:block">
+              <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-400 text-lg">graphic_eq</span>
+                <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  选择方言风格和背景音乐
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={onNext}
+              disabled={!canProceed}
+              className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+                canProceed
+                  ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20 animate-pulse-subtle'
+                  : 'bg-white/10 text-white/40 cursor-not-allowed'
+              }`}
+            >
+              {canProceed ? '下一步' : '请先录制或上传音频'}
+              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            </button>
           </div>
         </div>
-        <button
-          onClick={onNext}
-          disabled={!canProceed}
-          className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-            canProceed
-              ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20'
-              : 'bg-white/10 text-white/40 cursor-not-allowed'
-          }`}
-        >
-          {canProceed ? '下一步' : '请先录制或上传音频'}
-          <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-            arrow_forward
-          </span>
-        </button>
       </div>
     </div>
   )

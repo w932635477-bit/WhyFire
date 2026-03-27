@@ -56,7 +56,6 @@ export interface CreateState {
   beat: {
     selected: string | null
     beats: Beat[]
-    customBeatFile: File | null
   }
 
   // Step 3: 歌词生成
@@ -116,7 +115,6 @@ const initialState: CreateState = {
   beat: {
     selected: null,
     beats: [],
-    customBeatFile: null,
   },
   lyrics: {
     selfDescription: '',
@@ -144,7 +142,6 @@ type CreateAction =
   | { type: 'SET_REFERENCE_AUDIO_ID'; payload: string | null }
   | { type: 'SET_DIALECT'; payload: string }
   | { type: 'SET_BEAT'; payload: string | null }
-  | { type: 'SET_CUSTOM_BEAT'; payload: File | null }
   | { type: 'SET_SELF_DESCRIPTION'; payload: string }
   | { type: 'SET_TOPICS'; payload: string[] }
   | { type: 'SET_MEMES'; payload: string[] }
@@ -168,7 +165,6 @@ interface CreateContextType {
   setReferenceAudioId: (referenceAudioId: string | null) => void
   setDialect: (dialectId: string) => void
   setBeat: (beatId: string | null) => void
-  setCustomBeat: (file: File | null) => void
   setSelfDescription: (text: string) => void
   setTopics: (topics: string[]) => void
   setMemes: (memes: string[]) => void
@@ -262,14 +258,6 @@ function createReducer(state: CreateState, action: CreateAction): CreateState {
         beat: {
           ...state.beat,
           selected: action.payload,
-        },
-      }
-    case 'SET_CUSTOM_BEAT':
-      return {
-        ...state,
-        beat: {
-          ...state.beat,
-          customBeatFile: action.payload,
         },
       }
     case 'SET_SELF_DESCRIPTION':
@@ -379,10 +367,6 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_BEAT', payload: beatId })
   }, [])
 
-  const setCustomBeat = useCallback((file: File | null) => {
-    dispatch({ type: 'SET_CUSTOM_BEAT', payload: file })
-  }, [])
-
   const setSelfDescription = useCallback((text: string) => {
     dispatch({ type: 'SET_SELF_DESCRIPTION', payload: text })
   }, [])
@@ -427,7 +411,6 @@ export function CreateProvider({ children }: { children: ReactNode }) {
     setReferenceAudioId,
     setDialect,
     setBeat,
-    setCustomBeat,
     setSelfDescription,
     setTopics,
     setMemes,

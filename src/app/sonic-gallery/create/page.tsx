@@ -185,7 +185,8 @@ function CreatePageContent() {
         </div>
       </header>
 
-      <div className="px-4 sm:px-6 lg:px-16 py-8 sm:py-12 max-w-6xl mx-auto">
+      {/* 主内容区域 - 添加底部 padding 为固定导航栏留出空间 */}
+      <div className="px-4 sm:px-6 lg:px-16 py-8 sm:py-12 pb-32 max-w-6xl mx-auto">
         {/* Page Header */}
         <div className="mb-8 sm:mb-12 text-center">
           <span className="text-violet-400 text-sm font-medium tracking-wider uppercase mb-3 block">
