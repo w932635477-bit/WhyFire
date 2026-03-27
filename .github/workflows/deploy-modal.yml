@@ -42,17 +42,25 @@ jobs:
             echo "❌ MODAL_TOKEN_SECRET is NOT set"
           fi
 
-      - name: Deploy Seed-VC Mock
+      - name: Deploy Seed-VC Real (GPU)
         if: env.MODAL_TOKEN_ID != '' && env.MODAL_TOKEN_SECRET != ''
         run: |
-          echo "🚀 Deploying Seed-VC Mock to Modal..."
-          modal deploy modal/seed_vc_mock.py
+          echo "🚀 Deploying Seed-VC Real to Modal (GPU)..."
+          modal deploy modal/seed_vc_real.py
 
       - name: Deployment info
         if: always()
         run: |
           echo ""
           echo "=========================================="
-          echo "Modal Web Endpoint URL:"
-          echo "https://ac-l85cvzxpz5kmbbnuoo6iyx--seed-vc-mock.modal.run"
+          echo "Modal Web Endpoint URLs:"
+          echo ""
+          echo "Mock Version (for testing):"
+          echo "  https://w932635477--seed-vc-mock.modal.run"
+          echo ""
+          echo "Real Version (GPU, for production):"
+          echo "  https://w932635477--seed-vc-real.modal.run"
+          echo ""
+          echo "Health Check:"
+          echo "  curl https://w932635477--seed-vc-real.modal.run/health"
           echo "=========================================="
