@@ -25,6 +25,7 @@ const ALLOWED_PATH_PREFIXES = [
   'vocals/',
   'samples/',
   'temp/',
+  'rap/',
 ]
 
 /**

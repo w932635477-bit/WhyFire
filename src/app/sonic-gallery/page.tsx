@@ -1,455 +1,309 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 
+// 示例作品数据
+const sampleWorks = [
+  {
+    id: '1',
+    title: '成都漂移',
+    dialect: '四川话',
+    creator: '蜀山客',
+    plays: 12800,
+    cover: 'from-amber-600/30 to-red-600/20',
+  },
+  {
+    id: '2',
+    title: '东北爱情故事',
+    dialect: '东北话',
+    creator: '雪村大侠',
+    plays: 8900,
+    cover: 'from-sky-600/30 to-blue-600/20',
+  },
+  {
+    id: '3',
+    title: '珠江夜色',
+    dialect: '粤语',
+    creator: '粤语rapper',
+    plays: 6700,
+    cover: 'from-violet-600/30 to-purple-600/20',
+  },
+  {
+    id: '4',
+    title: '西安城墙下',
+    dialect: '陕西话',
+    creator: '长安客',
+    plays: 5200,
+    cover: 'from-emerald-600/30 to-teal-600/20',
+  },
+]
+
+// 方言卡片
+const dialectCards = [
+  { name: '粤语', region: '广东', emoji: '🦁', color: 'from-amber-500/20 to-orange-500/10' },
+  { name: '四川话', region: '川渝', emoji: '🌶️', color: 'from-red-500/20 to-rose-500/10' },
+  { name: '东北话', region: '东北', emoji: '❄️', color: 'from-sky-500/20 to-blue-500/10' },
+  { name: '闽南语', region: '福建', emoji: '🌊', color: 'from-cyan-500/20 to-teal-500/10' },
+  { name: '上海话', region: '吴语', emoji: '🌃', color: 'from-violet-500/20 to-purple-500/10' },
+  { name: '陕西话', region: '秦腔', emoji: '🏯', color: 'from-emerald-500/20 to-green-500/10' },
+  { name: '天津话', region: '津门', emoji: '🎭', color: 'from-pink-500/20 to-rose-500/10' },
+  { name: '南京话', region: '金陵', emoji: '🌸', color: 'from-fuchsia-500/20 to-pink-500/10' },
+]
+
 export default function SonicGalleryHome() {
+  const [hoveredWork, setHoveredWork] = useState<string | null>(null)
+
   return (
-    <>
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-        {/* Background Video */}
-        <div className="absolute inset-0 z-0">
+      <section className="relative overflow-hidden">
+        {/* 背景 */}
+        <div className="absolute inset-0">
           <video
             autoPlay
             loop
             muted
             playsInline
             className="w-full h-full object-cover"
-            style={{ filter: 'brightness(0.4) contrast(1.1) saturate(0.8)' }}
+            style={{ filter: 'brightness(0.3) contrast(1.1) saturate(0.7)' }}
           >
             <source src="/videos/9003210-hd_1920_1080_25fps.mp4" type="video/mp4" />
           </video>
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/70 to-[#0a0a0a]/40 z-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-[#0a0a0a]/50 z-10" />
-          {/* Noise Texture */}
-          <div className="absolute inset-0 opacity-[0.04] z-20" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/80 to-[#0a0a0a]/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-[#0a0a0a]/60" />
         </div>
 
-        {/* 一键方言 Rap - Split Reveal + Rock Style */}
-        <Link
-          href="/sonic-gallery/create"
-          className="absolute top-1/2 left-[58%] -translate-y-1/2 z-30 group cursor-pointer hidden lg:block"
-        >
-          <div className="relative text-center">
-            {/* Decorative sparks */}
-            <span
-              className="material-symbols-outlined absolute -top-8 -left-12 text-white/20 text-2xl"
-              style={{ animation: 'sparkle 2s ease-in-out 2s infinite', transform: 'rotate(-15deg)' }}
-            >
-              bolt
-            </span>
-            <span
-              className="material-symbols-outlined absolute -top-4 -right-10 text-white/15 text-xl"
-              style={{ animation: 'sparkle 2s ease-in-out 2.3s infinite', transform: 'rotate(20deg)' }}
-            >
-              star
-            </span>
-
-            {/* "一键方言" - Character by character reveal */}
-            <div className="relative mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-              {['一', '键', '方', '言'].map((char, i) => (
-                <span
-                  key={i}
-                  className="inline-block text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-[0.06em]"
-                  style={{
-                    animation: `splitReveal 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards${i === 3 ? ', subtleShake 0.1s 1.8s' : ''}`,
-                    animationDelay: `${0.1 + i * 0.08}s`,
-                    opacity: 0,
-                    textShadow: '2px 2px 0 rgba(0,0,0,0.8)',
-                  }}
-                >
-                  {char}
-                </span>
-              ))}
-            </div>
-
-            {/* "Rap" - Italic + Hard shadow + Continuous micro-shake */}
-            <div className="relative">
-              <span
-                className="inline-block text-7xl lg:text-[8rem] xl:text-[10rem] font-black tracking-tight text-white italic"
-                style={{
-                  animation: 'splitReveal 1s cubic-bezier(0.25, 1, 0.5, 1) forwards, rapShake 0.15s 1.6s infinite',
-                  animationDelay: '0.5s',
-                  opacity: 0,
-                  textShadow: '4px 4px 0 rgba(139,92,246,0.6), 6px 6px 0 rgba(0,0,0,0.8)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Rap
-              </span>
-
-              {/* Hard underline - more aggressive */}
-              <div
-                className="absolute -bottom-4 left-1/2 -translate-x-1/2 h-[4px] bg-white group-hover:bg-violet-400 transition-colors duration-300"
-                style={{
-                  width: '0%',
-                  animation: 'underlineSlash 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 1.3s forwards',
-                  boxShadow: '2px 2px 0 rgba(0,0,0,0.5)',
-                }}
-              />
-            </div>
-
-            {/* Hover hint with edge */}
-            <div
-              className="mt-10 flex items-center justify-center gap-3 transition-all duration-500"
-              style={{
-                opacity: 0,
-                animation: 'fadeIn 0.5s ease-out 1.6s forwards',
-              }}
-            >
-              <span className="w-2 h-2 bg-white" style={{ transform: 'rotate(45deg)' }} />
-              <span className="text-white/60 text-sm tracking-[0.2em] uppercase font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                Drop The Beat
-              </span>
-              <span className="w-2 h-2 bg-white" style={{ transform: 'rotate(45deg)' }} />
-            </div>
-          </div>
-        </Link>
-
-        {/* Content */}
-        <div className="relative z-20 w-full px-6 sm:px-8 lg:px-20 py-20">
+        {/* 内容 */}
+        <div className="relative z-10 px-6 sm:px-8 lg:px-20 pt-32 pb-24 lg:pt-40 lg:pb-32">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-8">
-              {/* Left: Main Content */}
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-12 lg:gap-16">
+              {/* 左侧文案 */}
               <div className="flex-1 max-w-xl">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] mb-6 backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-white/70 text-sm font-medium tracking-wide">
-                    全新上线 · 方言回响
-                  </span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] mb-5 backdrop-blur-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-white/60 text-xs font-sans">方言回响 · 全新上线</span>
                 </div>
 
-                {/* Main Title */}
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] tracking-tight mb-5">
-                  你的声音，
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.15] tracking-tight mb-4 font-sans">
+                  用你的声音，
                   <br />
-                  <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
-                    你的方言。
+                  <span className="bg-gradient-to-r from-violet-400 to-emerald-400 bg-clip-text text-transparent">
+                    唱方言 Rap
                   </span>
                 </h1>
 
-                <p className="text-white/50 text-base sm:text-lg max-w-md leading-relaxed mb-8">
-                  用人工智能克隆你的音色，在 8 种地道方言中重塑你的嘻哈灵魂。仅需 5 秒，开启你的数字音乐之旅。
+                <p className="text-white/45 text-base sm:text-lg max-w-md leading-relaxed mb-8 font-sans">
+                  上传一段人声，AI 克隆你的音色，生成独一无二的方言说唱。5 分钟完成。
                 </p>
 
-                {/* CTA Buttons */}
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href="/sonic-gallery/create"
-                    className="group inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-semibold text-sm hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 active:scale-95"
+                    className="group inline-flex items-center gap-2 bg-white text-black px-6 py-3.5 rounded-full font-semibold text-sm hover:shadow-lg hover:shadow-white/20 transition-all duration-300 active:scale-95"
                   >
                     开始创作
                     <span className="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">
                       arrow_forward
                     </span>
                   </Link>
-                  <button className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm text-white/80 hover:text-white hover:bg-white/[0.05] border border-white/[0.1] hover:border-white/[0.2] transition-all duration-300 active:scale-95">
-                    <span className="material-symbols-outlined text-base">headphones</span>
-                    试听作品
-                  </button>
+                  <Link
+                    href="/sonic-gallery/beats"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-white/70 text-sm font-medium border border-white/[0.1] hover:bg-white/[0.05] hover:text-white hover:border-white/[0.2] transition-all"
+                  >
+                    <span className="material-symbols-outlined text-base">graphic_eq</span>
+                    浏览伴奏
+                  </Link>
+                </div>
+
+                {/* 小数据 */}
+                <div className="flex items-center gap-6 mt-8">
+                  <div>
+                    <span className="text-white font-bold text-lg">8</span>
+                    <span className="text-white/30 text-xs ml-1 font-sans">种方言</span>
+                  </div>
+                  <div className="w-px h-4 bg-white/[0.1]" />
+                  <div>
+                    <span className="text-white font-bold text-lg">99%</span>
+                    <span className="text-white/30 text-xs ml-1 font-sans">音色相似度</span>
+                  </div>
+                  <div className="w-px h-4 bg-white/[0.1]" />
+                  <div>
+                    <span className="text-white font-bold text-lg">5min</span>
+                    <span className="text-white/30 text-xs ml-1 font-sans">完成创作</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Mobile: 一键方言 Rap - Apple Style */}
-              <Link
-                href="/sonic-gallery/create"
-                className="flex-shrink-0 group cursor-pointer lg:hidden"
-              >
-                <div className="relative" style={{ perspective: '800px' }}>
-                  {/* Glow */}
-                  <div className="absolute -inset-8 bg-gradient-to-r from-violet-500/25 via-purple-500/20 to-emerald-500/25 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-700" />
-
-                  {/* Text */}
-                  <div className="relative text-center" style={{ transformStyle: 'preserve-3d' }}>
-                    {/* "一键方言" */}
-                    <div
-                      className="relative mb-1"
-                      style={{ transform: 'rotateX(5deg)' }}
-                    >
-                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out infinite' }}>
-                        一
-                      </span>
-                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.1s infinite' }}>
-                        键
-                      </span>
-                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.2s infinite' }}>
-                        方
-                      </span>
-                      <span className="inline-block text-3xl sm:text-4xl font-bold text-white tracking-[0.1em]" style={{ animation: 'charFloat 4s ease-in-out 0.3s infinite' }}>
-                        言
-                      </span>
-                    </div>
-
-                    {/* "Rap" */}
-                    <div style={{ transform: 'rotateX(-3deg) translateZ(10px)' }}>
-                      <span
-                        className="inline-block text-6xl sm:text-7xl font-black tracking-tighter"
-                        style={{
-                          background: 'linear-gradient(135deg, #fff, #e879f9, #a855f7, #22d3ee)',
-                          backgroundSize: '300% 300%',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          animation: 'gradientFlow 4s ease infinite, letterPulse 3s ease-in-out infinite',
-                        }}
-                      >
-                        Rap
-                      </span>
-                    </div>
-
-                    {/* Underline */}
-                    <div
-                      className="mx-auto h-0.5 rounded-full opacity-50"
-                      style={{
-                        width: '70%',
-                        background: 'linear-gradient(90deg, transparent, #a855f7, #22d3ee, #10b981, transparent)',
-                      }}
-                    />
+              {/* 右侧 - 快速体验卡片 */}
+              <div className="flex-shrink-0 w-full max-w-sm">
+                <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+                  <div className="flex items-center gap-2 mb-5">
+                    <span className="material-symbols-outlined text-violet-400 text-lg">bolt</span>
+                    <span className="text-white/80 text-sm font-medium font-sans">快速体验流程</span>
                   </div>
-
-                  {/* Corner Accents */}
-                  <div className="absolute -top-3 -left-3 w-2 h-2 border-t border-l border-violet-400/40" />
-                  <div className="absolute -top-3 -right-3 w-2 h-2 border-t border-r border-cyan-400/40" />
-                  <div className="absolute -bottom-3 -left-3 w-2 h-2 border-b border-l border-emerald-400/40" />
-                  <div className="absolute -bottom-3 -right-3 w-2 h-2 border-b border-r border-fuchsia-400/40" />
+                  <div className="space-y-3">
+                    {[
+                      { icon: 'mic', label: '录音或上传人声', desc: '1-2 分钟' },
+                      { icon: 'language', label: '选择方言风格', desc: '10 秒' },
+                      { icon: 'auto_awesome', label: 'AI 生成歌词', desc: '1 分钟' },
+                      { icon: 'play_circle', label: '导出你的 Rap', desc: '2 分钟' },
+                    ].map((step, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined text-white/50 text-sm">{step.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-white/80 text-sm font-sans block">{step.label}</span>
+                        </div>
+                        <span className="text-white/25 text-xs font-sans flex-shrink-0">{step.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href="/sonic-gallery/create"
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-emerald-500 text-white font-semibold text-sm hover:opacity-90 transition-all btn-press"
+                  >
+                    <span className="material-symbols-outlined text-base">mic</span>
+                    立即开始
+                  </Link>
                 </div>
-              </Link>
+              </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Tech Card - Refined */}
-            <div className="mt-16 max-w-lg">
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-500">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-white/70 text-lg">
-                      auto_awesome
+      {/* 热门作品 */}
+      <section className="px-6 sm:px-8 lg:px-20 py-16 bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-xl font-bold text-white font-sans">热门作品</h2>
+              <p className="text-white/35 text-sm mt-1 font-sans">听听其他人创作的方言 Rap</p>
+            </div>
+            <Link href="/sonic-gallery/beats" className="text-white/40 hover:text-white/70 text-sm flex items-center gap-1 transition-colors font-sans">
+              查看全部
+              <span className="material-symbols-outlined text-sm">chevron_right</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {sampleWorks.map((work) => (
+              <button
+                key={work.id}
+                onMouseEnter={() => setHoveredWork(work.id)}
+                onMouseLeave={() => setHoveredWork(null)}
+                className="group text-left"
+              >
+                <div className={`relative aspect-[4/3] rounded-xl bg-gradient-to-br ${work.cover} overflow-hidden mb-3`}>
+                  {/* 模拟封面 */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur flex items-center justify-center group-hover:bg-white/20 group-hover:scale-110 transition-all">
+                      <span className={`material-symbols-outlined text-white ${hoveredWork === work.id ? 'text-xl' : 'text-lg'}`}>
+                        play_arrow
+                      </span>
+                    </div>
+                  </div>
+                  {/* 底部渐变 */}
+                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+                    <span className="text-[10px] text-white/60 font-sans">{work.dialect}</span>
+                    <span className="text-[10px] text-white/40 font-sans">
+                      {work.plays >= 10000 ? `${(work.plays / 10000).toFixed(1)}w` : `${(work.plays / 1000).toFixed(1)}k`}
                     </span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-medium text-sm mb-2">
-                      核心技术
-                    </h3>
-                    <p className="text-white/40 text-sm leading-relaxed">
-                      集成 <span className="text-white/60">Suno AI</span> 音乐生成与{' '}
-                      <span className="text-white/60">Seed-VC</span>{' '}
-                      零样本声音克隆技术。仅需 5 秒样本，捕捉细微咬字特征。
-                    </p>
-                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section - Apple Style Refined */}
-      <section className="px-8 lg:px-16 py-24 bg-[#0a0a0a]">
-        <div className="max-w-5xl mx-auto">
-          {/* Section Header */}
-          <div className="mb-16 max-w-2xl">
-            <span className="text-emerald-400 text-xs font-medium tracking-widest uppercase mb-3 block">
-              核心能力
-            </span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
-              声音，重新定义
-            </h2>
-            <p className="text-white/40 text-base mt-4 leading-relaxed">
-              三项核心技术，让每一个声音都独一无二
-            </p>
-          </div>
-
-          {/* Feature Cards - Asymmetric Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Feature 1 - Large Card */}
-            <div className="md:col-span-7 group">
-              <div className="h-full p-8 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-500">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="material-symbols-outlined text-white/80 text-xl">
-                    record_voice_over
-                  </span>
-                  <span className="text-white/40 text-xs font-medium tracking-wider uppercase">
-                    Voice Cloning
-                  </span>
-                </div>
-                <h4 className="text-white font-semibold text-xl mb-3 tracking-tight">
-                  人声克隆
-                </h4>
-                <p className="text-white/50 text-sm leading-relaxed mb-6">
-                  零样本学习，实时提取你的声纹特征。支持多情感维度的说唱表达，完美保留你的个人辨识度。
-                </p>
-                <div className="flex items-center gap-4 pt-4 border-t border-white/[0.06]">
-                  <div className="text-center">
-                    <div className="text-white font-semibold text-lg">5s</div>
-                    <div className="text-white/30 text-xs">最小样本</div>
-                  </div>
-                  <div className="w-px h-8 bg-white/[0.06]" />
-                  <div className="text-center">
-                    <div className="text-white font-semibold text-lg">99%</div>
-                    <div className="text-white/30 text-xs">相似度</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Feature 2 & 3 - Stacked Cards */}
-            <div className="md:col-span-5 flex flex-col gap-6">
-              {/* Feature 2 */}
-              <div className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-500">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="material-symbols-outlined text-white/80 text-xl">
-                    graphic_eq
-                  </span>
-                  <span className="text-white/40 text-xs font-medium tracking-wider uppercase">
-                    Beat Sync
-                  </span>
-                </div>
-                <h4 className="text-white font-semibold text-lg mb-2 tracking-tight">
-                  节奏对齐
-                </h4>
-                <p className="text-white/50 text-sm leading-relaxed">
-                  AI 自动分析 BPM 与律动，确保歌词咬字精准落点。
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-500">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="material-symbols-outlined text-white/80 text-xl">
-                    language
-                  </span>
-                  <span className="text-white/40 text-xs font-medium tracking-wider uppercase">
-                    Dialects
-                  </span>
-                </div>
-                <h4 className="text-white font-semibold text-lg mb-2 tracking-tight">
-                  九种方言
-                </h4>
-                <p className="text-white/50 text-sm leading-relaxed">
-                  粤语、川渝、东北、闽南等核心语系，支持原声本色，内置地道韵脚库。
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Visual Section - Refined */}
-      <section className="py-24 bg-[#080808]">
-        <div className="max-w-5xl mx-auto px-8 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-7 rounded-2xl overflow-hidden aspect-video relative group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&q=80"
-              alt="录音工作室"
-              className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <button className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:scale-110 hover:bg-white/20 transition-all duration-300 border border-white/10">
-                <span className="material-symbols-outlined text-white text-3xl">
-                  play_arrow
-                </span>
+                <h3 className="text-white/90 text-sm font-medium font-sans truncate">{work.title}</h3>
+                <p className="text-white/30 text-xs font-sans mt-0.5">{work.creator}</p>
               </button>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 方言展示 */}
+      <section className="px-6 sm:px-8 lg:px-20 py-16 bg-[#080808]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-xl font-bold text-white font-sans">支持方言</h2>
+            <p className="text-white/35 text-sm mt-1 font-sans">覆盖中国核心方言体系</p>
           </div>
 
-          <div className="lg:col-span-5 space-y-5">
-            <span className="text-emerald-400 text-xs font-medium tracking-widest uppercase">
-              创作流程
-            </span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight tracking-tight">
-              像写诗一样，
-              <br />
-              构建你的数字回响。
-            </h2>
-            <p className="text-white/40 text-sm leading-relaxed">
-              打破技术与艺术的边界。输入歌词，选择方言风格，AI 将根据你的声线特征生成极具张力的说唱段落。
-            </p>
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-3">
+            {dialectCards.map((d) => (
+              <div
+                key={d.name}
+                className={`group flex flex-col items-center p-3 sm:p-4 rounded-xl bg-gradient-to-br ${d.color} border border-white/[0.04] hover:border-white/[0.1] transition-all cursor-default`}
+              >
+                <span className="text-2xl sm:text-3xl mb-1">{d.emoji}</span>
+                <span className="text-white/80 text-xs sm:text-sm font-medium font-sans">{d.name}</span>
+                <span className="text-white/25 text-[10px] sm:text-xs font-sans">{d.region}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Stats - Refined */}
-            <div className="pt-6 border-t border-white/[0.06] flex gap-10">
-              <div>
-                <div className="text-2xl font-bold text-white tracking-tight">99%</div>
-                <div className="text-xs text-white/30 tracking-wide mt-1">
-                  声纹相似度
+      {/* 核心技术 */}
+      <section className="px-6 sm:px-8 lg:px-20 py-16 bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {[
+              {
+                icon: 'record_voice_over',
+                title: '零样本声音克隆',
+                desc: '仅需 5 秒样本，Seed-VC 实时提取声纹特征，保留个人辨识度',
+                stat: '99%',
+                statLabel: '相似度',
+              },
+              {
+                icon: 'auto_awesome',
+                title: '爆款歌词生成',
+                desc: 'AI 分析方言文化符号与热梗，生成有记忆点的歌词',
+                stat: '30s',
+                statLabel: '生成耗时',
+              },
+              {
+                icon: 'graphic_eq',
+                title: '智能节奏对齐',
+                desc: 'SunoAPI Add Vocals + Seed-VC 零样本克隆，歌词咬字完美落点',
+                stat: '2400+',
+                statLabel: '方言词条',
+              },
+            ].map((feature) => (
+              <div key={feature.title} className="p-5 sm:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.03] hover:border-white/[0.08] transition-all">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-violet-400 text-xl">{feature.icon}</span>
+                  <span className="text-white font-medium text-sm font-sans">{feature.title}</span>
+                </div>
+                <p className="text-white/40 text-sm leading-relaxed mb-5 font-sans">{feature.desc}</p>
+                <div className="pt-4 border-t border-white/[0.04]">
+                  <span className="text-white font-bold text-lg">{feature.stat}</span>
+                  <span className="text-white/25 text-xs ml-1.5 font-sans">{feature.statLabel}</span>
                 </div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-white tracking-tight">2400+</div>
-                <div className="text-xs text-white/30 tracking-wide mt-1">
-                  方言词条
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="px-8 lg:px-20 py-20 bg-[#0a0a0a] border-t border-white/[0.04]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-2">
-              {/* Logo */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">W</span>
-                </div>
-                <div>
-                  <span className="text-white font-semibold text-lg block">
-                    方言回响
-                  </span>
-                  <span className="text-white/30 text-xs">WhyFire Studio</span>
-                </div>
-              </div>
-              <p className="text-white/40 max-w-sm">
-                致力通过人工智能技术重构民族语言魅力，让每一种声音都能在数字时代找到回响。
-              </p>
+      <footer className="px-6 sm:px-8 lg:px-20 py-12 bg-[#080808] border-t border-white/[0.04]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/[0.08] flex items-center justify-center">
+              <span className="text-white font-bold text-sm">W</span>
             </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">
-                产品
-              </h4>
-              <nav className="flex flex-col gap-2">
-                <Link href="#" className="text-white/40 hover:text-white transition-colors">
-                  人声生成
-                </Link>
-                <Link href="#" className="text-white/40 hover:text-white transition-colors">
-                  伴奏分离
-                </Link>
-                <Link href="#" className="text-white/40 hover:text-white transition-colors">
-                  方言词库
-                </Link>
-              </nav>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">
-                关于
-              </h4>
-              <nav className="flex flex-col gap-2">
-                <Link href="#" className="text-white/40 hover:text-white transition-colors">
-                  实验室
-                </Link>
-                <Link href="#" className="text-white/40 hover:text-white transition-colors">
-                  创作者计划
-                </Link>
-                <Link href="#" className="text-white/40 hover:text-white transition-colors">
-                  隐私协议
-                </Link>
-              </nav>
-            </div>
+            <span className="text-white/40 text-xs font-sans">© 2024 方言回响 · WhyFire Studio</span>
           </div>
-          <div className="pt-8 border-t border-white/[0.04] flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-white/30">
-            <p>© 2024 方言回响 · 保留所有权利</p>
-            <div className="flex gap-6">
-              <Link href="#" className="hover:text-white/60 transition-colors">微博</Link>
-              <Link href="#" className="hover:text-white/60 transition-colors">微信</Link>
-              <Link href="#" className="hover:text-white/60 transition-colors">抖音</Link>
-            </div>
+          <div className="flex items-center gap-6">
+            <Link href="#" className="text-white/25 hover:text-white/50 text-xs font-sans transition-colors">隐私协议</Link>
+            <Link href="#" className="text-white/25 hover:text-white/50 text-xs font-sans transition-colors">使用条款</Link>
+            <Link href="#" className="text-white/25 hover:text-white/50 text-xs font-sans transition-colors">联系我们</Link>
           </div>
         </div>
       </footer>
-    </>
+    </div>
   )
 }

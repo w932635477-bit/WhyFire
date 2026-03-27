@@ -108,6 +108,8 @@ export interface ViralLyricsPromptOptions {
   trendingTopics?: TrendingTopic[]
   /** 网络热梗 */
   memes?: InternetMeme[]
+  /** BGM 时长（秒），用于约束歌词长度 */
+  bgmDurationSeconds?: number
 }
 
 // ============================================================================
@@ -204,6 +206,7 @@ ${config.keywords.map(k => `- ${k}`).join('\n')}
 - 结尾要有希望、有力量
 - 类似"大展鸿图"的气势
 ${timeBlock}
+${options.bgmDurationSeconds ? `## 时长约束\n- BGM 时长为 ${options.bgmDurationSeconds} 秒，歌词演唱时长须控制在 ${Math.floor(options.bgmDurationSeconds * 0.85)}~${options.bgmDurationSeconds} 秒之间\n- 按每秒 4-5 个字估算，歌词总字数控制在 ${Math.floor(options.bgmDurationSeconds * 0.85 * 4)}~${Math.floor(options.bgmDurationSeconds * 5)} 字\n- 宁可少写不要多写，留出前奏和间奏的空间\n` : ''}
 ## 歌词结构（必须遵守）
 
 [Hook]

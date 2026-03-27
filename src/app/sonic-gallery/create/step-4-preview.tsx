@@ -191,14 +191,11 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
       <div className="lg:col-span-4 space-y-6 lg:space-y-8 order-2 lg:order-1">
         {/* Header */}
         <div>
-          <span className="text-emerald-400 text-sm font-medium tracking-wider uppercase mb-3 block">
-            步骤四
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <h1 className="text-xl font-bold text-white mb-1 font-sans">
             预览你的杰作
           </h1>
-          <p className="text-white/40 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-            你的 AI 方言说唱作品已准备就绪。试听确认后，保存到你的音乐库。
+          <p className="text-white/40 text-sm leading-relaxed font-sans">
+            试听确认后，保存到你的音乐库
           </p>
         </div>
 
@@ -225,7 +222,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className={`text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
+                  <span className={`text-sm font-medium font-sans ${
                     item.status === 'pending' ? 'text-white/40' : 'text-white'
                   }`}>
                     {item.label}
@@ -248,13 +245,13 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               <span className="material-symbols-outlined text-violet-400 text-lg">
                 tune
               </span>
-              <span className="text-white font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <span className="text-white font-medium text-sm font-sans">
                 参数调整
               </span>
             </div>
             <button
               onClick={handleReset}
-              className="text-white/40 text-xs hover:text-white/60 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              className="text-white/40 text-xs hover:text-white/60 transition-colors font-sans"
             >
               重置
             </button>
@@ -263,7 +260,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {/* Speed Slider */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-white/50 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">语速</span>
+              <span className="text-white/50 text-xs font-sans">语速</span>
               <span className="text-white/60 text-xs font-mono">{speed.toFixed(1)}x</span>
             </div>
             <input
@@ -284,7 +281,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {/* Pitch Slider */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-white/50 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">音调</span>
+              <span className="text-white/50 text-xs font-sans">音调</span>
               <span className="text-white/60 text-xs font-mono">{pitch > 0 ? '+' : ''}{pitch}</span>
             </div>
             <input
@@ -311,12 +308,12 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
               <span className="material-symbols-outlined text-red-400 text-lg">error</span>
               <div className="flex-1">
-                <p className="text-red-400 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <p className="text-red-400 text-sm font-medium font-sans">
                   {error}
                 </p>
                 <button
                   onClick={handleGenerateMusic}
-                  className="text-red-400/70 text-xs mt-2 hover:text-red-400 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                  className="text-red-400/70 text-xs mt-2 hover:text-red-400 transition-colors font-sans"
                 >
                   点击重试
                 </button>
@@ -328,7 +325,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {!audioUrl && !isGenerating && (
             <button
               onClick={handleGenerateMusic}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-sans"
             >
               <span className="material-symbols-outlined text-lg">auto_awesome</span>
               生成音乐
@@ -340,7 +337,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
             <div className="w-full p-4 rounded-xl bg-violet-500/10 border border-violet-500/20">
               <div className="flex items-center gap-3 mb-3">
                 <span className="material-symbols-outlined text-violet-400 text-lg animate-spin">progress_activity</span>
-                <span className="text-violet-400 font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <span className="text-violet-400 font-medium text-sm font-sans">
                   正在生成音乐...
                 </span>
               </div>
@@ -350,7 +347,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                   style={{ width: `${generateProgress}%` }}
                 />
               </div>
-              <p className="text-white/40 text-xs mt-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <p className="text-white/40 text-xs mt-2 font-sans">
                 预计需要 30-60 秒，请耐心等待
               </p>
             </div>
@@ -359,18 +356,18 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {/* Primary Actions (after generation) */}
           {audioUrl && !isGenerating && (
             <>
-              <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-sans">
                 <span className="material-symbols-outlined text-lg">download</span>
                 导出音频
               </button>
 
               {/* Secondary Actions */}
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-sans">
                   <span className="material-symbols-outlined text-base">share</span>
                   分享
                 </button>
-                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-sans">
                   <span className="material-symbols-outlined text-base">save</span>
                   保存
                 </button>
@@ -379,7 +376,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               {/* Regenerate Button */}
               <button
                 onClick={handleGenerateMusic}
-                className="w-full py-2 text-white/40 hover:text-white/60 text-sm transition-colors flex items-center justify-center gap-2 min-h-[44px] font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                className="w-full py-2 text-white/40 hover:text-white/60 text-sm transition-colors flex items-center justify-center gap-2 min-h-[44px] font-sans"
               >
                 <span className="material-symbols-outlined text-base">refresh</span>
                 重新生成
@@ -389,7 +386,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
 
           <button
             onClick={onPrev}
-            className="w-full py-3 text-white/30 hover:text-white/60 text-sm transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+            className="w-full py-3 text-white/30 hover:text-white/60 text-sm transition-colors font-sans"
           >
             返回修改
           </button>
@@ -398,7 +395,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           <div className="mt-4 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-emerald-400 text-sm">info</span>
-              <span className="text-emerald-400/80 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <span className="text-emerald-400/80 text-xs font-sans">
                 💡 中间步骤可以无限次修改，只有最终导出才计入使用次数
               </span>
             </div>
@@ -428,10 +425,10 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                 <span className="text-emerald-400 text-xs font-medium tracking-wider uppercase">
                   正在预览
                 </span>
-                <h2 className="text-white text-xl sm:text-2xl font-bold mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h2 className="text-white text-xl sm:text-2xl font-bold mt-1 font-sans">
                   成都漂移
                 </h2>
-                <p className="text-white/40 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <p className="text-white/40 text-sm mt-1 font-sans">
                   {selectedDialect?.name || '方言'}版
                 </p>
               </div>
@@ -447,7 +444,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-violet-400 text-lg animate-spin">progress_activity</span>
-                    <span className="text-violet-400 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-violet-400 text-sm font-medium font-sans">
                     正在生成音乐... {generateProgress}%
                   </span>
                   </div>
@@ -457,7 +454,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-red-400 text-lg">error</span>
-                    <span className="text-red-400 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-red-400 text-sm font-medium font-sans">
                       生成失败
                     </span>
                   </div>
@@ -483,7 +480,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <span className="material-symbols-outlined text-white/20 text-3xl mb-2">music_note</span>
-                    <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <p className="text-white/30 text-xs font-sans">
                       点击播放按钮生成音乐
                     </p>
                   </div>
@@ -495,19 +492,19 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
             <div className="space-y-1 sm:space-y-2 text-center mb-2 sm:mb-4 px-2">
               {wordTimestamps ? (
                 <>
-                  <p className="text-white/30 text-sm sm:text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
+                  <p className="text-white/30 text-sm sm:text-base italic font-sans truncate">
                     {nextLyric || '...'}
                   </p>
-                  <p className="text-white text-lg sm:text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate animate-pulse">
+                  <p className="text-white text-lg sm:text-xl font-semibold font-sans truncate animate-pulse">
                     {currentLyric || (isPlaying ? '...' : '点击播放')}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-white/30 text-sm sm:text-base italic font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
+                  <p className="text-white/30 text-sm sm:text-base italic font-sans truncate">
                     {lyrics.split('\n')[0]?.slice(0, 15) || '歌词预览...'}
                   </p>
-                  <p className="text-white text-lg sm:text-xl font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif] truncate">
+                  <p className="text-white text-lg sm:text-xl font-semibold font-sans truncate">
                     {lyrics.split('\n')[1]?.slice(0, 20) || '生成音乐后可同步显示'}
                   </p>
                 </>
@@ -541,7 +538,7 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               <span className="material-symbols-outlined text-violet-400 text-lg">
                 lyrics
               </span>
-              <span className="text-white font-medium text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <span className="text-white font-medium text-sm font-sans">
                 歌词
               </span>
             </div>
@@ -563,19 +560,19 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
               <textarea
                 value={editedLyrics}
                 onChange={(e) => setEditedLyrics(e.target.value)}
-                className="w-full h-48 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed"
+                className="w-full h-48 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-sans leading-relaxed"
                 placeholder="在此编辑歌词..."
               />
               <button
                 onClick={handleSaveLyrics}
-                className="w-full py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm font-medium hover:bg-violet-500/30 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                className="w-full py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm font-medium hover:bg-violet-500/30 transition-colors font-sans"
               >
                 保存修改
               </button>
             </div>
           ) : (
             <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 h-48 overflow-y-auto">
-              <pre className="text-white/60 text-sm whitespace-pre-wrap font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed">
+              <pre className="text-white/60 text-sm whitespace-pre-wrap font-sans leading-relaxed">
                 {lyrics}
               </pre>
             </div>

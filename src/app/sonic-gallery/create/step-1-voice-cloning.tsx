@@ -229,17 +229,14 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
   }
 
   return (
-    <div className="space-y-12">
-      {/* Header */}
-      <div className="text-center max-w-2xl mx-auto">
-        <span className="text-violet-400 text-sm font-medium tracking-wider uppercase mb-3 block">
-          步骤一
-        </span>
-        <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+    <div className="space-y-6">
+      {/* Header - 简洁 */}
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1 font-sans">
           建立你的数字声音身份
         </h2>
-        <p className="text-white/40 text-base leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          提供至少 1 分钟的高质量人声样本，AI 将学习你的声音特点
+        <p className="text-white/40 text-sm font-sans">
+          提供至少 1 分钟的人声样本，AI 将学习你的声音特点
         </p>
       </div>
 
@@ -252,10 +249,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             </span>
           </div>
           <div className="flex-1">
-            <h4 className="text-white/90 font-medium mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+            <h4 className="text-white/90 font-medium mb-2 font-sans">
               为什么要录音？
             </h4>
-            <p className="text-white/50 text-sm leading-relaxed mb-3 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+            <p className="text-white/50 text-sm leading-relaxed mb-3 font-sans">
               AI 会学习你的声音特点，然后用<strong className="text-white/70">你自己的声音</strong>唱出方言 Rap。
               就像有一个"数字分身"在帮你唱歌！
             </p>
@@ -278,7 +275,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Column - Action Cards */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           {/* 主卡片：上传视频 - 最推荐 */}
@@ -305,17 +302,17 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-white/90 font-semibold text-base font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  <h3 className="text-white/90 font-semibold text-base font-sans">
                     上传视频
                   </h3>
                   <span className="px-2 py-0.5 bg-violet-500/20 text-violet-400 text-xs rounded-full font-medium">
                     推荐
                   </span>
                 </div>
-                <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif] mb-2">
+                <p className="text-white/40 text-sm font-sans mb-2">
                   从相册选择视频，自动提取人声
                 </p>
-                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <p className="text-white/30 text-xs font-sans">
                   支持 MP4 / MOV / AVI
                 </p>
 
@@ -350,7 +347,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
           {/* 分隔线 */}
           <div className="flex items-center gap-3 py-2">
             <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">其他方式</span>
+            <span className="text-white/30 text-xs font-sans">其他方式</span>
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
 
@@ -376,10 +373,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 </span>
               </div>
               <div className="flex-1">
-                <h3 className="text-white/90 font-medium text-base mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h3 className="text-white/90 font-medium text-base mb-1 font-sans">
                   直接录音
                 </h3>
-                <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <p className="text-white/40 text-sm font-sans">
                   点击开始，朗读指定文本
                 </p>
                 {(isRecording || state.voiceCloning.recordingBlob) && (
@@ -423,13 +420,13 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 </span>
               </div>
               <div className="flex-1">
-                <h3 className="text-white/90 font-medium text-base mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h3 className="text-white/90 font-medium text-base mb-1 font-sans">
                   上传音频
                 </h3>
-                <p className="text-white/40 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <p className="text-white/40 text-sm font-sans">
                   从文件选择音频
                 </p>
-                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif] mt-1">
+                <p className="text-white/30 text-xs font-sans mt-1">
                   MP3 / WAV / FLAC / M4A
                 </p>
                 {state.voiceCloning.audioFile && state.voiceCloning.uploadType === 'upload' && (
@@ -452,11 +449,11 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 <span className="material-symbols-outlined text-white/50 text-base">
                   article
                 </span>
-                <span className="text-white/60 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <span className="text-white/60 text-sm font-medium font-sans">
                   请朗读以下文字（约1分钟）
                 </span>
               </div>
-              <p className="text-white/40 text-sm leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif] whitespace-pre-line">
+              <p className="text-white/40 text-sm leading-relaxed font-sans whitespace-pre-line">
                 {readingText}
               </p>
             </div>
@@ -467,10 +464,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
             <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-white text-lg font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  <h3 className="text-white text-lg font-semibold font-sans">
                     音频已就绪
                   </h3>
-                  <p className="text-white/30 text-sm mt-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                  <p className="text-white/30 text-sm mt-1 font-sans">
                     音频文件已上传，可以进行声音克隆
                   </p>
                 </div>
@@ -488,7 +485,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                     <span className="material-symbols-outlined text-white/50 text-base">
                       audio_file
                     </span>
-                    <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-white/60 text-sm font-sans">
                       {state.voiceCloning.audioFile.name}
                     </span>
                   </div>
@@ -498,7 +495,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                     <span className="material-symbols-outlined text-white/50 text-base">
                       mic
                     </span>
-                    <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-white/60 text-sm font-sans">
                       录制完成
                     </span>
                   </div>
@@ -508,7 +505,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                     <span className="material-symbols-outlined text-white/50 text-base">
                       movie
                     </span>
-                    <span className="text-white/60 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                    <span className="text-white/60 text-sm font-sans">
                       从视频提取
                     </span>
                   </div>
@@ -523,11 +520,11 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               <span className="material-symbols-outlined text-amber-400 text-lg">
                 lightbulb
               </span>
-              <span className="text-white/60 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <span className="text-white/60 text-sm font-medium font-sans">
                 录制技巧
               </span>
             </div>
-            <ul className="space-y-2 text-white/40 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+            <ul className="space-y-2 text-white/40 text-xs font-sans">
               <li className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-violet-400" />
                 最少录制 1 分钟，建议 1-2 分钟
@@ -567,10 +564,10 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
                 <span className="material-symbols-outlined text-white/60">graphic_eq</span>
               </div>
               <div>
-                <h4 className="text-white font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <h4 className="text-white font-medium font-sans">
                   {getStatusText()}
                 </h4>
-                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+                <p className="text-white/30 text-xs font-sans">
                   Seed-VC 零样本声音克隆
                 </p>
               </div>
@@ -585,7 +582,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               style={{ width: `${getProgressPercent()}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-white/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+          <div className="flex justify-between text-xs text-white/30 font-sans">
             <span>{getStatusText()}</span>
             <span>
               {cloningStatus === 'completed' ? '可以使用' :
@@ -604,7 +601,7 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
           {cloningStatus === 'idle' && hasAudio && (
             <button
               onClick={startVoiceCloning}
-              className="mt-4 w-full py-3 bg-gradient-to-r from-violet-500/20 to-emerald-500/20 text-white rounded-xl font-medium hover:from-violet-500/30 hover:to-emerald-500/30 transition-all font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+              className="mt-4 w-full py-3 bg-gradient-to-r from-violet-500/20 to-emerald-500/20 text-white rounded-xl font-medium hover:from-violet-500/30 hover:to-emerald-500/30 transition-all font-sans"
             >
               创建我的声音模型
             </button>
@@ -618,16 +615,16 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
               <span className="material-symbols-outlined text-amber-400">info</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-white font-medium mb-2 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <h4 className="text-white font-medium mb-2 font-sans">
                 声音克隆服务暂未启用
               </h4>
-              <p className="text-white/50 text-sm leading-relaxed mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+              <p className="text-white/50 text-sm leading-relaxed mb-4 font-sans">
                 CosyVoice 声音复刻服务需要配置 DASHSCOPE_API_KEY。您可以跳过此步骤，使用系统默认音色创作方言 Rap。
               </p>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleSkipVoiceCloning}
-                  className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/15 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+                  className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/15 transition-colors font-sans"
                 >
                   使用默认音色继续
                 </button>
@@ -637,38 +634,6 @@ export function Step1VoiceCloning({ onNext }: Step1VoiceCloningProps) {
           </div>
         </div>
       )}
-
-      {/* Navigation - 固定在底部 */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-end gap-4">
-            {/* 下一步预览 */}
-            <div className="hidden md:block">
-              <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400 text-lg">graphic_eq</span>
-                <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  选择方言风格和背景音乐
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={onNext}
-              disabled={!canProceed}
-              className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-                canProceed
-                  ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20 animate-pulse-subtle'
-                  : 'bg-white/10 text-white/40 cursor-not-allowed'
-              }`}
-            >
-              {canProceed ? '下一步' : '请先录制或上传音频'}
-              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

@@ -24,6 +24,7 @@ export interface LyricsGenerateRequest {
   selfDescription?: string
   selectedTopics?: string[]
   selectedMemes?: string[]
+  bgmId?: string  // UI Beat ID，用于计算歌词时长约束
   timeOptions?: {
     includeFestival?: boolean
     includeTrending?: boolean
@@ -140,7 +141,7 @@ export async function generateLyrics(
   params: LyricsGenerateRequest
 ): Promise<LyricsGenerateResponse> {
   // 转换为 V2 API 格式
-  const requestBody = {
+  const requestBody: Record<string, any> = {
     scene: params.scene,
     dialect: params.dialect,
     funnyInfo: {
@@ -152,6 +153,11 @@ export async function generateLyrics(
       includeTrending: true,
       includeMemes: true,
     },
+  }
+
+  // 传入 bgmId，让歌词 API 根据 BGM 时长约束歌词长度
+  if (params.bgmId) {
+    requestBody.bgmId = params.bgmId
   }
 
   return request<LyricsGenerateResponse>('/api/lyrics/generate-v2', {

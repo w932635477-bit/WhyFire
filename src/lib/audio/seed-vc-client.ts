@@ -13,6 +13,7 @@
 import '@/lib/proxy'
 
 import { getModalClient, type ModalTaskStatus } from '@/lib/serverless/modal-client'
+import { Agent, ProxyAgent } from 'undici'
 
 // ============================================================================
 // 类型定义
@@ -135,6 +136,15 @@ export class SeedVCModalClient implements ISeedVCClient {
   private modalClient = getModalClient()
   private maxPollAttempts = 60
   private pollDelayMs = 3000
+  // 下载外部音频需要走代理（SunoAPI 返回的 tempfile 域名等）
+  private proxyDispatcher: any
+
+  constructor() {
+    const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy
+    if (proxyUrl) {
+      this.proxyDispatcher = new ProxyAgent(proxyUrl)
+    }
+  }
 
   async convert(request: SeedVCConversionRequest): Promise<SeedVCConversionResult> {
     console.log('[SeedVC-Modal] Starting voice conversion')
@@ -145,22 +155,44 @@ export class SeedVCModalClient implements ISeedVCClient {
     const startTime = Date.now()
 
     try {
-      // 直接使用 MODAL_WEB_ENDPOINT_URL 作为完整的 convert endpoint
       const endpointUrl = process.env.MODAL_WEB_ENDPOINT_URL
 
       if (!endpointUrl) {
         throw new Error('MODAL_WEB_ENDPOINT_URL not configured')
       }
 
-      // 构建请求
+      // 在服务端下载音频并转为 base64（Modal 容器无法访问外部 URL）
+      console.log('[SeedVC-Modal] Downloading source audio for base64 encoding...')
+      const sourceRes = await fetch(request.sourceAudio, {
+        signal: AbortSignal.timeout(60000),
+        dispatcher: this.proxyDispatcher,
+      } as any)
+      if (!sourceRes.ok) throw new Error(`Failed to download source audio: ${sourceRes.status}`)
+      const sourceBuffer = Buffer.from(await sourceRes.arrayBuffer())
+
+      console.log('[SeedVC-Modal] Downloading reference audio for base64 encoding...')
+      const refRes = await fetch(request.referenceAudio, {
+        signal: AbortSignal.timeout(60000),
+        dispatcher: this.proxyDispatcher,
+      } as any)
+      if (!refRes.ok) throw new Error(`Failed to download reference audio: ${refRes.status}`)
+      const refBuffer = Buffer.from(await refRes.arrayBuffer())
+
+      const sourceBase64 = `data:audio/wav;base64,${sourceBuffer.toString('base64')}`
+      const refBase64 = `data:audio/wav;base64,${refBuffer.toString('base64')}`
+
+      console.log(`[SeedVC-Modal] Source: ${sourceBuffer.length} bytes, Reference: ${refBuffer.length} bytes`)
+
+      // 构建请求（base64 传输，避免 Modal 容器网络隔离）
+      // 使用直连 dispatcher 绕过全局代理，避免大请求体被代理截断
       const response = await fetch(endpointUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          source_audio_url: request.sourceAudio,
-          reference_audio_url: request.referenceAudio,
+          source_audio_base64: sourceBase64,
+          reference_audio_base64: refBase64,
           f0_condition: request.f0Condition ?? true,
           fp16: request.fp16 ?? true,
           diffusion_steps: request.diffusionSteps ?? 25,
@@ -168,6 +200,8 @@ export class SeedVCModalClient implements ISeedVCClient {
           inference_cfg_rate: 0.7,
         }),
         signal: AbortSignal.timeout(600000), // 10 分钟超时（GPU 推理较慢）
+        // @ts-expect-error Node.js fetch 支持 dispatcher 参数
+        dispatcher: new Agent({ connect: { timeout: 30_000 } }),
       })
 
       if (!response.ok) {

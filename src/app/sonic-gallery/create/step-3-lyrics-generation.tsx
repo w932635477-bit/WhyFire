@@ -30,6 +30,7 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
   const [isEditing, setIsEditing] = useState(false)
   const [editedLyrics, setEditedLyrics] = useState(state.lyrics.generatedLyrics)
   const [error, setError] = useState<string | null>(null)
+  const [showTopics, setShowTopics] = useState(false)
 
   const toggleTopic = (topicId: string) => {
     setTopics(
@@ -52,13 +53,13 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
     setError(null)
 
     try {
-      // 调用实际 API
       const result = await generateLyrics({
         scene: 'funny',
         dialect: state.dialect.selected,
         selfDescription: state.lyrics.selfDescription,
         selectedTopics: state.lyrics.selectedTopics,
         selectedMemes: state.lyrics.selectedMemes,
+        bgmId: state.beat.selected || undefined,
         timeOptions: {
           includeFestival: true,
           includeTrending: true,
@@ -85,313 +86,214 @@ export function Step3LyricsGeneration({ onNext, onPrev }: Step3LyricsGenerationP
     setIsEditing(false)
   }
 
-  // 检查是否可以进入下一步
   const canProceed = state.lyrics.generatedLyrics.length > 0
 
   return (
-    <div className="space-y-10">
-      {/* Header */}
-      <div className="text-center max-w-2xl mx-auto">
-        <span className="text-purple-400 text-sm font-medium tracking-wider uppercase mb-3 block">
-          步骤三
-        </span>
-        <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight mb-4 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
+    <div className="space-y-6">
+      {/* Header - 简洁 */}
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1 font-sans">
           创作你的专属歌词
         </h2>
-        <p className="text-white/40 text-base leading-relaxed font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-          告诉我们你是谁，想表达什么，AI 会为你生成独一无二的方言 Rap 歌词
+        <p className="text-white/40 text-sm font-sans">
+          描述你自己，AI 会为你生成独一无二的方言 Rap 歌词
         </p>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column - Input */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Self Description */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-violet-400 text-xl">
-                  person
-                </span>
-              </div>
-              <div>
-                <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  自我描述
-                </h3>
-                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  职业、爱好、想说的...
-                </p>
-              </div>
-            </div>
-            <textarea
-              value={state.lyrics.selfDescription}
-              onChange={(e) => setSelfDescription(e.target.value)}
-              placeholder="例如：程序员，喜欢打游戏，最近在减肥，想吐槽一下加班生活..."
-              className="w-full h-32 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 placeholder:text-white/20 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-            />
-            <div className="flex items-center justify-between mt-3 text-xs text-white/30">
-              <span>越具体，生成的歌词越有个性</span>
-              <span>{state.lyrics.selfDescription.length}/200</span>
-            </div>
-
-            {/* 输入引导示例 */}
-            <div className="mt-4 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-violet-400 text-sm">lightbulb</span>
-                <span className="text-violet-400 text-xs font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  填写技巧
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-1">
-                  <p className="text-white/40 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">你填写：</p>
-                  <p className="text-white/60 text-xs italic font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    "程序员，喜欢打游戏，最近在减肥"
-                  </p>
-                </div>
-                <span className="material-symbols-outlined text-white/20 text-lg">arrow_forward</span>
-                <div className="flex-1">
-                  <p className="text-white/40 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">生成歌词：</p>
-                  <p className="text-emerald-400/80 text-xs italic font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    "代码敲到凌晨三点半，减肥计划又拖延..."
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Hot Topics */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-amber-400 text-xl">
-                    local_fire_department
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    热点话题
-                  </h3>
-                  <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    选择话题蹭热度
-                  </p>
-                </div>
-              </div>
-              <span className="px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-medium">
-                实时热搜
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {hotTopics.map((topic) => (
-                <button
-                  key={topic.id}
-                  onClick={() => toggleTopic(topic.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-                    state.lyrics.selectedTopics.includes(topic.id)
-                      ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06] hover:text-white/70'
-                  }`}
-                >
-                  {topic.hot && <span className="mr-1">🔥</span>}
-                  {topic.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Popular Memes */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-400 text-xl">
-                  sentiment_very_satisfied
-                </span>
-              </div>
-              <div>
-                <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  流行梗
-                </h3>
-                <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  点选加入歌词
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {popularMemes.map((meme) => (
-                <button
-                  key={meme}
-                  onClick={() => toggleMeme(meme)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-                    state.lyrics.selectedMemes.includes(meme)
-                      ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06] hover:text-white/70'
-                  }`}
-                >
-                  #{meme}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* 自我描述输入 */}
+      <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="material-symbols-outlined text-violet-400 text-lg">person</span>
+          <span className="text-white font-medium text-sm font-sans">自我描述</span>
+          <span className="text-white/30 text-xs">职业、爱好、想吐槽的...</span>
         </div>
+        <textarea
+          value={state.lyrics.selfDescription}
+          onChange={(e) => setSelfDescription(e.target.value)}
+          placeholder="例如：程序员，喜欢打游戏，最近在减肥，想吐槽一下加班生活..."
+          className="w-full h-24 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 placeholder:text-white/20 font-sans"
+        />
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-white/30 text-xs font-sans">越具体，歌词越有个性</span>
+          <span className="text-white/25 text-xs font-mono">{state.lyrics.selfDescription.length}/200</span>
+        </div>
+      </div>
 
-        {/* Right Column - Lyrics Output */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="w-full group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 to-emerald-500/10 border border-violet-500/20 hover:border-violet-500/40 transition-all duration-500 btn-press"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-500/0 via-violet-500/10 to-violet-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <div className="relative flex items-center justify-center gap-3">
-              <span className={`material-symbols-outlined text-2xl ${isGenerating ? 'animate-spin' : 'text-violet-400'}`}>
-                {isGenerating ? 'progress_activity' : 'auto_awesome'}
-              </span>
-              <span className="text-white font-semibold text-lg font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                {isGenerating ? 'AI 正在创作中...' : '生成歌词'}
-              </span>
-            </div>
-          </button>
+      {/* 可折叠的热点/热梗选择 */}
+      <div>
+        <button
+          onClick={() => setShowTopics(!showTopics)}
+          className="flex items-center gap-2 text-white/50 hover:text-white/70 text-sm transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">local_fire_department</span>
+          <span className="font-sans">热点话题 & 流行梗</span>
+          <span className="text-white/25 text-xs">（可选）</span>
+          {(state.lyrics.selectedTopics.length + state.lyrics.selectedMemes.length) > 0 && (
+            <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs flex items-center justify-center">
+              {state.lyrics.selectedTopics.length + state.lyrics.selectedMemes.length}
+            </span>
+          )}
+          <span className={`material-symbols-outlined text-base transition-transform ${showTopics ? 'rotate-180' : ''}`}>
+            expand_more
+          </span>
+        </button>
 
-          {/* Error Display */}
-          {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
-              <span className="material-symbols-outlined text-red-400 text-lg">error</span>
-              <div className="flex-1">
-                <p className="text-red-400 text-sm font-medium font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  {error}
-                </p>
-                <button
-                  onClick={handleGenerate}
-                  className="text-red-400/70 text-xs mt-2 hover:text-red-400 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-                >
-                  点击重试
-                </button>
+        {showTopics && (
+          <div className="mt-3 space-y-3 animate-fade-in">
+            {/* 热点话题 */}
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <span className="text-white/40 text-xs font-sans mb-2 block">热点话题</span>
+              <div className="flex flex-wrap gap-2">
+                {hotTopics.map((topic) => (
+                  <button
+                    key={topic.id}
+                    onClick={() => toggleTopic(topic.id)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all font-sans ${
+                      state.lyrics.selectedTopics.includes(topic.id)
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    {topic.hot && <span className="mr-1">🔥</span>}
+                    {topic.name}
+                  </button>
+                ))}
               </div>
+            </div>
+
+            {/* 流行梗 */}
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <span className="text-white/40 text-xs font-sans mb-2 block">流行梗</span>
+              <div className="flex flex-wrap gap-2">
+                {popularMemes.map((meme) => (
+                  <button
+                    key={meme}
+                    onClick={() => toggleMeme(meme)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all font-sans ${
+                      state.lyrics.selectedMemes.includes(meme)
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    #{meme}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 生成歌词按钮 - 始终可见 */}
+      <button
+        onClick={handleGenerate}
+        disabled={isGenerating}
+        className={`w-full group relative overflow-hidden p-5 rounded-2xl border-2 border-dashed transition-all duration-300 btn-press ${
+          isGenerating
+            ? 'bg-violet-500/10 border-violet-500/30'
+            : 'bg-white/[0.02] border-white/[0.1] hover:bg-white/[0.04] hover:border-violet-500/30'
+        }`}
+      >
+        <div className="relative flex items-center justify-center gap-3">
+          <span className={`material-symbols-outlined text-2xl ${isGenerating ? 'animate-spin text-violet-400' : 'text-violet-400'}`}>
+            {isGenerating ? 'progress_activity' : 'auto_awesome'}
+          </span>
+          <span className="text-white font-semibold text-base font-sans">
+            {isGenerating ? 'AI 正在创作中...' : '生成歌词'}
+          </span>
+        </div>
+      </button>
+
+      {/* Error */}
+      {error && (
+        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-2">
+          <span className="material-symbols-outlined text-red-400 text-base">error</span>
+          <p className="text-red-400 text-sm font-sans flex-1">{error}</p>
+          <button onClick={handleGenerate} className="text-red-400/70 text-xs hover:text-red-400 font-sans">重试</button>
+        </div>
+      )}
+
+      {/* 生成的歌词 - 紧跟生成按钮 */}
+      {state.lyrics.generatedLyrics.length > 0 && (
+        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-violet-400 text-lg">lyrics</span>
+              <span className="text-white font-medium text-sm font-sans">生成歌词</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`p-1.5 rounded-lg transition-all text-xs ${
+                  isEditing ? 'bg-violet-500/20 text-violet-400' : 'bg-white/[0.03] text-white/40 hover:text-white/60'
+                }`}
+              >
+                <span className="material-symbols-outlined text-base">{isEditing ? 'check' : 'edit'}</span>
+              </button>
+              <button
+                onClick={handleGenerate}
+                className="p-1.5 rounded-lg bg-white/[0.03] text-white/40 hover:text-white/60 transition-all text-xs"
+              >
+                <span className="material-symbols-outlined text-base">refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-2">
+              <textarea
+                value={editedLyrics}
+                onChange={(e) => setEditedLyrics(e.target.value)}
+                className="w-full h-60 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-sans leading-relaxed"
+              />
+              <button
+                onClick={handleSaveEdit}
+                className="w-full py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm font-medium hover:bg-violet-500/30 transition-colors font-sans"
+              >
+                保存修改
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 h-60 overflow-y-auto">
+              <pre className="text-white/70 text-sm whitespace-pre-wrap font-sans leading-relaxed">
+                {state.lyrics.generatedLyrics}
+              </pre>
             </div>
           )}
 
-          {/* Lyrics Display/Edit */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white/60 text-xl">
-                    lyrics
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    生成歌词
-                  </h3>
-                  <p className="text-white/30 text-xs font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                    可编辑修改
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className={`p-2 rounded-lg transition-all ${
-                    isEditing
-                      ? 'bg-violet-500/20 text-violet-400'
-                      : 'bg-white/[0.03] text-white/40 hover:text-white/60'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-lg">{isEditing ? 'check' : 'edit'}</span>
-                </button>
-                <button
-                  onClick={handleGenerate}
-                  className="p-2 rounded-lg bg-white/[0.03] text-white/40 hover:text-white/60 transition-all"
-                >
-                  <span className="material-symbols-outlined text-lg">refresh</span>
-                </button>
-              </div>
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.04]">
+            <span className="flex items-center gap-1.5 text-xs text-white/40">
+              <span className="material-symbols-outlined text-sm">music_note</span>
+              约 30 秒
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-white/40">
+              <span className="material-symbols-outlined text-sm">text_fields</span>
+              {state.lyrics.generatedLyrics.length} 字
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 输入引导示例 - 歌词未生成时 */}
+      {!state.lyrics.generatedLyrics && (
+        <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-violet-400 text-sm">lightbulb</span>
+            <span className="text-violet-400 text-xs font-medium font-sans">填写技巧</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <p className="text-white/40 text-xs mb-0.5 font-sans">你填写：</p>
+              <p className="text-white/50 text-xs italic font-sans">"程序员，喜欢打游戏，最近在减肥"</p>
             </div>
-
-            {isEditing ? (
-              <div className="space-y-3">
-                <textarea
-                  value={editedLyrics}
-                  onChange={(e) => setEditedLyrics(e.target.value)}
-                  className="w-full h-80 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-white/80 text-sm resize-none focus:outline-none focus:border-violet-500/30 font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed"
-                />
-                <button
-                  onClick={handleSaveEdit}
-                  className="w-full py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm font-medium hover:bg-violet-500/30 transition-colors font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-                >
-                  保存修改
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 h-80 overflow-y-auto">
-                <pre className="text-white/70 text-sm whitespace-pre-wrap font-['PingFang_SC','Noto_Sans_SC',sans-serif] leading-relaxed">
-                  {state.lyrics.generatedLyrics || '点击上方「生成歌词」按钮开始创作...'}
-                </pre>
-              </div>
-            )}
-
-            {/* Stats */}
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/[0.04]">
-              <div className="flex items-center gap-2 text-xs text-white/40">
-                <span className="material-symbols-outlined text-base">music_note</span>
-                <span>约 30 秒</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-white/40">
-                <span className="material-symbols-outlined text-base">text_fields</span>
-                <span>{state.lyrics.generatedLyrics.length} 字</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-white/40">
-                <span className="material-symbols-outlined text-base">format_list_numbered</span>
-                <span>4 段落</span>
-              </div>
+            <span className="material-symbols-outlined text-white/20 text-lg">arrow_forward</span>
+            <div className="flex-1">
+              <p className="text-white/40 text-xs mb-0.5 font-sans">生成歌词：</p>
+              <p className="text-emerald-400/70 text-xs italic font-sans">"代码敲到凌晨三点半，减肥计划又拖延..."</p>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Navigation - 固定在底部 */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
-          <div className="flex flex-col-reverse sm:flex-row justify-between items-end gap-4">
-            <div className="w-full sm:w-auto">
-              <button
-                onClick={onPrev}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/[0.03] transition-all min-h-[48px] w-full sm:w-auto font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
-              >
-                <span className="material-symbols-outlined text-lg">arrow_back</span>
-                上一步
-              </button>
-            </div>
-            {/* 下一步预览 */}
-            <div className="hidden md:block text-right">
-              <p className="text-white/30 text-xs mb-1 font-['PingFang_SC','Noto_Sans_SC',sans-serif]">下一步</p>
-              <div className="flex items-center justify-end gap-2">
-                <span className="text-white/50 text-sm font-['PingFang_SC','Noto_Sans_SC',sans-serif]">
-                  生成你的方言 Rap，听到自己的声音！
-                </span>
-                <span className="material-symbols-outlined text-emerald-400 text-lg">play_circle</span>
-              </div>
-            </div>
-            <button
-              onClick={onNext}
-              disabled={!canProceed}
-              className={`group inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 active:scale-95 min-h-[48px] w-full sm:w-auto btn-press font-['PingFang_SC','Noto_Sans_SC',sans-serif] ${
-                canProceed
-                  ? 'bg-white text-black hover:shadow-lg hover:shadow-white/20 animate-pulse-subtle'
-                  : 'bg-white/10 text-white/40 cursor-not-allowed'
-              }`}
-            >
-              {canProceed ? '下一步：生成音乐' : '请先生成歌词'}
-              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

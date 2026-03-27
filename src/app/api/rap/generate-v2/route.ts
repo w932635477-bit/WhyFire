@@ -1,13 +1,11 @@
 /**
  * Rap 生成 API V2
- * 使用 Suno + Seed-VC 方案生成方言 Rap
+ * 使用 SunoAPI Add Vocals + Seed-VC 方案生成方言 Rap
  *
- * 5 步流程：
- * 1. 歌词生成（Claude API）
- * 2. Suno 生成 Rap（AI 音色）
- * 3. Demucs 人声分离
- * 4. Seed-VC 零样本音色替换
- * 5. FFmpeg 混音合成
+ * 3 步流程：
+ * 1. 歌词生成（Claude API，根据 BGM 时长约束字数）
+ * 2. SunoAPI Add Vocals（在用户 BGM 上生成人声，节拍自动匹配）
+ * 3. Seed-VC 零样本音色替换 → 上传 OSS
  *
  * POST /api/rap/generate-v2
  * Body: { userId, userDescription, dialect, referenceAudioId, bgmId?, lyrics? }
@@ -113,18 +111,11 @@ export const POST = withOptionalAuth(async (request: NextRequest): Promise<NextR
 
     // 检查服务状态
     const services = await generator.checkServices()
-    console.log(`[API V2] 服务状态: Suno=${services.suno}, SeedVC=${services.seedvc}, Demucs=${services.demucs}, FFmpeg=${services.ffmpeg}`)
+    console.log(`[API V2] 服务状态: SunoAPI=${services.sunoApi}, SeedVC=${services.seedvc}`)
 
-    if (!services.suno) {
+    if (!services.sunoApi) {
       return NextResponse.json(
-        { code: 503, message: 'Suno 服务不可用' },
-        { status: 503 }
-      )
-    }
-
-    if (!services.demucs) {
-      return NextResponse.json(
-        { code: 503, message: 'Demucs 服务不可用，请启动本地服务' },
+        { code: 503, message: 'SunoAPI 服务不可用，请配置 SUNOAPI_API_KEY' },
         { status: 503 }
       )
     }
@@ -211,29 +202,18 @@ export async function GET(request: NextRequest) {
       code: 0,
       data: {
         services: {
-          suno: {
-            available: services.suno,
-            name: 'Suno AI',
-            description: 'AI 音乐生成服务',
+          sunoApi: {
+            available: services.sunoApi,
+            name: 'SunoAPI Add Vocals',
+            description: '在自定义 BGM 上生成人声',
           },
           seedvc: {
             available: services.seedvc,
             name: 'Seed-VC',
             description: '零样本声音克隆',
           },
-          demucs: {
-            available: services.demucs,
-            name: 'Demucs',
-            description: '人声分离服务',
-          },
-          ffmpeg: {
-            available: services.ffmpeg,
-            name: 'FFmpeg',
-            description: '音频处理和混音',
-          },
         },
-        allAvailable: services.suno && services.seedvc && services.demucs && services.ffmpeg,
-        minRequired: services.suno && services.demucs, // 最小需要 Suno + Demucs
+        allAvailable: services.sunoApi && services.seedvc,
       },
     })
   } catch (error) {

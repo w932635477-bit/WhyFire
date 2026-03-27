@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto'
 import { generateWithClaude } from '@/lib/ai/claude-client'
 import { buildViralLyricsPrompt, countWords, estimateDuration } from '@/lib/ai/prompts/viral-lyrics-prompts'
 import { getTimeContext, getTrendingService } from '@/lib/ai/context'
+import { getBGMById } from '@/lib/music/bgm-library'
 import type { SceneType } from '@/types'
 import type { DialectCode } from '@/types/dialect'
 
@@ -83,6 +84,8 @@ interface LyricsGenerateV2Request {
     includeTrending?: boolean
     includeMemes?: boolean
   }
+  /** UI Beat ID，用于计算歌词时长约束 */
+  bgmId?: string
 }
 
 // 响应类型
@@ -122,7 +125,8 @@ export async function POST(
       funnyInfo,
       ipInfo,
       vlogInfo,
-      timeOptions = {}
+      timeOptions = {},
+      bgmId: requestBgmId,
     } = body
 
     // 验证必填字段
@@ -193,6 +197,30 @@ export async function POST(
       }
     }
 
+    // 计算 BGM 时长约束
+    let bgmDurationSeconds: number | undefined
+    if (requestBgmId) {
+      // 将 UI Beat ID 转换为 BGM Library ID
+      const BEAT_TO_BGM: Record<string, string> = {
+        'beat-1': 'fortune-flow',
+        'beat-2': 'karma-dark',
+        'beat-3': 'apt-remix',
+        'beat-4': 'brazilian-phonk',
+        'beat-5': 'warm-gray',
+        'beat-6': 'wonderful-01',
+      }
+      const libraryId = requestBgmId.startsWith('beat-')
+        ? BEAT_TO_BGM[requestBgmId]
+        : requestBgmId
+      if (libraryId) {
+        const bgm = getBGMById(libraryId)
+        if (bgm) {
+          bgmDurationSeconds = bgm.duration
+          console.log(`[LyricsAPI] BGM 时长约束: ${bgmDurationSeconds}s (${libraryId})`)
+        }
+      }
+    }
+
     // 构建爆款歌词 Prompt
     const prompt = buildViralLyricsPrompt({
       description,
@@ -200,6 +228,7 @@ export async function POST(
       timeContext,
       trendingTopics,
       memes,
+      bgmDurationSeconds,
     })
 
     // 调用 Claude API 生成歌词

@@ -43,13 +43,40 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className={`${poppins.variable} ${inter.variable} ${spaceGrotesk.variable}`}>
       <head>
-        {/* Preconnect to Google Fonts for faster loading */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Material Symbols Outlined - 使用完整字符集 */}
+        {/* Material Symbols Outlined - 本地字体，不依赖外部 CDN */}
         <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
+          rel="preload"
+          href="/fonts/material-symbols-outlined.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @font-face {
+                font-family: 'Material Symbols Outlined';
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+              }
+              .material-symbols-outlined {
+                font-family: 'Material Symbols Outlined';
+                font-weight: normal;
+                font-style: normal;
+                font-size: 24px;
+                line-height: 1;
+                letter-spacing: normal;
+                text-transform: none;
+                display: inline-block;
+                white-space: nowrap;
+                word-wrap: normal;
+                direction: ltr;
+                -webkit-font-smoothing: antialiased;
+              }
+            `,
+          }}
         />
       </head>
       <body className="font-sans bg-dark-900 text-white min-h-screen antialiased pb-8">

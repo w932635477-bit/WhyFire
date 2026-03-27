@@ -46,10 +46,8 @@ describe('Mock Full Flow Integration', () => {
     // 检查服务状态
     const services = await generator.checkServices()
     console.log('服务状态:')
-    console.log(`  - Suno: ${services.suno ? '✓' : '✗'}`)
-    console.log(`  - Demucs: ${services.demucs ? '✓' : '✗'}`)
+    console.log(`  - SunoAPI: ${services.sunoApi ? '✓' : '✗'}`)
     console.log(`  - SeedVC: ${services.seedvc ? '✓' : '✗'}`)
-    console.log(`  - FFmpeg: ${services.ffmpeg ? '✓' : '✗'}`)
     console.log('')
   })
 

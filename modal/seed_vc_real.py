@@ -81,9 +81,9 @@ from typing import Optional
 
 
 class ConvertRequest(BaseModel):
-    """声音转换请求"""
-    source_audio_url: str
-    reference_audio_url: str
+    """声音转换请求 - 接受 base64 编码的音频数据（避免容器网络隔离问题）"""
+    source_audio_base64: str  # data:audio/wav;base64,... 格式
+    reference_audio_base64: str
     f0_condition: Optional[bool] = True  # Rap 模式必须为 True
     fp16: Optional[bool] = True
     diffusion_steps: Optional[int] = 25  # 推荐 30-50 用于歌声转换
@@ -154,8 +154,8 @@ class SeedVC:
 
         请求格式：
         {
-            "source_audio_url": "https://example.com/source.wav",
-            "reference_audio_url": "https://example.com/reference.wav",
+            "source_audio_base64": "data:audio/wav;base64,...",
+            "reference_audio_base64": "data:audio/wav;base64,...",
             "f0_condition": true,
             "fp16": true,
             "diffusion_steps": 25
@@ -165,12 +165,11 @@ class SeedVC:
         {
             "status": "completed",
             "task_id": "xxx",
-            "output_audio": "base64 or URL",
+            "output_audio": "data:audio/wav;base64,...",
             "duration": 30.0,
             "processing_time": 5.2
         }
         """
-        import httpx
         import subprocess
         import base64
         from pathlib import Path
@@ -188,19 +187,21 @@ class SeedVC:
                 output_dir = Path(tmpdir) / "output"
                 output_dir.mkdir()
 
-                # 下载源音频
-                print(f"📥 Downloading source audio: {request.source_audio_url}")
-                with httpx.Client(timeout=60) as client:
-                    resp = client.get(request.source_audio_url)
-                    resp.raise_for_status()
-                    source_path.write_bytes(resp.content)
+                # 解码 base64 源音频
+                print(f"📦 Decoding source audio from base64 ({len(request.source_audio_base64)} chars)")
+                source_b64 = request.source_audio_base64
+                if source_b64.startswith("data:"):
+                    source_b64 = source_b64.split(",", 1)[1]
+                source_path.write_bytes(base64.b64decode(source_b64))
+                print(f"  Source audio size: {source_path.stat().st_size} bytes")
 
-                # 下载参考音频
-                print(f"📥 Downloading reference audio: {request.reference_audio_url}")
-                with httpx.Client(timeout=60) as client:
-                    resp = client.get(request.reference_audio_url)
-                    resp.raise_for_status()
-                    reference_path.write_bytes(resp.content)
+                # 解码 base64 参考音频
+                print(f"📦 Decoding reference audio from base64 ({len(request.reference_audio_base64)} chars)")
+                ref_b64 = request.reference_audio_base64
+                if ref_b64.startswith("data:"):
+                    ref_b64 = ref_b64.split(",", 1)[1]
+                reference_path.write_bytes(base64.b64decode(ref_b64))
+                print(f"  Reference audio size: {reference_path.stat().st_size} bytes")
 
                 # 构建 inference 命令
                 cmd = [
@@ -264,13 +265,6 @@ class SeedVC:
                     processing_time=processing_time,
                 )
 
-        except httpx.TimeoutException:
-            return ConvertResponse(
-                status="failed",
-                task_id=task_id,
-                processing_time=time.time() - start_time,
-                error="Timeout downloading audio files"
-            )
         except subprocess.TimeoutExpired:
             return ConvertResponse(
                 status="failed",

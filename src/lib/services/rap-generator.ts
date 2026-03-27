@@ -1,24 +1,19 @@
 /**
  * Suno + Seed-VC Rap 生成器
  *
- * 5 步流程：
- * 1. Claude 生成歌词
- * 2. Suno 生成 Rap（AI 音色）
- * 3. Demucs 人声分离
- * 4. Seed-VC 零样本音色替换（无需训练）
- * 5. FFmpeg 混音
- *
- * 技术方案: Seed-VC 零样本声音克隆
+ * Add Vocals 管道（3 步）：
+ *   1. Claude 生成歌词（根据 BGM 时长约束字数）
+ *   2. SunoAPI Add Vocals（在用户 BGM 上生成人声，节拍自动匹配）
+ *   3. Seed-VC 零样本音色替换 → 上传 OSS
  */
 
 // 初始化全局代理（必须在其他 import 之前）
 import '@/lib/proxy'
 
-import { getSunoClient } from '@/lib/music/suno-client'
+import { ProxyAgent } from 'undici'
+import { getSunoApiClient, type SunoApiClient } from '@/lib/music/suno-api-client'
 import { getSeedVCClient, type ISeedVCClient } from '@/lib/audio/seed-vc-client'
-import { getDemucsClient, type SeparationResult } from '@/lib/audio/demucs-client'
-import { FFmpegProcessor } from '@/lib/audio/ffmpeg-processor'
-import { getBGMById, getDefaultBGM, type BGMMetadata } from '@/lib/music/bgm-library'
+import { getBGMById, getDefaultBGM, type BGMMetadata, toSunoStyle } from '@/lib/music/bgm-library'
 import { uploadToOSS, isOSSConfigured } from '@/lib/oss'
 import { generateWithClaude } from '@/lib/ai/claude-client'
 import { buildViralLyricsPrompt, VIRAL_DIALECT_CONFIGS } from '@/lib/ai/prompts/viral-lyrics-prompts'
@@ -31,89 +26,69 @@ import { join } from 'path'
 // 类型定义
 // ============================================================================
 
-/**
- * Rap 生成参数
- */
 export interface RapGenerationParams {
-  /** 用户 ID */
   userId: string
-  /** 用户描述（职业、爱好、想说的） */
   userDescription: string
-  /** 方言 */
   dialect: DialectCode
-  /** 用户参考音频 ID（OSS 中的参考音频，1-30 秒） */
   referenceAudioId: string
-  /** BGM ID（从 BGM 库选择，可选） */
   bgmId?: string
-  /** 歌词（可选，如果不提供则自动生成） */
   lyrics?: string
 }
 
-/**
- * 生成步骤
- */
 export type GenerationStep =
   | 'lyrics'      // 歌词生成
-  | 'suno'        // Suno 生成 Rap
-  | 'separation'  // 人声分离
-  | 'conversion'  // 音色替换
-  | 'mixing'      // 混音
+  | 'suno'        // Suno Add Vocals
+  | 'conversion'  // Seed-VC 音色替换
 
-/**
- * 生成进度
- */
 export interface GenerationProgress {
-  /** 当前步骤 */
   step: GenerationStep
-  /** 步骤名称 */
   stepName: string
-  /** 进度 (0-100) */
   progress: number
-  /** 消息 */
   message?: string
 }
 
-/**
- * Rap 生成结果
- */
 export interface RapGenerationResult {
-  /** 最终音频 URL */
   audioUrl: string
-  /** 音频时长（秒） */
   duration: number
-  /** 歌词 */
   lyrics: string
-  /** 使用的方言 */
   dialect: DialectCode
-  /** 任务 ID */
   taskId: string
+  pipeline: 'add-vocals'
 }
 
-/**
- * 进度回调
- */
 export type ProgressCallback = (progress: GenerationProgress) => void
+
+// ============================================================================
+// 方言到 Suno 风格映射
+// ============================================================================
+
+const DIALECT_RAP_STYLE: Partial<Record<DialectCode, string>> = {
+  original: 'chinese rap, mandarin rap, hip-hop, trap',
+  cantonese: 'cantonese rap, hong kong hip-hop, trap',
+  sichuan: 'sichuan rap, chinese hip-hop, trap, dialect rap',
+  dongbei: 'northeastern chinese rap, dongbei rap, hip-hop, trap',
+  shaanxi: 'shaanxi rap, chinese hip-hop, folk rap',
+  wu: 'wu dialect rap, shanghai rap, hip-hop',
+  minnan: 'taiwanese rap, minnan hip-hop, dialect rap',
+  tianjin: 'tianjin rap, northern rap, hip-hop',
+  nanjing: 'nanjing rap, jiangsu rap, hip-hop',
+}
+
+const EXCLUDED_STYLES = 'singing, melody, ballad, pop song, slow, romantic, acoustic'
 
 // ============================================================================
 // Rap 生成器
 // ============================================================================
 
-/**
- * Suno + Seed-VC Rap 生成器
- */
 export class RapGeneratorSunoRvc {
-  private sunoClient = getSunoClient()
+  private sunoApiClient: SunoApiClient = getSunoApiClient()
   private seedVCClient: ISeedVCClient = getSeedVCClient()
-  private demucsClient = getDemucsClient()
-  private ffmpegProcessor = new FFmpegProcessor()
+  // 代理 dispatcher（Next.js Worker 中 setGlobalDispatcher 可能不生效）
+  private dispatcher: any = (() => {
+    const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy
+    return proxyUrl ? new ProxyAgent(proxyUrl) : undefined
+  })()
 
-  /**
-   * 生成 Rap
-   *
-   * @param params 生成参数
-   * @param onProgress 进度回调
-   * @returns 生成结果
-   */
   async generate(
     params: RapGenerationParams,
     onProgress?: ProgressCallback
@@ -121,7 +96,6 @@ export class RapGeneratorSunoRvc {
     const { userId, userDescription, dialect, referenceAudioId, bgmId, lyrics: providedLyrics } = params
     const taskId = `${userId}-${Date.now()}`
 
-    // 获取 BGM 元数据
     const bgmMetadata = bgmId
       ? getBGMById(bgmId)
       : getDefaultBGM()
@@ -130,9 +104,13 @@ export class RapGeneratorSunoRvc {
       throw new Error(`BGM not found: ${bgmId || 'default'}. Please add BGM to the library or provide a valid bgmId.`)
     }
 
-    console.log(`[RapGenerator] Using BGM: ${bgmMetadata.id} (${bgmMetadata.bpm} BPM)`)
+    if (!this.sunoApiClient.isConfigured()) {
+      throw new Error('SunoAPI not configured. Set SUNOAPI_API_KEY in .env.local.')
+    }
 
-    // Step 1: 生成歌词
+    console.log(`[RapGenerator] BGM: ${bgmMetadata.id} (${bgmMetadata.bpm} BPM, ${bgmMetadata.duration}s)`)
+
+    // Step 1: 生成歌词（根据 BGM 时长约束字数）
     onProgress?.({
       step: 'lyrics',
       stepName: '生成歌词',
@@ -140,7 +118,7 @@ export class RapGeneratorSunoRvc {
       message: '正在生成个性化歌词...',
     })
 
-    const lyrics = providedLyrics || await this.generateLyrics(userDescription, dialect)
+    const lyrics = providedLyrics || await this.generateLyrics(userDescription, dialect, bgmMetadata.duration)
 
     onProgress?.({
       step: 'lyrics',
@@ -149,62 +127,44 @@ export class RapGeneratorSunoRvc {
       message: '歌词生成完成',
     })
 
-    // Step 2: Suno 生成 Rap（注入 BGM 信息）
+    const referenceAudioUrl = this.resolveReferenceAudioUrl(referenceAudioId)
+
+    // Step 2: Suno Add Vocals — 在用户 BGM 上生成人声
     onProgress?.({
       step: 'suno',
       stepName: '生成 Rap',
       progress: 0,
-      message: '正在使用 Suno 生成 Rap...',
+      message: '正在使用 Suno Add Vocals 生成人声（跟随你的 BGM 节拍）...',
     })
 
-    const sunoResult = await this.sunoClient.generate({
-      lyrics,
-      dialect,
-      style: 'rap',
+    const dialectStyle = DIALECT_RAP_STYLE[dialect] || 'rap, hip-hop'
+    const bgmStyle = toSunoStyle(bgmMetadata)
+    const combinedStyle = `rap, hip-hop, ${dialectStyle}, ${bgmStyle}`
+
+    const addVocalsResult = await this.sunoApiClient.addVocals({
+      uploadUrl: bgmMetadata.url,
+      prompt: this.formatLyrics(lyrics),
       title: `WhyFire ${dialect} Rap`,
-      bgm: {
-        bpm: bgmMetadata.bpm,
-        styleTags: bgmMetadata.styleTags,
-        mood: bgmMetadata.mood,
-      },
+      style: combinedStyle,
+      negativeTags: EXCLUDED_STYLES,
+      audioWeight: 0.6,
+      model: 'V4_5PLUS',
     })
 
-    if (!sunoResult.audioUrl) {
-      throw new Error('Suno generation failed: no audio URL')
+    if (!addVocalsResult.audioUrl) {
+      throw new Error(`Suno Add Vocals failed: ${addVocalsResult.error || 'no audio URL'}`)
     }
+
+    console.log(`[RapGenerator] Add Vocals completed: ${addVocalsResult.duration}s`)
 
     onProgress?.({
       step: 'suno',
       stepName: '生成 Rap',
       progress: 100,
-      message: `Rap 生成完成 (${sunoResult.duration}s)`,
+      message: `Rap 生成完成 (${addVocalsResult.duration}s)`,
     })
 
-    // Step 3: Demucs 人声分离
-    onProgress?.({
-      step: 'separation',
-      stepName: '人声分离',
-      progress: 0,
-      message: '正在分离人声和伴奏...',
-    })
-
-    const separationResult = await this.demucsClient.separate({
-      audioUrl: sunoResult.audioUrl,
-      model: 'htdemucs',
-    })
-
-    if (!separationResult.vocals) {
-      throw new Error('Demucs separation failed: no vocals')
-    }
-
-    onProgress?.({
-      step: 'separation',
-      stepName: '人声分离',
-      progress: 100,
-      message: '人声分离完成',
-    })
-
-    // Step 4: Seed-VC 零样本音色替换
+    // Step 3: Seed-VC 音色替换 + 上传
     onProgress?.({
       step: 'conversion',
       stepName: '音色替换',
@@ -212,37 +172,15 @@ export class RapGeneratorSunoRvc {
       message: '正在替换为用户音色...',
     })
 
-    // 验证参考音频 URL
-    // referenceAudioId 应该是完整的 OSS URL（从上传 API 获取）
-    const referenceAudioUrl = referenceAudioId.startsWith('http')
-      ? referenceAudioId  // 已经是完整 URL
-      : (() => {
-          // 向后兼容：如果不是完整 URL，尝试构建（但这不是推荐方式）
-          const bucket = process.env.OSS_BUCKET
-          const region = process.env.OSS_REGION || 'oss-cn-beijing'
-          console.warn('[RapGenerator] referenceAudioId should be a complete URL from upload API')
-          return `https://${bucket}.${region}.aliyuncs.com/voice-references/${referenceAudioId}`
-        })()
-
-    console.log(`[RapGenerator] Reference audio: ${referenceAudioUrl}`)
-
     const seedVCResult = await this.seedVCClient.convert({
-      sourceAudio: separationResult.vocals,
+      sourceAudio: addVocalsResult.audioUrl,
       referenceAudio: referenceAudioUrl,
-      f0Condition: true,  // Rap 模式必须启用 F0 条件化
+      f0Condition: true,
       fp16: true,
     })
 
-    // 详细错误处理
     if (!seedVCResult.outputAudio) {
-      const errorMsg = seedVCResult.error || 'Unknown error - no output generated'
-      console.error('[RapGenerator] Seed-VC conversion failed:', {
-        status: seedVCResult.status,
-        error: errorMsg,
-        taskId: seedVCResult.taskId,
-        processingTime: seedVCResult.processingTime,
-      })
-      throw new Error(`Seed-VC 音色转换失败: ${errorMsg}`)
+      throw new Error(`Seed-VC 音色转换失败: ${seedVCResult.error || 'Unknown error'}`)
     }
 
     onProgress?.({
@@ -252,133 +190,109 @@ export class RapGeneratorSunoRvc {
       message: '音色替换完成',
     })
 
-    // Step 5: FFmpeg 混音（使用用户指定的 BGM）
-    onProgress?.({
-      step: 'mixing',
-      stepName: '混音合成',
-      progress: 0,
-      message: '正在与 BGM 混音...',
-    })
-
-    // 下载 Seed-VC 输出音频
-    const convertedAudioUrl = seedVCResult.outputAudio!
-    if (!convertedAudioUrl.startsWith('http')) {
-      throw new Error(`Seed-VC output must be a full URL, got: ${convertedAudioUrl}`)
-    }
-
-    console.log(`[RapGenerator] Downloading Seed-VC output: ${convertedAudioUrl}`)
-    const convertedAudioRes = await fetch(convertedAudioUrl, {
-      signal: AbortSignal.timeout(60000),
-    })
-    if (!convertedAudioRes.ok) {
-      throw new Error(`Failed to download Seed-VC audio: ${convertedAudioRes.status}`)
-    }
-    const convertedAudioBuffer = Buffer.from(await convertedAudioRes.arrayBuffer())
-
-    // 下载用户指定的 BGM（而不是 Demucs 分离的伴奏）
-    console.log(`[RapGenerator] Downloading BGM: ${bgmMetadata.url}`)
-    const bgmRes = await fetch(bgmMetadata.url, {
-      signal: AbortSignal.timeout(60000),
-    })
-    if (!bgmRes.ok) {
-      throw new Error(`Failed to download BGM: ${bgmRes.status}`)
-    }
-    const bgmBuffer = Buffer.from(await bgmRes.arrayBuffer())
-
-    // 计算时长
-    const vocalDuration = seedVCResult.duration || sunoResult.duration || 0
-
-    // 决定是否循环 BGM
-    const shouldLoopBgm = bgmMetadata.duration > 0 && bgmMetadata.duration < vocalDuration * 0.9
-
-    console.log(`[RapGenerator] Mixing: vocal=${vocalDuration}s, bgm=${bgmMetadata.duration}s, loop=${shouldLoopBgm}`)
-
-    // 混音
-    const mixResult = await this.ffmpegProcessor.mixTracks(convertedAudioBuffer, bgmBuffer, {
-      vocalVolume: 1.0,
-      bgmVolume: 0.3,
-      loopBgm: shouldLoopBgm,
-    })
-
-    // 上传到 OSS（优先）或保存到本地
-    let audioUrl: string
-
-    if (isOSSConfigured()) {
-      // 上传到 OSS，返回公网可访问的 URL
-      const ossResult = await uploadToOSS(
-        mixResult.audioBuffer!,
-        `final-rap-${taskId}.mp3`,
-        { folder: 'rap', contentType: 'audio/mpeg' }
-      )
-
-      if (ossResult.success && ossResult.url) {
-        // 使用代理 URL 以兼容 COEP (Cross-Origin-Embedder-Policy)
-        audioUrl = this.getProxiedAudioUrl(ossResult.url)
-        console.log(`[RapGenerator] Uploaded to OSS: ${ossResult.url}`)
-        console.log(`[RapGenerator] Proxied URL: ${audioUrl}`)
-      } else {
-        console.warn(`[RapGenerator] OSS upload failed: ${ossResult.error}, falling back to local file`)
-        // 回退到本地文件
-        audioUrl = await this.saveToLocal(mixResult.audioBuffer!, taskId)
-      }
-    } else {
-      // OSS 未配置，保存到本地
-      console.log('[RapGenerator] OSS not configured, saving to local file')
-      audioUrl = await this.saveToLocal(mixResult.audioBuffer!, taskId)
-    }
-
-    onProgress?.({
-      step: 'mixing',
-      stepName: '混音合成',
-      progress: 100,
-      message: '混音完成',
-    })
+    // 上传到 OSS
+    const audioUrl = await this.uploadResult(seedVCResult.outputAudio, taskId)
 
     return {
       audioUrl,
-      duration: mixResult.processedDuration || 0,
+      duration: seedVCResult.duration || addVocalsResult.duration || 0,
       lyrics,
       dialect,
       taskId,
+      pipeline: 'add-vocals',
     }
   }
 
-  /**
-   * 保存音频到本地文件
-   * 注意：本地文件 URL (file://) 无法在浏览器中直接访问
-   */
-  private async saveToLocal(audioBuffer: Buffer, taskId: string): Promise<string> {
-    const outputDir = join(process.cwd(), 'temp')
-    if (!existsSync(outputDir)) {
-      mkdirSync(outputDir, { recursive: true })
+  // ---------------------------------------------------------------------------
+  // 工具方法
+  // ---------------------------------------------------------------------------
+
+  private resolveReferenceAudioUrl(referenceAudioId: string): string {
+    if (referenceAudioId.startsWith('http')) {
+      return referenceAudioId
     }
-    const outputFileName = `final-rap-${taskId}.mp3`
-    const outputPath = join(outputDir, outputFileName)
+    const bucket = process.env.OSS_BUCKET
+    const region = process.env.OSS_REGION || 'oss-cn-beijing'
+    console.warn('[RapGenerator] referenceAudioId should be a complete URL from upload API')
+    return `https://${bucket}.${region}.aliyuncs.com/voice-references/${referenceAudioId}`
+  }
+
+  private async downloadAudio(source: string): Promise<Buffer> {
+    if (source.startsWith('data:audio')) {
+      const base64Data = source.split(',')[1]
+      return Buffer.from(base64Data!, 'base64')
+    }
+
+    console.log(`[RapGenerator] Downloading: ${source}`)
+    const res = await fetch(source, {
+      signal: AbortSignal.timeout(60000),
+      dispatcher: this.dispatcher,
+    } as any)
+    if (!res.ok) throw new Error(`Failed to download audio: ${res.status} from ${source}`)
+    return Buffer.from(await res.arrayBuffer())
+  }
+
+  private async uploadResult(
+    audioData: string | Buffer,
+    taskId: string,
+    contentType: string = 'audio/mpeg'
+  ): Promise<string> {
+    const buffer = typeof audioData === 'string'
+      ? await this.downloadAudio(audioData)
+      : audioData
+
+    if (isOSSConfigured()) {
+      const ossResult = await uploadToOSS(buffer, `final-rap-${taskId}.mp3`, {
+        folder: 'rap',
+        contentType,
+      })
+
+      if (ossResult.success && ossResult.url) {
+        const audioUrl = this.getProxiedAudioUrl(ossResult.url)
+        console.log(`[RapGenerator] Uploaded to OSS: ${ossResult.url}`)
+        return audioUrl
+      }
+
+      console.warn(`[RapGenerator] OSS upload failed: ${ossResult.error}, saving locally`)
+    }
+
+    return this.saveToLocal(buffer, taskId)
+  }
+
+  private saveToLocal(audioBuffer: Buffer, taskId: string): string {
+    const outputDir = join(process.cwd(), 'temp')
+    if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true })
+    const outputPath = join(outputDir, `final-rap-${taskId}.mp3`)
     writeFileSync(outputPath, audioBuffer)
     console.log(`[RapGenerator] Saved to local: ${outputPath}`)
     return `file://${outputPath}`
   }
 
-  /**
-   * 获取代理音频 URL
-   * 通过 /api/audio-proxy 代理 OSS 资源，添加 CORP 头以兼容 COEP
-   *
-   * @param ossUrl OSS 原始 URL
-   * @returns 代理后的 URL
-   */
   private getProxiedAudioUrl(ossUrl: string): string {
-    // 解析 OSS URL，提取路径
-    // 例如: https://whyfire-02.oss-cn-beijing.aliyuncs.com/rap/xxx.mp3 -> rap/xxx.mp3
     const ossPath = ossUrl.replace(/^https?:\/\/[^/]+\//, '')
     return `/api/audio-proxy?path=${encodeURIComponent(ossPath)}`
   }
 
-  /**
-   * 生成歌词（调用 Claude API）
-   * 基于《八方来财》《野狼disco》等爆款分析，设计传播性强的歌词
-   */
-  private async generateLyrics(description: string, dialect: DialectCode): Promise<string> {
-    // 获取时效性上下文（节日/热点/热梗）
+  private formatLyrics(lyrics: string): string {
+    if (lyrics.includes('[Verse]') || lyrics.includes('[Chorus]')) {
+      return lyrics
+    }
+    const lines = lyrics.split('\n').filter(line => line.trim())
+    const formatted: string[] = ['[Verse 1]']
+    let lineCount = 0
+    for (const line of lines) {
+      formatted.push(line)
+      lineCount++
+      if (lineCount === 4) {
+        formatted.push('')
+        formatted.push('[Chorus]')
+        lineCount = 0
+      }
+    }
+    return formatted.join('\n')
+  }
+
+  private async generateLyrics(description: string, dialect: DialectCode, bgmDuration: number): Promise<string> {
     const timeContext = getTimeContext()
     let trendingTopics: Awaited<ReturnType<ReturnType<typeof getTrendingService>['getTrendingTopics']>> | undefined
     let memes: Awaited<ReturnType<ReturnType<typeof getTrendingService>['getInternetMemes']>> | undefined
@@ -388,16 +302,16 @@ export class RapGeneratorSunoRvc {
       trendingTopics = await trendingService.getTrendingTopics({ limit: 3 })
       memes = await trendingService.getInternetMemes()
     } catch {
-      // 时效性数据非关键，失败不影响核心功能
+      // 时效性数据非关键
     }
 
-    // 构建爆款歌词 Prompt
     const prompt = buildViralLyricsPrompt({
       description,
       dialect,
       timeContext,
       trendingTopics,
       memes,
+      bgmDurationSeconds: bgmDuration,
     })
 
     try {
@@ -405,50 +319,33 @@ export class RapGeneratorSunoRvc {
         maxTokens: 2048,
         temperature: 0.9,
       })
-
       return lyrics.trim()
     } catch (error) {
-      // Claude API 失败时回退到简单模板
       console.error('Claude 歌词生成失败，使用回退模板:', error)
       const config = VIRAL_DIALECT_CONFIGS[dialect]
-
-      return `[Chorus]
-${config.goldenPhrases[0]}
-${config.culturalSymbols[0]}里的故事
-`
+      return `[Chorus]\n${config.goldenPhrases[0]}\n${config.culturalSymbols[0]}里的故事\n`
     }
   }
 
-  /**
-   * 检查所有服务可用性
-   */
   async checkServices(): Promise<{
-    suno: boolean
+    sunoApi: boolean
     seedvc: boolean
-    demucs: boolean
-    ffmpeg: boolean
   }> {
-    const [suno, seedvc, demucs] = await Promise.all([
-      this.sunoClient.isConfigured(),
+    const [sunoApi, seedvc] = await Promise.all([
+      this.sunoApiClient.isConfigured(),
       this.seedVCClient.isAvailable(),
-      this.demucsClient.isAvailable(),
     ])
 
-    const ffmpeg = await this.ffmpegProcessor.isAvailable()
-
-    return { suno, seedvc, demucs, ffmpeg }
+    return { sunoApi, seedvc }
   }
 }
 
 // ============================================================================
-// 单例实例
+// 单例
 // ============================================================================
 
 let generatorInstance: RapGeneratorSunoRvc | null = null
 
-/**
- * 获取 Rap 生成器实例
- */
 export function getRapGenerator(): RapGeneratorSunoRvc {
   if (!generatorInstance) {
     generatorInstance = new RapGeneratorSunoRvc()
@@ -456,13 +353,6 @@ export function getRapGenerator(): RapGeneratorSunoRvc {
   return generatorInstance
 }
 
-// ============================================================================
-// 便捷函数
-// ============================================================================
-
-/**
- * 生成 Rap（便捷函数）
- */
 export async function generateRap(
   params: RapGenerationParams,
   onProgress?: ProgressCallback
