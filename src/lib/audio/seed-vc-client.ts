@@ -177,6 +177,38 @@ export class SeedVCModalClient implements ISeedVCClient {
 
       const result = await response.json()
 
+      // 详细日志记录
+      console.log('[SeedVC-Modal] Modal response:', JSON.stringify({
+        status: result.status,
+        task_id: result.task_id,
+        has_output: !!result.output_audio,
+        output_type: result.output_audio?.substring(0, 50) + '...',
+        duration: result.duration,
+        error: result.error,
+      }, null, 2))
+
+      // 检查响应状态
+      if (result.status === 'failed') {
+        console.error('[SeedVC-Modal] Modal returned failed status:', result.error)
+        return {
+          taskId: result.task_id || `failed-${Date.now()}`,
+          status: 'failed',
+          error: result.error || 'Modal conversion failed',
+          processingTime: Date.now() - startTime,
+        }
+      }
+
+      // 检查输出音频是否存在
+      if (!result.output_audio) {
+        console.error('[SeedVC-Modal] No output_audio in response. Full result:', JSON.stringify(result))
+        return {
+          taskId: result.task_id || `failed-${Date.now()}`,
+          status: 'failed',
+          error: result.error || 'No output audio generated. Check Modal service logs.',
+          processingTime: Date.now() - startTime,
+        }
+      }
+
       // Modal 返回的格式: { status, task_id, output_audio, duration, processing_time, error }
       return {
         taskId: result.task_id || `vc-${Date.now()}`,

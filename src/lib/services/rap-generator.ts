@@ -231,8 +231,16 @@ export class RapGeneratorSunoRvc {
       fp16: true,
     })
 
+    // 详细错误处理
     if (!seedVCResult.outputAudio) {
-      throw new Error('Seed-VC conversion failed: no output audio')
+      const errorMsg = seedVCResult.error || 'Unknown error - no output generated'
+      console.error('[RapGenerator] Seed-VC conversion failed:', {
+        status: seedVCResult.status,
+        error: errorMsg,
+        taskId: seedVCResult.taskId,
+        processingTime: seedVCResult.processingTime,
+      })
+      throw new Error(`Seed-VC 音色转换失败: ${errorMsg}`)
     }
 
     onProgress?.({
