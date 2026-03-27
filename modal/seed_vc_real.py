@@ -55,6 +55,9 @@ image = (
         "torchaudio",
         "omegaconf",
         "hydra-core",
+        "munch",
+        "rotary-embedding-torch",
+        "torchdiffeq",
         # HuggingFace
         "huggingface_hub",
     )
