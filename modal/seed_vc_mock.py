@@ -11,9 +11,6 @@ Seed-VC Mock 版本 - 快速测试 Modal 部署
 
 测试：
   modal serve modal/seed_vc_mock.py
-
-查看：
-  modal app show seed-vc-mock
 """
 
 import modal
@@ -25,78 +22,97 @@ app = modal.App("seed-vc-mock")
 # 定义容器镜像（轻量级）
 image = (
     modal.Image.debian_slim()
-    .pip_install("fastapi>=0.104", "python-multipart", "httpx")
+    .pip_install("fastapi>=0.104", "python-multipart", "httpx", "pydantic")
 )
 
 
-@app.cls(
-    image=image,
-    timeout=60,
-    memory=512,
-)
-class SeedVCMock:
-    """Mock Seed-VC 服务"""
+# ============================================================================
+# Web Endpoints - 使用独立函数而不是类方法
+# ============================================================================
 
-    @modal.fastapi_endpoint(method="POST")
-    async def convert(self, data: dict):
-        """
-        Mock 声音转换
-
-        请求格式：
-        {
-            "source_audio_url": "https://example.com/source.mp3",
-            "reference_audio_url": "https://example.com/reference.mp3",
-            "f0_condition": true,
-            "fp16": true
-        }
-
-        响应格式：
-        {
-            "status": "completed",
-            "task_id": "mock-xxx",
-            "output_audio": "...",
-            "duration": 30.0,
-            "processing_time": 0.1
-        }
-        """
-        source_url = data.get("source_audio_url")
-        reference_url = data.get("reference_audio_url")
-
-        if not source_url or not reference_url:
-            return {"error": "Missing source_audio_url or reference_audio_url"}, 400
-
-        # Mock: 直接返回源音频 URL
-        task_id = f"mock-{os.urandom(8).hex()}"
-
-        return {
-            "status": "completed",
-            "task_id": task_id,
-            "output_audio": source_url,  # Mock: 返回源音频
-            "duration": 30.0,
-            "processing_time": 0.1,
-        }
-
-    @modal.fastapi_endpoint(method="GET")
-    async def health(self):
-        """健康检查"""
-        return {
-            "status": "ok",
-            "mode": "mock",
-            "version": "0.1.0",
-            "service": "seed-vc-mock",
-        }
-
-    @modal.fastapi_endpoint(method="GET")
-    async def status(self, task_id: str):
-        """查询任务状态（Mock 总是返回完成）"""
-        return {
-            "task_id": task_id,
-            "status": "completed",
-            "progress": 100,
-        }
+from pydantic import BaseModel
+from typing import Optional
 
 
+class ConvertRequest(BaseModel):
+    """声音转换请求"""
+    source_audio_url: str
+    reference_audio_url: str
+    f0_condition: Optional[bool] = True
+    fp16: Optional[bool] = True
+
+
+class ConvertResponse(BaseModel):
+    """声音转换响应"""
+    status: str
+    task_id: str
+    output_audio: str
+    duration: float
+    processing_time: float
+
+
+@app.function(image=image, timeout=60, memory=512)
+@modal.fastapi_endpoint(method="POST", docs=True)
+def convert(request: ConvertRequest) -> ConvertResponse:
+    """
+    Mock 声音转换
+
+    请求格式：
+    {
+        "source_audio_url": "https://example.com/source.mp3",
+        "reference_audio_url": "https://example.com/reference.mp3",
+        "f0_condition": true,
+        "fp16": true
+    }
+
+    响应格式：
+    {
+        "status": "completed",
+        "task_id": "mock-xxx",
+        "output_audio": "...",
+        "duration": 30.0,
+        "processing_time": 0.1
+    }
+    """
+    # Mock: 直接返回源音频 URL
+    task_id = f"mock-{os.urandom(8).hex()}"
+
+    return ConvertResponse(
+        status="completed",
+        task_id=task_id,
+        output_audio=request.source_audio_url,  # Mock: 返回源音频
+        duration=30.0,
+        processing_time=0.1,
+    )
+
+
+@app.function(image=image)
+@modal.fastapi_endpoint(method="GET", docs=True)
+def health():
+    """健康检查"""
+    return {
+        "status": "ok",
+        "mode": "mock",
+        "version": "0.2.0",
+        "service": "seed-vc-mock",
+    }
+
+
+@app.function(image=image)
+@modal.fastapi_endpoint(method="GET", docs=True)
+def status(task_id: str):
+    """查询任务状态（Mock 总是返回完成）"""
+    return {
+        "task_id": task_id,
+        "status": "completed",
+        "progress": 100,
+    }
+
+
+# ============================================================================
 # 本地测试入口
+# ============================================================================
+
 @app.local_entrypoint()
 def test():
     """本地测试"""
@@ -112,7 +128,10 @@ def test():
     print("  npx tsx scripts/verify-modal-api.ts")
 
 
+# ============================================================================
 # 部署指南
+# ============================================================================
+
 if __name__ == "__main__":
     print("""
 ╔══════════════════════════════════════════════════════════╗
@@ -123,7 +142,7 @@ if __name__ == "__main__":
    pip install modal
 
 2. 配置认证:
-   modal token new
+   modal setup
 
 3. 测试本地运行:
    modal serve modal/seed_vc_mock.py
@@ -132,7 +151,7 @@ if __name__ == "__main__":
    modal deploy modal/seed_vc_mock.py
 
 5. 获取 Web Endpoint URL:
-   modal app show seed-vc-mock
+   查看 Actions 日志中的 URL
 
 6. 配置 .env.local:
    MODAL_WEB_ENDPOINT_URL=https://your-workspace--seed-vc-mock.modal.run
