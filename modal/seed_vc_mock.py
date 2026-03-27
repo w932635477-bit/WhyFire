@@ -165,3 +165,4 @@ if __name__ == "__main__":
 - 真实版本需要配置 GPU 和模型文件
 - 参考文档: docs/MODAL_DEPLOYMENT.md
     """)
+
