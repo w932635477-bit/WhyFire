@@ -36,30 +36,29 @@ image = (
         "wget",
     )
     .pip_install(
-        # 核心依赖
-        "torch>=2.0",
-        "torchaudio>=2.0",
+        # 核心依赖 (匹配 Seed-VC requirements)
+        "torch==2.4.0",
+        "torchvision==0.19.0",
+        "torchaudio==2.4.0",
+        "scipy==1.13.1",
+        "librosa==0.10.2",
+        "huggingface-hub>=0.28.1",
+        "munch==4.0.0",
+        "einops==0.8.0",
+        "descript-audio-codec==1.0.0",
+        "pydub==0.25.1",
+        "resemblyzer",
+        "transformers==4.46.3",
+        "soundfile==0.12.1",
+        "numpy==1.26.4",
+        "hydra-core==1.3.2",
+        "pyyaml",
+        "accelerate",
+        # Web API 依赖
         "fastapi>=0.104",
         "python-multipart",
         "httpx",
         "pydantic",
-        "numpy",
-        "scipy",
-        "soundfile",
-        "librosa",
-        # Seed-VC 依赖
-        "transformers>=4.30",
-        "diffusers>=0.21",
-        "accelerate>=0.24",
-        "einops",
-        "torchaudio",
-        "omegaconf",
-        "hydra-core",
-        "munch",
-        "rotary-embedding-torch",
-        "torchdiffeq",
-        # HuggingFace
-        "huggingface_hub",
     )
     .run_commands(
         # 克隆 Seed-VC 仓库（2025-11 归档，但仍然可用）
