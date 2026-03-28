@@ -3,6 +3,15 @@ import { Poppins, Inter, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/auth-provider'
 
+// 初始化 global-agent，使所有 HTTP 请求自动使用环境变量中的代理配置
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    require('global-agent').bootstrap()
+  } catch (error) {
+    console.warn('Failed to initialize global-agent:', error)
+  }
+}
+
 const poppins = Poppins({
   weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin'],
