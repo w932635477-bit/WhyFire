@@ -294,23 +294,25 @@ className="min-w-[44px] min-h-[44px]"
 ```
 src/
 ├── app/
-│   └── sonic-gallery/
-│       └── create/
-│           ├── page.tsx          # 主页面
-│           ├── create-context.tsx # 状态管理
-│           ├── step-1-voice-cloning.tsx
-│           ├── step-2-beat-dialect.tsx
-│           ├── step-3-lyrics-generation.tsx
-│           └── step-4-preview.tsx
+│   ├── sonic-gallery/create/    # 创作流程
+│   │   ├── page.tsx
+│   │   ├── create-context.tsx
+│   │   ├── step-1-voice-cloning.tsx
+│   │   ├── step-2-beat-dialect.tsx
+│   │   ├── step-3-lyrics-generation.tsx
+│   │   └── step-4-preview.tsx
+│   └── api/                     # API Routes
 ├── components/
-│   ├── ui/
-│   │   └── toast.tsx
-│   └── sonic-gallery/
-│       ├── top-nav-bar.tsx
-│       └── side-nav-bar.tsx
-└── lib/
-    └── services/
-        └── create-api.ts
+│   ├── features/                # 业务组件
+│   └── ui/                      # 基础组件
+├── lib/
+│   ├── ai/                      # Claude 客户端 + Prompts
+│   ├── audio/                   # Seed-VC, 音频处理
+│   ├── music/                   # SunoAPI, BGM 库
+│   ├── oss/                     # 阿里云 OSS
+│   ├── services/                # Rap 生成编排
+│   └── tts/                     # CosyVoice 声音复刻
+└── types/                       # TypeScript 类型
 ```
 
 ---
@@ -319,4 +321,5 @@ src/
 
 | 日期 | 版本 | 更改 |
 |------|------|------|
+| 2026-03-28 | 1.1 | 更新文件结构，反映当前架构 |
 | 2026-03-22 | 1.0 | 初始设计系统文档 |

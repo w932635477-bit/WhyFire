@@ -6,14 +6,14 @@
  * - BGM Library: 背景音乐库
  */
 
-// Suno 客户端导出
+// SunoAPI 客户端导出
 export {
-  getSunoClient,
-  type SunoClient,
-  type SunoModel,
-  type SunoGenerationRequest,
-  type SunoGenerationResult,
-} from './suno-client'
+  getSunoApiClient,
+  SunoApiClient,
+  type AddVocalsRequest,
+  type AddVocalsResult,
+  type SunoApiModel,
+} from './suno-api-client'
 
 // BGM 库导出
 export {

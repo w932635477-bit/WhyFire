@@ -28,8 +28,8 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: '方言回响 - AI 方言说唱创作平台',
-  description: '用 AI 克隆你的音色，在 8 种地道方言中重塑你的嘻哈灵魂。GPT-SoVITS 音色克隆，一键生成方言说唱。',
-  keywords: ['AI音乐', '方言说唱', '音色克隆', 'GPT-SoVITS', '方言Rap', 'AI创作'],
+  description: '用 AI 克隆你的音色，在 8 种地道方言中重塑你的嘻哈灵魂。Seed-VC 零样本声音克隆，一键生成方言说唱。',
+  keywords: ['AI音乐', '方言说唱', '音色克隆', 'Seed-VC', '方言Rap', 'AI创作'],
   icons: {
     icon: '/favicon.svg',
   },

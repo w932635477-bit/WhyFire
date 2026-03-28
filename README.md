@@ -1,91 +1,60 @@
 # WhyFire
 
-> AI Rap 视频一键生成器 - 输入信息，一键生成创意短视频
+> AI 方言 Rap 生成器 - 录制声音，生成你的专属方言 Rap
 
-## 功能特色
+## 功能
 
-- 4 大使用场景：产品推广、 搞笑洗脑 | IP混剪 | 日常Vlog
+- 8 种方言支持：普通话、粤语、四川话、东北话、陕西话、吴语、闽南语、天津话
 - AI 生成 Rap 歌词（Claude）
-- AI 生成 Rap 音乐（MiniMax）
-- 视频模板 + 用户上传
-- 一键合成成品
+- AI 生成 Rap 人声 + BGM（Suno Add Vocals）
+- 零样本声音克隆（Seed-VC）
+- 声音复刻注册（CosyVoice）
 
 ## 技术栈
-- **框架**: Next.js 15 + React 18
-- **样式**: Tailwind CSS
-- **AI**: Claude API + MiniMax API
-- **视频合成**: FFmpeg.wasm
 
-- **语言**: TypeScript
+- **前端**: Next.js 15 + React 18 + TypeScript + Tailwind CSS
+- **AI 歌词**: Claude API (Anthropic)
+- **音乐生成**: SunoAPI (Add Vocals)
+- **声音克隆**: Seed-VC (Modal GPU) + CosyVoice (阿里云 DashScope)
+- **文件存储**: 阿里云 OSS
+- **方言支持**: 8 种中国方言
 
 ## 快速开始
 
 ```bash
-# 安装依赖
 pnpm install
-
-# 配置环境变量
 cp .env.example .env.local
 # 编辑 .env.local 填入 API Keys
-
-# 启动开发服务器
 pnpm dev
 ```
 
 ## 环境变量
-| 变量名 | 用途 | 获取地址 |
-|--------|------|---------|
-| `ANTHROPIC_API_KEY` | Claude API | [Anthropic Console](https://console.anthropic.com/) |
-| `MINIMAX_API_KEY` | MiniMax API | [MiniMax 开放平台](https://platform.minimaxi.com/) |
-| `MINIMAX_GROUP_ID` | MiniMax Group ID | MiniMax 控制台 |
+
+| 变量名 | 用途 |
+|--------|------|
+| `ANTHROPIC_API_KEY` | Claude API（歌词生成） |
+| `SUNOAPI_API_KEY` | SunoAPI（Rap 音乐生成） |
+| `SEEDVC_ENDPOINT` | Seed-VC Modal 端点 URL |
+| `DASHSCOPE_API_KEY` | CosyVoice 声音复刻 |
+| `OSS_ACCESS_KEY_ID` | 阿里云 OSS |
+| `OSS_ACCESS_KEY_SECRET` | 阿里云 OSS |
+| `OSS_BUCKET` | 阿里云 OSS Bucket |
 
 ## 用户流程
-1. 选择场景（产品推广/搞笑/IP混剪/日常Vlog）
-2. 输入信息（根据场景不同）
-3. AI 生成 Rap 歌词
-4. AI 生成 Rap 音乐
-5. 选择视频（上传/模板）
-6. 合成成品视频
 
-7. 下载分享
+1. 录制或上传声音样本（用于声音克隆）
+2. 选择方言和 BGM
+3. 输入创意描述（AI 自动生成歌词）
+4. AI 生成 Rap（Suno 在 BGM 上合成人声）
+5. 声音替换（Seed-VC 将人声替换为用户声音）
+6. 预览和下载
 
-## 节拍同步功能
+## 生成管道
 
-视频合成支持自动节拍检测和字幕同步：
-
-### 功能特点
-
-- **自动节拍检测**: 使用 web-audio-beat-detector 分析音频 BPM
-- **智能字幕同步**: 歌词自动对齐到节拍点
-- **词级时间戳**: 为每个字符/词生成精确时间戳
-- **7种动态特效**: 所有字幕特效与音乐节奏同步
-
-### 支持的字幕特效
-
-- **增强卡拉OK (karaoke-plus)**: 逐字高亮配合光泽流动
-- **打击效果 (punch)**: 每个词带缩放冲击，与鼓点同步
-- **3D弹跳 (bounce-3d)**: 3D旋转弹跳效果
-- **故障文字 (glitch-text)**: 文字抖动配色彩分离，适合Trap
-- **霓虹脉冲 (neon-pulse)**: 霓虹呼吸灯效果，适合Chill
-- **波浪 (wave)**: 文字波浪起伏，适合Melodic
-- **爆炸 (explosion)**: 文字爆炸出现，适合Hardcore
-
-### 技术实现
-
-- BeatDetector: 音频节拍分析
-- TimestampMapper: 歌词时间戳映射
-- 与 FFmpeg.wasm 集成的完整工作流
-
-## 开发进度
-- [x] 项目初始化
-- [x] 四大场景选择
-- [x] Claude 歌词生成
-- [ ] MiniMax 音乐生成
-- [ ] 视频上传
-- [ ] FFmpeg.wasm 合成
-- [ ] 视频模板
-
-- [ ] 测试与优化
+```
+用户描述 → Claude 生成歌词 → Suno Add Vocals（BGM + 人声）→ Seed-VC 音色替换 → 成品音频
+```
 
 ## 许可证
+
 MIT

@@ -248,24 +248,6 @@ export async function cloneVoice(
 }
 
 /**
- * 获取支持的方言列表
- */
-export async function getSupportedDialects() {
-  const response = await fetch('/api/music/generate')
-  const result = await response.json()
-  return result.data?.dialects || []
-}
-
-/**
- * 获取可用的音乐风格
- */
-export async function getAvailableStyles(): Promise<string[]> {
-  const response = await fetch('/api/music/generate')
-  const result = await response.json()
-  return result.data?.styles || ['rap', 'pop', 'electronic', 'rock', 'chill']
-}
-
-/**
  * 重试包装器
  */
 export async function withRetry<T>(
