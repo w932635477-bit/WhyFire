@@ -137,7 +137,7 @@ export async function POST(
       }
 
       audioUrl = uploadResult.url
-      console.log(`[VoiceCloneAPI] Audio uploaded to OSS: ${audioUrl}`)
+      console.log('[VoiceCloneAPI] Audio uploaded to OSS')
     }
 
     // 验证参数

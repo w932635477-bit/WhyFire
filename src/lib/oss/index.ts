@@ -154,7 +154,7 @@ export async function uploadToOSS(
       const region = process.env.OSS_REGION || 'oss-cn-beijing'
       const publicUrl = `https://${bucket}.${region}.aliyuncs.com/${objectKey}`
 
-      console.log(`[OSS] File uploaded successfully: ${publicUrl}`)
+      console.log(`[OSS] File uploaded successfully: ${objectKey}`)
 
       return {
         success: true,

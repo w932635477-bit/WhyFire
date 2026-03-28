@@ -238,7 +238,7 @@ export class RapGeneratorSunoRvc {
 
       if (ossResult.success && ossResult.url) {
         const audioUrl = this.getProxiedAudioUrl(ossResult.url)
-        console.log(`[RapGenerator] Uploaded to OSS: ${ossResult.url}`)
+        console.log('[RapGenerator] Uploaded to OSS successfully')
         return audioUrl
       }
 

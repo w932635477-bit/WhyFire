@@ -86,6 +86,7 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
             language_hints: options.languageHints || ['zh'],
           },
         }),
+        signal: AbortSignal.timeout(60000), // 1 分钟超时
       })
 
       if (!response.ok) {

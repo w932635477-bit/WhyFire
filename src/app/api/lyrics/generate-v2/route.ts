@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
+import { checkRateLimit } from '@/lib/middleware/auth'
 import { generateWithClaude } from '@/lib/ai/claude-client'
 import { buildViralLyricsPrompt, countWords, estimateDuration } from '@/lib/ai/prompts/viral-lyrics-prompts'
 import { getTimeContext, getTrendingService } from '@/lib/ai/context'

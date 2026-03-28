@@ -354,6 +354,27 @@ interface RateLimitEntry {
 
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
+// 定期清理过期和过多的条目，防止内存泄漏
+const MAX_RATE_LIMIT_ENTRIES = 10000
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [key, entry] of rateLimitStore) {
+      if (entry.resetTime < now) {
+        rateLimitStore.delete(key)
+      }
+    }
+    // 如果条目过多，删除最旧的一半
+    if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+      const entries = [...rateLimitStore.entries()].sort((a, b) => a[1].resetTime - b[1].resetTime)
+      const toDelete = entries.slice(0, Math.floor(entries.length / 2))
+      for (const [key] of toDelete) {
+        rateLimitStore.delete(key)
+      }
+    }
+  }, 60000) // 每分钟清理一次
+}
+
 /**
  * 简单的速率限制检查
  *
@@ -465,6 +486,51 @@ export function withAuthAndRateLimit<T extends unknown[]>(
     response.headers.set('X-RateLimit-Limit', String(maxRequests))
     response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining))
     response.headers.set('X-RateLimit-Reset', String(rateLimit.resetTime))
+
+    return response
+  }
+}
+
+/**
+ * 独立速率限制包装器（不需要认证）
+ *
+ * 用法：
+ * export const POST = withRateLimit(async (request) => { ... }, { maxRequests: 10, windowMs: 60000 })
+ */
+export function withRateLimit<T extends unknown[]>(
+  handler: (request: NextRequest, ...args: T) => Promise<NextResponse>,
+  options: { maxRequests?: number; windowMs?: number } = {}
+): (request: NextRequest, ...args: T) => Promise<NextResponse> {
+  const { maxRequests = 10, windowMs = 60000 } = options
+
+  return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
+    const identifier =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'anonymous'
+
+    const rateLimit = checkRateLimit(identifier, maxRequests, windowMs)
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000),
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)),
+          },
+        }
+      )
+    }
+
+    const response = await handler(request, ...args)
+
+    response.headers.set('X-RateLimit-Limit', String(maxRequests))
+    response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining))
 
     return response
   }

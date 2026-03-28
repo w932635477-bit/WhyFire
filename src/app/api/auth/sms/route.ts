@@ -23,7 +23,7 @@ async function sendSMS(phoneNumber: string, code: string): Promise<boolean> {
   //   to: phoneNumber
   // })
 
-  console.log(`[SMS Mock] Sending code ${code} to ${phoneNumber}`)
+  console.log(`[SMS] Code sent to ${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`)
   return true
 }
 
@@ -85,8 +85,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Verification code sent successfully',
-      // In development, return the code for testing (remove in production!)
-      ...(process.env.NODE_ENV === 'development' && { code })
     })
   } catch (error) {
     console.error('SMS send error:', error)

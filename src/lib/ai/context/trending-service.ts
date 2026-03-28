@@ -39,6 +39,16 @@ interface TrendingConfig {
 export class TrendingService {
   private config: TrendingConfig
   private cache: Map<string, { data: TrendingTopic[]; timestamp: number }> = new Map()
+  private static MAX_CACHE_SIZE = 100
+
+  private setCache(key: string, value: { data: TrendingTopic[]; timestamp: number }): void {
+    if (this.cache.size >= TrendingService.MAX_CACHE_SIZE) {
+      // 删除最早的条目
+      const oldestKey = this.cache.keys().next().value
+      if (oldestKey !== undefined) this.cache.delete(oldestKey)
+    }
+    this.cache.set(key, value)
+  }
 
   constructor() {
     const apiKey = process.env.SERPER_API_KEY
@@ -99,7 +109,7 @@ export class TrendingService {
       const topics = this.parseSearchResults(data)
 
       // 缓存结果
-      this.cache.set(cacheKey, { data: topics, timestamp: Date.now() })
+      this.setCache(cacheKey, { data: topics, timestamp: Date.now() })
 
       return topics.slice(0, options?.limit || 5)
     } catch (error) {
@@ -147,7 +157,7 @@ export class TrendingService {
       const topics = this.parseSearchResults(data)
 
       // 缓存结果
-      this.cache.set(cacheKey, { data: topics, timestamp: Date.now() })
+      this.setCache(cacheKey, { data: topics, timestamp: Date.now() })
 
       return topics.slice(0, options?.limit || 5)
     } catch (error) {
@@ -171,7 +181,7 @@ export class TrendingService {
     const memes = this.getDefaultMemes()
 
     // 缓存结果
-    this.cache.set(cacheKey, {
+    this.setCache(cacheKey, {
       data: memes as unknown as TrendingTopic[],
       timestamp: Date.now()
     })

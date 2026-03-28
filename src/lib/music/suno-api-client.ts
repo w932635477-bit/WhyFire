@@ -131,9 +131,7 @@ export class SunoApiClient {
     }
 
     console.log('[SunoAPI] Submitting Add Vocals task')
-    console.log(`  BGM: ${request.uploadUrl}`)
-    console.log(`  Style: ${request.style}`)
-    console.log(`  Model: ${request.model || 'V4_5PLUS'}`)
+    console.log(`  Style: ${request.style}, Model: ${request.model || 'V4_5PLUS'}`)
 
     // Step 1: 提交任务
     const taskId = await this.submitTask(request)

@@ -70,7 +70,7 @@ export class DemucsClient {
 
   constructor() {
     this.apiUrl = process.env.DEMUCS_API_URL || 'http://localhost:8002'
-    this.timeout = 240000 // 4 分钟超时（Demucs 需要较长时间）
+    this.timeout = parseInt(process.env.DEMUCS_TIMEOUT || '240000', 10)
   }
 
   /**
@@ -109,7 +109,7 @@ export class DemucsClient {
   async separate(request: SeparationRequest): Promise<SeparationResult> {
     const { audioUrl, model = 'htdemucs', outputFormat = 'wav' } = request
 
-    console.log(`[Demucs] Separating audio, model: ${model}, url: ${audioUrl}`)
+    console.log(`[Demucs] Separating audio, model: ${model}`)
 
     try {
       // 下载音频文件

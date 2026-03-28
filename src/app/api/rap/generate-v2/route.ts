@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRapGenerator, type GenerationProgress } from '@/lib/services/rap-generator'
 import { getBGMById, listAllBGM } from '@/lib/music/bgm-library'
-import { withOptionalAuth } from '@/lib/middleware/auth'
+import { withOptionalAuth, checkRateLimit } from '@/lib/middleware/auth'
 import type { DialectCode } from '@/types/dialect'
 
 export const runtime = 'nodejs'
@@ -62,6 +62,15 @@ interface RapGenerateV2Response {
  * - BEARER_TOKENS: 逗号分隔的 Bearer Tokens
  */
 export const POST = withOptionalAuth(async (request: NextRequest): Promise<NextResponse<RapGenerateV2Response>> => {
+  // 速率限制：每用户每分钟 5 次 Rap 生成请求
+  const clientId = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+  const rateLimit = checkRateLimit(`rap:${clientId}`, 5, 60000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { code: 429, message: '请求过于频繁，请稍后再试', data: null as any },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)) } }
+    )
+  }
   try {
     const body: RapGenerateV2Request = await request.json()
 

@@ -93,6 +93,7 @@ export async function generateWithGLM5(
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify(requestBody),
+    signal: AbortSignal.timeout(120000), // 2 分钟超时
   })
 
   if (!response.ok) {
@@ -158,6 +159,7 @@ export async function streamWithGLM5(
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify(requestBody),
+    signal: AbortSignal.timeout(180000), // 3 分钟超时（流式可能较长）
   })
 
   if (!response.ok) {
