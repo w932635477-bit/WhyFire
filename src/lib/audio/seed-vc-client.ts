@@ -64,7 +64,7 @@ export interface ISeedVCClient {
 /**
  * Seed-VC 后端类型
  */
-export type SeedVCBackend = 'mock' | 'modal'
+export type SeedVCBackend = 'mock' | 'modal' | 'autodl'
 
 // ============================================================================
 // Mock 客户端（本地测试用）
@@ -268,6 +268,159 @@ export class SeedVCModalClient implements ISeedVCClient {
 }
 
 // ============================================================================
+// AutoDL 客户端（自托管 GPU）
+// ============================================================================
+
+export class SeedVCAutoDLClient implements ISeedVCClient {
+  private maxPollAttempts = 120
+  private pollDelayMs = 3000
+
+  private get baseUrl(): string {
+    const url = process.env.SEEDVC_AUTODL_URL
+    if (!url) throw new Error('SEEDVC_AUTODL_URL not configured')
+    return url.replace(/\/+$/, '')
+  }
+
+  async convert(request: SeedVCConversionRequest): Promise<SeedVCConversionResult> {
+    console.log('[SeedVC-AutoDL] Starting voice conversion')
+
+    const startTime = Date.now()
+
+    try {
+      // Step 1: 提交任务
+      const submitResponse = await fetch(`${this.baseUrl}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source_audio_url: request.sourceAudio,
+          reference_audio_url: request.referenceAudio,
+          f0_condition: request.f0Condition ?? true,
+          fp16: request.fp16 ?? true,
+          diffusion_steps: request.diffusionSteps ?? 10,
+          length_adjust: 1.0,
+          inference_cfg_rate: 0.7,
+        }),
+        signal: AbortSignal.timeout(30000),
+      })
+
+      if (!submitResponse.ok) {
+        const errorText = await submitResponse.text()
+        throw new Error(`提交任务失败: ${submitResponse.status} - ${errorText}`)
+      }
+
+      const submitResult = await submitResponse.json()
+      const taskId = submitResult.task_id
+
+      if (!taskId) {
+        throw new Error(`提交任务返回无效 task_id: ${JSON.stringify(submitResult)}`)
+      }
+
+      console.log(`[SeedVC-AutoDL] Task submitted: ${taskId}`)
+
+      // Step 2: 轮询结果
+      const result = await this.pollForResult(taskId)
+      result.processingTime = Date.now() - startTime
+      return result
+    } catch (error) {
+      console.error('[SeedVC-AutoDL] Conversion failed:', error)
+      return {
+        taskId: `failed-${Date.now()}`,
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        processingTime: Date.now() - startTime,
+      }
+    }
+  }
+
+  private async pollForResult(taskId: string): Promise<SeedVCConversionResult> {
+    const statusUrl = `${this.baseUrl}/status?task_id=${taskId}`
+
+    for (let attempt = 0; attempt < this.maxPollAttempts; attempt++) {
+      await this.delay(this.pollDelayMs)
+
+      try {
+        const res = await fetch(statusUrl, {
+          signal: AbortSignal.timeout(15000),
+        })
+
+        if (!res.ok) {
+          console.warn(`[SeedVC-AutoDL] Poll ${attempt + 1}: HTTP ${res.status}`)
+          continue
+        }
+
+        const data = await res.json()
+
+        console.log(`[SeedVC-AutoDL] Poll ${attempt + 1}: status=${data.status}` +
+          (data.duration ? ` duration=${data.duration}s` : ''))
+
+        if (data.status === 'completed') {
+          return {
+            taskId: data.task_id || taskId,
+            status: 'completed',
+            outputAudio: data.output_audio,
+            duration: data.duration,
+            processingTime: data.processing_time,
+          }
+        }
+
+        if (data.status === 'failed') {
+          return {
+            taskId: data.task_id || taskId,
+            status: 'failed',
+            error: data.error || 'Conversion failed',
+          }
+        }
+      } catch (e) {
+        console.warn(`[SeedVC-AutoDL] Poll ${attempt + 1} error:`, e instanceof Error ? e.message : String(e))
+      }
+    }
+
+    return {
+      taskId,
+      status: 'failed',
+      error: `轮询超时（${this.maxPollAttempts * this.pollDelayMs / 1000} 秒）`,
+    }
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/health`, {
+        signal: AbortSignal.timeout(10000),
+      })
+      return res.ok
+    } catch {
+      return false
+    }
+  }
+
+  async getStatus(taskId: string): Promise<SeedVCConversionResult> {
+    try {
+      const res = await fetch(`${this.baseUrl}/status?task_id=${taskId}`, {
+        signal: AbortSignal.timeout(15000),
+      })
+      const data = await res.json()
+      return {
+        taskId: data.task_id || taskId,
+        status: data.status || 'pending',
+        outputAudio: data.output_audio,
+        duration: data.duration,
+        error: data.error,
+      }
+    } catch (e) {
+      return {
+        taskId,
+        status: 'failed',
+        error: e instanceof Error ? e.message : 'Unknown error',
+      }
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+}
+
+// ============================================================================
 // 工厂函数
 // ============================================================================
 
@@ -281,6 +434,10 @@ export function getSeedVCClient(): ISeedVCClient {
       case 'modal':
         seedVCClientInstance = new SeedVCModalClient()
         console.log('[SeedVC] Using Modal backend (async mode)')
+        break
+      case 'autodl':
+        seedVCClientInstance = new SeedVCAutoDLClient()
+        console.log('[SeedVC] Using AutoDL backend (self-hosted GPU)')
         break
       case 'mock':
       default:
