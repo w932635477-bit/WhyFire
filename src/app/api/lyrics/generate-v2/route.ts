@@ -117,6 +117,20 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<LyricsGenerateV2Response>> {
   try {
+    // 速率限制
+    const clientId = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+    const rateLimit = checkRateLimit(`lyrics:${clientId}`, 5, 60000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          code: 429,
+          data: { lyricsId: '', content: '', wordCount: 0, estimatedDuration: 0, meta: {} },
+          message: '请求过于频繁，请稍后再试',
+        },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)) } }
+      )
+    }
+
     // 解析请求体
     const body: LyricsGenerateV2Request = await request.json()
     const {

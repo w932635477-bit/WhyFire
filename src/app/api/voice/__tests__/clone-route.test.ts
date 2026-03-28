@@ -30,6 +30,11 @@ vi.mock('@/lib/oss', () => ({
   })),
 }))
 
+// 模拟速率限制（绕过进程内共享 store）
+vi.mock('@/lib/middleware/auth', () => ({
+  checkRateLimit: vi.fn(() => ({ allowed: true, resetTime: Date.now() + 60000 })),
+}))
+
 describe('/api/voice/clone', () => {
   beforeEach(() => {
     vi.clearAllMocks()

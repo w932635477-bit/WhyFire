@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCosyVoiceCloneClient } from '@/lib/tts/cosyvoice-clone-client'
 import { uploadToOSS, isOSSConfigured } from '@/lib/oss'
+import { checkRateLimit } from '@/lib/middleware/auth'
 import type { DialectCode } from '@/types/dialect'
 
 // ============================================================================
@@ -57,6 +58,20 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<VoiceCloneResponse>> {
   try {
+    // 速率限制（声音克隆资源消耗大，限制更严格）
+    const clientId = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+    const rateLimit = checkRateLimit(`voice-clone:${clientId}`, 3, 300000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        code: 429,
+        data: { status: 'failed', message: '请求过于频繁，请稍后再试' },
+        message: '请求过于频繁',
+      }, {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)) }
+      })
+    }
+
     // 检查 CosyVoice 服务是否可用
     const client = getCosyVoiceCloneClient()
 
