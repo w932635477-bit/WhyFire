@@ -13,8 +13,8 @@ import {
 
 describe('Dialect Types', () => {
   describe('DIALECT_CONFIGS', () => {
-    it('should have 9 dialects (original + 8 regional)', () => {
-      expect(Object.keys(DIALECT_CONFIGS).length).toBe(9)
+    it('should have 10 dialects (original + mandarin + 8 regional)', () => {
+      expect(Object.keys(DIALECT_CONFIGS).length).toBe(10)
     })
 
     it('should have original as first dialect', () => {
@@ -50,8 +50,9 @@ describe('Dialect Types', () => {
       })
     })
 
-    it('should NOT contain mandarin (replaced by original)', () => {
-      expect(DIALECT_CONFIGS).not.toHaveProperty('mandarin')
+    it('should contain mandarin', () => {
+      expect(DIALECT_CONFIGS).toHaveProperty('mandarin')
+      expect(DIALECT_CONFIGS.mandarin.name).toBe('普通话')
     })
   })
 
@@ -77,7 +78,7 @@ describe('Dialect Types', () => {
   describe('getEnabledDialects', () => {
     it('should return all dialects (all enabled by default)', () => {
       const enabled = getEnabledDialects()
-      expect(enabled.length).toBe(9)
+      expect(enabled.length).toBe(10)
     })
 
     it('should only return enabled dialects', () => {

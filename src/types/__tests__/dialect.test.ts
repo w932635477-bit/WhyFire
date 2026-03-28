@@ -11,9 +11,9 @@ import {
 
 describe('dialect types', () => {
   describe('DIALECT_CONFIGS', () => {
-    it('应该包含 9 种方言（原声 + 8 种方言）', () => {
+    it('应该包含 10 种方言（原声 + 普通话 + 8 种方言）', () => {
       const dialectCodes = Object.keys(DIALECT_CONFIGS) as DialectCode[]
-      expect(dialectCodes.length).toBe(9)
+      expect(dialectCodes.length).toBe(10)
     })
 
     it('每种方言应该有完整的配置', () => {
@@ -56,7 +56,7 @@ describe('dialect types', () => {
   describe('getEnabledDialects', () => {
     it('应该返回所有启用的方言', () => {
       const enabled = getEnabledDialects()
-      expect(enabled.length).toBe(9)
+      expect(enabled.length).toBe(10)
     })
 
     it('返回的方言应该都是启用的', () => {
