@@ -10,9 +10,6 @@
  * - 外部通过完整的 Web Endpoint URL 调用
  */
 
-// 初始化全局代理（必须在其他 import 之前）
-import '@/lib/proxy'
-
 /**
  * Modal API 配置
  */

@@ -10,9 +10,7 @@
  *   GET  /api/v1/generate/record-info   — 轮询状态
  */
 
-import '@/lib/proxy'
 import type { DialectCode } from '@/types/dialect'
-import { ProxyAgent } from 'undici'
 
 // ============================================================================
 // 类型定义
@@ -105,17 +103,10 @@ export class SunoApiClient {
   private baseUrl: string
   private pollInterval = 5000
   private maxPollAttempts = 120 // 10 分钟超时
-  // SunoAPI 是海外服务，需要走代理（Next.js Worker 中 setGlobalDispatcher 可能不生效）
-  private dispatcher: any
 
   constructor() {
     this.apiKey = process.env.SUNOAPI_API_KEY || ''
     this.baseUrl = process.env.SUNOAPI_BASE_URL || 'https://api.sunoapi.org'
-
-    const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy
-    if (proxyUrl) {
-      this.dispatcher = new ProxyAgent(proxyUrl)
-    }
 
     if (!this.apiKey) {
       console.warn('[SunoAPI] SUNOAPI_API_KEY not set')
@@ -188,7 +179,6 @@ export class SunoApiClient {
       },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
-      dispatcher: this.dispatcher,
     } as any)
 
     if (!res.ok) {
@@ -212,7 +202,6 @@ export class SunoApiClient {
           'Authorization': `Bearer ${this.apiKey}`,
         },
         signal: AbortSignal.timeout(15000),
-        dispatcher: this.dispatcher,
       } as any
     )
 

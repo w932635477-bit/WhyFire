@@ -180,7 +180,7 @@ export const MusicGenerationProgress = React.forwardRef<
           )
 
           // 检查是否需要切换到下一阶段
-          let newStage = prev.stage
+          let newStage: GenerationStage = prev.stage
           if (newProgress >= currentStageConfig.progressEnd) {
             const currentStageIndex = STAGES.findIndex(
               (s) => s.id === prev.stage

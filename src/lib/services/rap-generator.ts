@@ -7,10 +7,6 @@
  *   3. Seed-VC 零样本音色替换 → 上传 OSS
  */
 
-// 初始化全局代理（必须在其他 import 之前）
-import '@/lib/proxy'
-
-import { ProxyAgent } from 'undici'
 import { getSunoApiClient, type SunoApiClient } from '@/lib/music/suno-api-client'
 import { getSeedVCClient, type ISeedVCClient } from '@/lib/audio/seed-vc-client'
 import { getBGMById, getDefaultBGM, type BGMMetadata, toSunoStyle } from '@/lib/music/bgm-library'
@@ -83,11 +79,6 @@ const EXCLUDED_STYLES = 'singing, melody, ballad, pop song, slow, romantic, acou
 export class RapGeneratorSunoRvc {
   private sunoApiClient: SunoApiClient = getSunoApiClient()
   private seedVCClient: ISeedVCClient = getSeedVCClient()
-  // 代理 dispatcher（Next.js Worker 中 setGlobalDispatcher 可能不生效）
-  private dispatcher: any = (() => {
-    const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy
-    return proxyUrl ? new ProxyAgent(proxyUrl) : undefined
-  })()
 
   async generate(
     params: RapGenerationParams,
@@ -164,7 +155,7 @@ export class RapGeneratorSunoRvc {
       message: `Rap 生成完成 (${addVocalsResult.duration}s)`,
     })
 
-    // Step 3: Seed-VC 音色替换 + 上传
+    // Step 3: Seed-VC 音色替换
     onProgress?.({
       step: 'conversion',
       stepName: '音色替换',
@@ -173,7 +164,7 @@ export class RapGeneratorSunoRvc {
     })
 
     const seedVCResult = await this.seedVCClient.convert({
-      sourceAudio: addVocalsResult.audioUrl,
+      sourceAudio: addVocalsResult.audioUrl!,
       referenceAudio: referenceAudioUrl,
       f0Condition: true,
       fp16: true,
@@ -190,11 +181,10 @@ export class RapGeneratorSunoRvc {
       message: '音色替换完成',
     })
 
-    // 上传到 OSS
-    const audioUrl = await this.uploadResult(seedVCResult.outputAudio, taskId)
+    console.log(`[RapGenerator] Seed-VC conversion succeeded (${seedVCResult.duration}s)`)
 
     return {
-      audioUrl,
+      audioUrl: seedVCResult.outputAudio,
       duration: seedVCResult.duration || addVocalsResult.duration || 0,
       lyrics,
       dialect,
@@ -226,8 +216,7 @@ export class RapGeneratorSunoRvc {
     console.log(`[RapGenerator] Downloading: ${source}`)
     const res = await fetch(source, {
       signal: AbortSignal.timeout(60000),
-      dispatcher: this.dispatcher,
-    } as any)
+    })
     if (!res.ok) throw new Error(`Failed to download audio: ${res.status} from ${source}`)
     return Buffer.from(await res.arrayBuffer())
   }

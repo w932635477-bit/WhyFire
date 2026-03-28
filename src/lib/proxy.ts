@@ -1,22 +1,11 @@
 /**
- * 全局代理配置模块
+ * 网络配置模块
  *
- * 在应用启动时设置 undici 全局代理，使所有 fetch 请求自动走代理。
- * 这是必要的，因为：
- * 1. Node.js fetch 不会自动读取 HTTPS_PROXY 环境变量
- * 2. undici ProxyAgent 需要手动配置
- * 3. 当前环境 DNS 不可用，所有请求必须走代理
+ * 所有外部服务在当前环境下均可直连，不需要代理。
+ * 此模块保留仅用于获取代理 URL（如 OSS SDK 可能需要）。
  *
- * 使用方式：
- * 在应用入口或需要代理的模块顶部导入：
- * import '@/lib/proxy'
+ * 注意：不要使用 setGlobalDispatcher，它会破坏 Node.js fetch。
  */
-
-import { ProxyAgent, setGlobalDispatcher } from 'undici'
-
-// ============================================================================
-// 代理配置
-// ============================================================================
 
 const proxyUrl =
   process.env.HTTPS_PROXY ||
@@ -26,29 +15,14 @@ const proxyUrl =
   process.env.ALL_PROXY ||
   process.env.all_proxy
 
-let proxyInitialized = false
-
-/**
- * 初始化全局代理
- * 幂等操作，多次调用只会初始化一次
- */
-export function initGlobalProxy(): void {
-  if (proxyInitialized) {
-    return
-  }
-
-  if (proxyUrl) {
-    console.log(`[Proxy] Setting global proxy: ${proxyUrl}`)
-    setGlobalDispatcher(new ProxyAgent(proxyUrl))
-    proxyInitialized = true
-  } else {
-    console.log('[Proxy] No proxy configured, using direct connection')
-    proxyInitialized = true
-  }
+if (proxyUrl) {
+  console.log(`[Network] Proxy available but not used by default: ${proxyUrl}`)
+} else {
+  console.log('[Network] Direct connection (no proxy)')
 }
 
 /**
- * 获取代理 URL（用于需要手动配置的场景，如 OSS httpsAgent）
+ * 获取代理 URL（供 OSS SDK 等需要单独配置的场景使用）
  */
 export function getProxyUrl(): string | undefined {
   return proxyUrl
@@ -60,10 +34,3 @@ export function getProxyUrl(): string | undefined {
 export function isProxyConfigured(): boolean {
   return !!proxyUrl
 }
-
-// ============================================================================
-// 自动初始化
-// ============================================================================
-
-// 模块加载时自动初始化
-initGlobalProxy()

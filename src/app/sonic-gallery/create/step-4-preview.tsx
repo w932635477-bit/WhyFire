@@ -26,6 +26,8 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
   const [rapInfo, setRapInfo] = useState<{
     duration?: number
   } | null>(null)
+  const [isSaved, setIsSaved] = useState(false)
+  const [shareToast, setShareToast] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // 从 context 获取状态
@@ -95,6 +97,53 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
   const handleSaveLyrics = () => {
     setLyrics(editedLyrics)
     setIsEditingLyrics(false)
+  }
+
+  const handleShare = async () => {
+    if (!audioUrl) return
+
+    // 优先使用 Web Share API（移动端体验好）
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `方言回响 - ${selectedDialect?.name || ''}版`,
+          text: `我用方言回响创作了一首${selectedDialect?.name || ''}Rap，快来听听！`,
+          url: audioUrl,
+        })
+        return
+      } catch {
+        // 用户取消分享，不做提示
+      }
+    }
+
+    // 降级：复制音频链接到剪贴板
+    try {
+      await navigator.clipboard.writeText(audioUrl)
+      setShareToast('链接已复制到剪贴板')
+    } catch {
+      setShareToast('复制失败，请手动复制链接')
+    }
+    setTimeout(() => setShareToast(null), 2000)
+  }
+
+  const handleSave = () => {
+    if (!audioUrl) return
+    const savedList = JSON.parse(localStorage.getItem('dialect-rap-saved') || '[]')
+    savedList.push({
+      id: Date.now().toString(),
+      audioUrl,
+      lyrics,
+      dialect: selectedDialect?.name || '',
+      dialectCode: state.dialect.selected,
+      beatId: selectedBeat,
+      speed,
+      pitch,
+      savedAt: new Date().toISOString(),
+      duration: rapInfo?.duration,
+    })
+    localStorage.setItem('dialect-rap-saved', JSON.stringify(savedList))
+    setIsSaved(true)
+    setTimeout(() => setIsSaved(false), 2000)
   }
 
   const handleReset = () => {
@@ -356,22 +405,51 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
           {/* Primary Actions (after generation) */}
           {audioUrl && !isGenerating && (
             <>
-              <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-sans">
+              <button
+                onClick={() => {
+                  if (!audioUrl) return
+                  const a = document.createElement('a')
+                  a.href = audioUrl
+                  a.download = `方言回响-${selectedDialect?.name || 'rap'}-${Date.now()}.mp3`
+                  a.click()
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-emerald-500 text-white py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all btn-press min-h-[48px] font-sans"
+              >
                 <span className="material-symbols-outlined text-lg">download</span>
                 导出音频
               </button>
 
               {/* Secondary Actions */}
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-sans">
+                <button
+                  onClick={handleShare}
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-sans"
+                >
                   <span className="material-symbols-outlined text-base">share</span>
                   分享
                 </button>
-                <button className="flex items-center justify-center gap-2 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.03] border border-white/[0.06] transition-all btn-press min-h-[48px] font-sans">
-                  <span className="material-symbols-outlined text-base">save</span>
-                  保存
+                <button
+                  onClick={handleSave}
+                  disabled={isSaved}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all btn-press min-h-[48px] font-sans ${
+                    isSaved
+                      ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+                      : 'text-white/60 hover:text-white hover:bg-white/[0.03] border-white/[0.06]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">
+                    {isSaved ? 'check_circle' : 'save'}
+                  </span>
+                  {isSaved ? '已保存' : '保存'}
                 </button>
               </div>
+
+              {/* 分享提示 */}
+              {shareToast && (
+                <div className="p-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-center animate-fade-in">
+                  <span className="text-white/60 text-xs font-sans">{shareToast}</span>
+                </div>
+              )}
 
               {/* Regenerate Button */}
               <button

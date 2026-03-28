@@ -67,26 +67,10 @@ async function getOSSClient(): Promise<OSS | null> {
     }
 
     try {
-      // 检查代理配置
-      // 注意：如果系统 DNS 无法解析阿里云域名，需要通过代理连接
-      const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy ||
-                       process.env.HTTP_PROXY || process.env.http_proxy ||
-                       process.env.ALL_PROXY || process.env.all_proxy
-
-      // 创建 HTTPS Agent
-      let httpsAgent: https.Agent
-      if (proxyUrl) {
-        // 使用代理
-        console.log(`[OSS] Using proxy: ${proxyUrl}`)
-        const ProxyAgentClass = await loadHttpsProxyAgent()
-        httpsAgent = new ProxyAgentClass!(proxyUrl)
-      } else {
-        // 直连
-        console.log('[OSS] Direct connection (no proxy)')
-        httpsAgent = new https.Agent({
-          keepAlive: true,
-        })
-      }
+      // 创建 HTTPS Agent（直连，阿里云 OSS 在当前环境下可正常访问）
+      const httpsAgent = new https.Agent({
+        keepAlive: true,
+      })
 
       ossClient = new OSS({
         region,

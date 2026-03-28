@@ -114,7 +114,8 @@ export const LyricsPreview = React.forwardRef<HTMLDivElement, LyricsPreviewProps
 
       let index = -1
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i].time !== undefined && lines[i].time <= currentTime) {
+        const line = lines[i]!
+        if (line.time !== undefined && line.time <= currentTime) {
           index = i
         }
       }

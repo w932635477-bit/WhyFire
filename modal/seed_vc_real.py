@@ -1,21 +1,16 @@
 """
-Seed-VC 真实版本 - Modal GPU 部署
+Seed-VC 真实版本 - Modal GPU 部署（异步模式）
 
 用途：
 - 零样本声音克隆（Rap 歌声转换）
-- 使用 seed-uvit-whisper-base 模型（44.1kHz）
-- 支持 f0-condition 模式
+- 异步处理：submit 返回 task_id → status 轮询结果
+- 解决 Modal Web Endpoint 60 秒 HTTP 超时限制
 
 部署：
   modal deploy modal/seed_vc_real.py
 
 测试：
   modal serve modal/seed_vc_real.py
-
-注意：
-- 首次部署会自动下载模型（约 200MB）
-- 需要 A10G GPU（推荐）
-- 每次推理约 $0.02-0.05
 """
 
 import modal
@@ -26,17 +21,11 @@ import time
 # 创建 Modal App
 app = modal.App("seed-vc-real")
 
-# 定义容器镜像（包含所有依赖）
+# 定义容器镜像
 image = (
     modal.Image.debian_slim(python_version="3.10")
-    .apt_install(
-        "ffmpeg",
-        "libsndfile1",
-        "git",
-        "wget",
-    )
+    .apt_install("ffmpeg", "libsndfile1", "git", "wget")
     .pip_install(
-        # 核心依赖 (匹配 Seed-VC requirements)
         "torch==2.4.0",
         "torchvision==0.19.0",
         "torchaudio==2.4.0",
@@ -54,156 +43,108 @@ image = (
         "hydra-core==1.3.2",
         "pyyaml",
         "accelerate",
-        # Web API 依赖
         "fastapi>=0.104",
         "python-multipart",
         "httpx",
         "pydantic",
     )
     .run_commands(
-        # 克隆 Seed-VC 仓库（2025-11 归档，但仍然可用）
         "cd /root && git clone https://github.com/Plachtaa/seed-vc.git",
         "cd /root/seed-vc && pip install -e . || true",
     )
 )
 
-# 创建 Volume 用于缓存模型
+# 共享存储
 volume = modal.Volume.from_name("seed-vc-models", create_if_missing=True)
+task_store = modal.Dict.from_name("seed-vc-tasks", create_if_missing=True)
 MODEL_DIR = "/root/models"
-
-
-# ============================================================================
-# Pydantic 模型
-# ============================================================================
 
 from pydantic import BaseModel
 from typing import Optional
 
 
 class ConvertRequest(BaseModel):
-    """声音转换请求 - 接受 base64 编码的音频数据（避免容器网络隔离问题）"""
-    source_audio_base64: str  # data:audio/wav;base64,... 格式
-    reference_audio_base64: str
-    f0_condition: Optional[bool] = True  # Rap 模式必须为 True
+    """声音转换请求"""
+    source_audio_url: Optional[str] = None
+    reference_audio_url: Optional[str] = None
+    source_audio_base64: Optional[str] = None
+    reference_audio_base64: Optional[str] = None
+    f0_condition: Optional[bool] = True
     fp16: Optional[bool] = True
-    diffusion_steps: Optional[int] = 25  # 推荐 30-50 用于歌声转换
+    diffusion_steps: Optional[int] = 10
     length_adjust: Optional[float] = 1.0
     inference_cfg_rate: Optional[float] = 0.7
 
 
-class ConvertResponse(BaseModel):
-    """声音转换响应"""
-    status: str
-    task_id: str
-    output_audio: Optional[str] = None
-    duration: Optional[float] = None
-    processing_time: float
-    error: Optional[str] = None
-
-
-# ============================================================================
-# Seed-VC 服务类
-# ============================================================================
-
 @app.cls(
     image=image,
-    gpu="A10G",  # 使用 A10G GPU
-    timeout=600,  # 10 分钟超时
-    memory=16384,  # 16GB 内存
+    gpu="A10G",
+    timeout=600,
+    memory=16384,
     volumes={MODEL_DIR: volume},
-    scaledown_window=120,  # 2 分钟无请求后停止
+    scaledown_window=300,
+    min_containers=1,
 )
 class SeedVC:
-    """Seed-VC 声音转换服务"""
+    """Seed-VC 声音转换服务（异步模式）"""
 
     @modal.enter()
     def setup(self):
-        """加载模型（容器启动时执行一次）"""
         import sys
-        print("🔄 Setting up Seed-VC...")
-
-        # 添加 Seed-VC 到路径
         sys.path.insert(0, "/root/seed-vc")
-
-        # 设置 HuggingFace 镜像（国内网络）
         if not os.environ.get("HF_ENDPOINT"):
             os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-
-        # 设置模型缓存目录
         os.environ["HF_HOME"] = MODEL_DIR
-
         self.model_loaded = False
-        print("✓ Seed-VC setup complete (model will load on first inference)")
+        print("Seed-VC setup complete")
 
-    def _load_model(self, f0_condition: bool = True):
-        """延迟加载模型"""
-        if self.model_loaded:
-            return
+    def _get_audio_data(self, url, base64_data, label):
+        import base64 as b64mod
+        import httpx
 
-        import sys
-        sys.path.insert(0, "/root/seed-vc")
+        if url:
+            print(f"Downloading {label} from URL: {url[:100]}...")
+            with httpx.Client(timeout=120) as client:
+                resp = client.get(url)
+                resp.raise_for_status()
+                data = resp.content
+            print(f"  Downloaded {label}: {len(data)} bytes")
+            return data
 
-        # 模型会在首次推理时自动下载
-        print(f"📦 Model will be downloaded on first inference (f0_condition={f0_condition})")
-        self.model_loaded = True
+        if base64_data:
+            raw = base64_data
+            if raw.startswith("data:"):
+                raw = raw.split(",", 1)[1]
+            data = b64mod.b64decode(raw)
+            print(f"  Decoded {label}: {len(data)} bytes")
+            return data
 
-    @modal.fastapi_endpoint(method="POST", docs=True)
-    def convert(self, request: ConvertRequest) -> ConvertResponse:
-        """
-        执行声音转换
+        raise ValueError(f"No audio source for {label}")
 
-        请求格式：
-        {
-            "source_audio_base64": "data:audio/wav;base64,...",
-            "reference_audio_base64": "data:audio/wav;base64,...",
-            "f0_condition": true,
-            "fp16": true,
-            "diffusion_steps": 25
-        }
-
-        响应格式：
-        {
-            "status": "completed",
-            "task_id": "xxx",
-            "output_audio": "data:audio/wav;base64,...",
-            "duration": 30.0,
-            "processing_time": 5.2
-        }
-        """
+    @modal.method()
+    def process(self, task_id: str, request_data: dict):
+        """GPU 推理（后台运行，不受 60 秒 HTTP 限制）"""
         import subprocess
         import base64
         from pathlib import Path
 
+        request = ConvertRequest(**request_data)
         start_time = time.time()
-        task_id = f"vc-{int(time.time()*1000)}"
 
         try:
-            # 确保模型已加载
-            self._load_model(request.f0_condition)
-
             with tempfile.TemporaryDirectory() as tmpdir:
                 source_path = Path(tmpdir) / "source.wav"
                 reference_path = Path(tmpdir) / "reference.wav"
                 output_dir = Path(tmpdir) / "output"
                 output_dir.mkdir()
 
-                # 解码 base64 源音频
-                print(f"📦 Decoding source audio from base64 ({len(request.source_audio_base64)} chars)")
-                source_b64 = request.source_audio_base64
-                if source_b64.startswith("data:"):
-                    source_b64 = source_b64.split(",", 1)[1]
-                source_path.write_bytes(base64.b64decode(source_b64))
-                print(f"  Source audio size: {source_path.stat().st_size} bytes")
+                source_path.write_bytes(
+                    self._get_audio_data(request.source_audio_url, request.source_audio_base64, "source")
+                )
+                reference_path.write_bytes(
+                    self._get_audio_data(request.reference_audio_url, request.reference_audio_base64, "reference")
+                )
 
-                # 解码 base64 参考音频
-                print(f"📦 Decoding reference audio from base64 ({len(request.reference_audio_base64)} chars)")
-                ref_b64 = request.reference_audio_base64
-                if ref_b64.startswith("data:"):
-                    ref_b64 = ref_b64.split(",", 1)[1]
-                reference_path.write_bytes(base64.b64decode(ref_b64))
-                print(f"  Reference audio size: {reference_path.stat().st_size} bytes")
-
-                # 构建 inference 命令
                 cmd = [
                     "python", "/root/seed-vc/inference.py",
                     "--source", str(source_path),
@@ -216,72 +157,80 @@ class SeedVC:
                     "--fp16", str(request.fp16).lower(),
                 ]
 
-                print(f"🎵 Running inference: {' '.join(cmd)}")
+                print(f"Running inference: {' '.join(cmd)}")
                 result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=500,  # 8 分钟超时
-                    env={**os.environ, "HF_HOME": MODEL_DIR}
+                    cmd, capture_output=True, text=True,
+                    timeout=500, env={**os.environ, "HF_HOME": MODEL_DIR}
                 )
 
                 if result.returncode != 0:
-                    print(f"❌ Inference failed: {result.stderr}")
-                    return ConvertResponse(
-                        status="failed",
-                        task_id=task_id,
-                        processing_time=time.time() - start_time,
-                        error=f"Inference failed: {result.stderr[:500]}"
-                    )
+                    task_store[task_id] = {
+                        "status": "failed", "task_id": task_id,
+                        "processing_time": time.time() - start_time,
+                        "error": f"Inference failed: {result.stderr[:500]}",
+                    }
+                    return
 
-                # 查找输出文件
                 output_files = list(output_dir.glob("*.wav"))
                 if not output_files:
-                    return ConvertResponse(
-                        status="failed",
-                        task_id=task_id,
-                        processing_time=time.time() - start_time,
-                        error="No output file generated"
-                    )
+                    task_store[task_id] = {
+                        "status": "failed", "task_id": task_id,
+                        "processing_time": time.time() - start_time,
+                        "error": "No output file generated",
+                    }
+                    return
 
-                output_path = output_files[0]
-                print(f"✅ Output generated: {output_path}")
-
-                # 读取输出文件并转换为 base64
-                output_data = output_path.read_bytes()
+                output_data = output_files[0].read_bytes()
                 output_base64 = base64.b64encode(output_data).decode()
-
-                # 估算时长（44100Hz, 16bit stereo）
                 duration = len(output_data) / (44100 * 2 * 2)
-
                 processing_time = time.time() - start_time
-                print(f"⏱️ Total processing time: {processing_time:.2f}s")
 
-                return ConvertResponse(
-                    status="completed",
-                    task_id=task_id,
-                    output_audio=f"data:audio/wav;base64,{output_base64}",
-                    duration=duration,
-                    processing_time=processing_time,
-                )
+                task_store[task_id] = {
+                    "status": "completed", "task_id": task_id,
+                    "output_audio": f"data:audio/wav;base64,{output_base64}",
+                    "duration": duration,
+                    "processing_time": processing_time,
+                }
+                print(f"Completed in {processing_time:.2f}s")
 
         except subprocess.TimeoutExpired:
-            return ConvertResponse(
-                status="failed",
-                task_id=task_id,
-                processing_time=time.time() - start_time,
-                error="Inference timeout (>500s)"
-            )
+            task_store[task_id] = {
+                "status": "failed", "task_id": task_id,
+                "processing_time": time.time() - start_time,
+                "error": "Inference timeout (>500s)",
+            }
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
             import traceback
             traceback.print_exc()
-            return ConvertResponse(
-                status="failed",
-                task_id=task_id,
-                processing_time=time.time() - start_time,
-                error=str(e)[:500]
-            )
+            task_store[task_id] = {
+                "status": "failed", "task_id": task_id,
+                "processing_time": time.time() - start_time,
+                "error": str(e)[:500],
+            }
+
+    @modal.fastapi_endpoint(method="POST", docs=True)
+    def convert(self, request: ConvertRequest):
+        """提交声音转换任务（异步）- 立即返回 task_id"""
+        task_id = f"vc-{int(time.time()*1000)}"
+
+        # 初始化任务状态
+        task_store[task_id] = {
+            "status": "processing", "task_id": task_id,
+            "processing_time": 0,
+        }
+
+        # 在 GPU 容器中异步执行推理
+        self.process.spawn(task_id, request.model_dump())
+
+        return {"task_id": task_id, "status": "processing"}
+
+    @modal.fastapi_endpoint(method="GET", docs=True)
+    def status(self, task_id: str):
+        """查询任务状态"""
+        if task_id in task_store:
+            return task_store[task_id]
+        return {"task_id": task_id, "status": "not_found"}
 
     @modal.fastapi_endpoint(method="GET", docs=True)
     def health(self):
@@ -289,72 +238,14 @@ class SeedVC:
         return {
             "status": "ok",
             "mode": "real",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "service": "seed-vc-real",
-            "model": "seed-uvit-whisper-base",
-            "sample_rate": 44100,
+            "pattern": "async (submit + poll)",
         }
 
-    @modal.fastapi_endpoint(method="GET", docs=True)
-    def status(self, task_id: str):
-        """查询任务状态（简化版，总是返回完成）"""
-        return {
-            "task_id": task_id,
-            "status": "completed",
-            "progress": 100,
-        }
-
-
-# ============================================================================
-# 本地测试入口
-# ============================================================================
 
 @app.local_entrypoint()
 def test():
-    """本地测试"""
-    import httpx
-
-    print("🧪 测试 Seed-VC Real 服务...")
-    print("\n部署完成后，使用以下命令测试：")
-    print("  curl https://your-workspace--seed-vc-real.modal.run/health")
-    print("")
-    print("或运行验证脚本：")
-    print("  npx tsx scripts/verify-modal-api.ts")
-
-
-# ============================================================================
-# 部署指南
-# ============================================================================
-
-if __name__ == "__main__":
-    print("""
-╔══════════════════════════════════════════════════════════╗
-║           Seed-VC Real 部署指南                          ║
-╚══════════════════════════════════════════════════════════╝
-
-1. 测试本地运行:
-   modal serve modal/seed_vc_real.py
-
-2. 部署到生产:
-   modal deploy modal/seed_vc_real.py
-
-3. 获取 Web Endpoint URL:
-   modal app show seed-vc-real
-
-4. 配置 .env.local:
-   MODAL_WEB_ENDPOINT_URL=https://your-workspace--seed-vc-real.modal.run
-   SEEDVC_BACKEND=modal
-
-5. 验证部署:
-   curl https://your-workspace--seed-vc-real.modal.run/health
-
-成本估算（每次转换 30 秒音频）：
-- GPU A10G: 30s * $0.000603 ≈ $0.018
-- 内存 16GB: 30s * 16 * $0.0000231 ≈ $0.011
-- 总计: ~$0.03 / 次
-
-提示：
-- 首次部署会下载模型（约 200MB）
-- 使用 Volume 缓存模型，避免重复下载
-- 建议使用 keep_warm=1 保持预热（可选）
-    """)
+    print("Seed-VC Real v2 (async) deployed!")
+    print("Submit: POST /convert  -> returns task_id")
+    print("Status: GET /status?task_id=xxx  -> returns result when done")

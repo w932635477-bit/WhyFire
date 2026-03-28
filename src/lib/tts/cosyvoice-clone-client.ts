@@ -3,12 +3,7 @@
  *
  * 用于克隆用户声音，生成可用于 TTS 的音色
  * API 文档: https://help.aliyun.com/zh/model-studio/cosyvoice-clone-design-api
- *
- * 代理配置: 由 src/lib/proxy.ts 统一管理
  */
-
-// 导入全局代理配置（必须在其他模块之前）
-import '@/lib/proxy'
 
 // ============================================================================
 // 类型定义
