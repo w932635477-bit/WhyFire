@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useCoverContext, COVER_DIALECTS } from './cover-context'
 import { fetchTimestampedLyrics } from '@/lib/services/create-api'
 import { convertAlignedWordsToLyricLines } from '@/lib/subtitle/suno-lyrics-converter'
-import { createVideoSynthesizer } from '@/lib/ffmpeg/video-synthesizer'
 
 function genBars(seed: string, n: number): number[] {
   const b: number[] = []
@@ -257,6 +256,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
       dispatch({ type: 'SET_KTV', payload: { ktvProgress: 30, ktvMessage: '加载 FFmpeg...' } })
 
       // Step 4: 使用 VideoSynthesizer 合成 KTV 视频
+      const { createVideoSynthesizer } = await import('@/lib/ffmpeg/video-synthesizer')
       const synthesizer = createVideoSynthesizer()
       const result = await synthesizer.synthesize({
         videoFile: videoBlob,

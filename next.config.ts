@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
         ...config.resolve.fallback,
         fs: false,
         path: false,
+        child_process: false,
       }
 
       // 配置 webpack 正确处理 FFmpeg.wasm 的动态 import
