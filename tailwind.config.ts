@@ -10,61 +10,75 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // 背景色
-        background: '#111113',
-        foreground: '#FAFAFA',
-
-        // 卡片
-        card: {
-          DEFAULT: '#1A1A1C',
-          hover: '#222224',
+        // Editorial Immersion Surface Hierarchy
+        surface: {
+          DEFAULT: '#000000',
+          dim: '#0e0e0e',
+          low: '#131313',
+          card: '#1C1C1E',
+          mid: '#1f1f1f',
+          high: '#2a2a2a',
+          highest: '#353535',
+          bright: '#393939',
         },
-
-        // 边框
-        border: {
-          DEFAULT: '#2A2A2E',
-          hover: '#3A3A3E',
+        on: {
+          surface: '#E2E2E2',
+          'surface-variant': '#cbc3d7',
         },
-
-        // 静音文字
-        muted: {
-          DEFAULT: '#71717A',
-          foreground: '#FAFAFA',
-        },
-
-        // 主色 - 紫色 (Primary)
+        // Brand Gradient Colors
         primary: {
-          DEFAULT: '#8B5CF6',
-          foreground: '#FFFFFF',
-          hover: '#7C3AED',
+          DEFAULT: '#d0bcff',
+          dim: '#a078ff',
+          fixed: '#e9ddff',
         },
-
-        // 强调色 - 绿色 (Secondary/Accent)
         secondary: {
-          DEFAULT: '#10B981',
-          foreground: '#FFFFFF',
-          hover: '#059669',
+          DEFAULT: '#4edea3',
+          dim: '#00a572',
         },
-
-        // 危险/删除
+        // Accent Colors (kept from original)
+        accent: {
+          purple: '#8B5CF6',
+          green: '#10B981',
+        },
+        // Semantic Colors
+        background: '#000000',
+        foreground: '#E2E2E2',
+        muted: {
+          DEFAULT: '#958ea0',
+          foreground: '#E2E2E2',
+        },
         destructive: {
           DEFAULT: '#EF4444',
           foreground: '#FFFFFF',
         },
-
-        // 语义颜色
         success: '#22C55E',
         warning: '#F59E0B',
         error: '#EF4444',
         info: '#3B82F6',
+
+        // Legacy compat
+        card: {
+          DEFAULT: '#1C1C1E',
+          hover: '#2a2a2a',
+        },
+        border: {
+          DEFAULT: '#2a2a2a',
+          hover: '#353535',
+        },
       },
       fontFamily: {
-        sans: ['PingFang SC', 'Noto Sans SC', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'PingFang SC', 'Noto Sans SC', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        headline: ['Inter', 'PingFang SC', 'sans-serif'],
+        body: ['Inter', 'PingFang SC', 'sans-serif'],
+        label: ['Inter', 'PingFang SC', 'sans-serif'],
       },
       borderRadius: {
-        lg: 'var(--radius-lg)',
-        md: 'var(--radius-md)',
-        sm: 'var(--radius-sm)',
+        DEFAULT: '1rem',
+        lg: '1.5rem',
+        xl: '2rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
+        full: '9999px',
       },
       animation: {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
@@ -95,6 +109,7 @@ const config: Config = {
         'soft-lg': '0 8px 40px rgba(0, 0, 0, 0.35)',
         'glow': '0 0 30px rgba(16, 185, 129, 0.3)',
         'glow-lg': '0 0 50px rgba(16, 185, 129, 0.4)',
+        'glow-purple': '0 8px 32px rgba(139, 92, 246, 0.3)',
       },
     },
   },
@@ -104,6 +119,20 @@ const config: Config = {
       addUtilities({
         '.no-scrollbar::-webkit-scrollbar': { display: 'none' },
         '.no-scrollbar': { '-ms-overflow-style': 'none', 'scrollbar-width': 'none' },
+        '.text-gradient': {
+          background: 'linear-gradient(to right, #8B5CF6, #10B981)',
+          '-webkit-background-clip': 'text',
+          '-webkit-text-fill-color': 'transparent',
+          'background-clip': 'text',
+        },
+        '.glass-shell': {
+          background: 'rgba(0, 0, 0, 0.7)',
+          'backdrop-filter': 'blur(40px)',
+          '-webkit-backdrop-filter': 'blur(40px)',
+        },
+        '.hero-mask': {
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)',
+        },
       })
     },
   ],

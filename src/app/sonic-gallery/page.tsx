@@ -4,10 +4,10 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 const sampleWorks = [
-  { id: '1', title: '成都漂移', dialect: '四川话', creator: '蜀山客', plays: 12800, gradient: 'linear-gradient(135deg, rgba(245,158,11,0.3), rgba(239,68,68,0.15))' },
-  { id: '2', title: '东北爱情故事', dialect: '东北话', creator: '雪村大侠', plays: 8900, gradient: 'linear-gradient(135deg, rgba(56,189,248,0.3), rgba(59,130,246,0.15))' },
-  { id: '3', title: '珠江夜色', dialect: '粤语', creator: '粤语歌手', plays: 6700, gradient: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.15))' },
-  { id: '4', title: '西安城墙下', dialect: '陕西话', creator: '长安客', plays: 5200, gradient: 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(20,184,166,0.15))' },
+  { id: '1', title: '成都漂移', dialect: '四川话', creator: '蜀山客', plays: 12800, gradient: 'linear-gradient(135deg, rgba(245,158,11,0.3), rgba(239,68,68,0.15))', accent: '#f59e0b' },
+  { id: '2', title: '东北爱情故事', dialect: '东北话', creator: '雪村大侠', plays: 8900, gradient: 'linear-gradient(135deg, rgba(56,189,248,0.3), rgba(59,130,246,0.15))', accent: '#38bdf8' },
+  { id: '3', title: '珠江夜色', dialect: '粤语', creator: '粤语歌手', plays: 6700, gradient: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.15))', accent: '#8b5cf6' },
+  { id: '4', title: '西安城墙下', dialect: '陕西话', creator: '长安客', plays: 5200, gradient: 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(20,184,166,0.15))', accent: '#10b981' },
 ]
 
 const dialectCards = [
@@ -28,88 +28,107 @@ export default function SonicGalleryHome() {
   return (
     <div className="min-h-screen bg-black text-white antialiased">
 
-      {/* ========== NAVIGATION ========== */}
+      {/* ========== NAVIGATION — glass shell ========== */}
       <nav className="fixed top-0 inset-x-0 z-50">
-        <div className="mx-auto max-w-[980px] px-6">
-          <div className="flex items-center justify-between h-12 bg-black/70 backdrop-blur-2xl rounded-b-2xl px-5">
-            <Link href="/sonic-gallery" className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-white flex items-center justify-center">
-                <span className="text-black text-[9px] font-black">W</span>
-              </div>
-              <span className="text-[12px] font-semibold text-white tracking-tight font-sans">方言回响</span>
+        <div className="mx-auto max-w-6xl px-6">
+          <div
+            className="flex items-center justify-between h-14 px-6 rounded-b-2xl"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+          >
+            {/* Left: text logo */}
+            <Link href="/sonic-gallery" className="text-[16px] font-extrabold tracking-tighter text-white font-sans">
+              方言回响
             </Link>
-            <div className="flex items-center gap-7">
-              <Link href="/sonic-gallery/cover" className="text-[11px] text-white/50 hover:text-white transition-colors font-sans font-medium">翻唱</Link>
-              <Link href="/sonic-gallery/create" className="text-[11px] text-white/50 hover:text-white transition-colors font-sans font-medium">Rap</Link>
-              <Link href="/sonic-gallery/beats" className="text-[11px] text-white/50 hover:text-white transition-colors font-sans font-medium">作品</Link>
+
+            {/* Center: nav links */}
+            <div className="flex items-center gap-8">
+              <Link href="/sonic-gallery/cover" className="text-[13px] text-white/50 hover:text-white transition-colors font-sans font-medium">
+                Cover
+              </Link>
+              <Link href="/sonic-gallery/create" className="text-[13px] text-white/50 hover:text-white transition-colors font-sans font-medium">
+                Rap
+              </Link>
+              <Link href="/sonic-gallery/beats" className="text-[13px] text-white/50 hover:text-white transition-colors font-sans font-medium">
+                Gallery
+              </Link>
             </div>
+
+            {/* Right: account icon */}
+            <button className="text-white/50 hover:text-white transition-colors">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M20 21a8 8 0 1 0-16 0" />
+              </svg>
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* ========== HERO ========== */}
-      <section className="relative pt-32 pb-28 sm:pt-40 sm:pb-36 overflow-hidden">
-        {/* Background video */}
+      {/* ========== HERO — full viewport ========== */}
+      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background gradient (fallback for no external image) */}
         <div className="absolute inset-0 z-0">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover opacity-30"
-          >
-            <source src="/videos/hero-bg.mp4" type="video/mp4" />
-          </video>
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
+          <div className="absolute inset-0" style={{
+            background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(139,92,246,0.15) 0%, rgba(16,185,129,0.08) 40%, transparent 70%)'
+          }} />
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.95) 100%)'
+          }} />
         </div>
 
-        <div className="relative z-10 max-w-[980px] mx-auto px-6 text-center">
+        {/* hero-mask overlay */}
+        <div className="absolute inset-0 z-[1]" style={{
+          background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, #000000 100%)'
+        }} />
+
+        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center pt-24">
           {/* Overline */}
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/30 font-sans font-medium mb-6">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/30 font-sans font-medium mb-8">
             全新上线
           </p>
 
-          {/* Title — Apple-style: large, tight, centered */}
-          <h1 className="text-[48px] sm:text-[72px] lg:text-[80px] font-bold leading-[1.05] tracking-[-0.03em] font-sans mb-6">
+          {/* Title */}
+          <h1 className="text-[48px] sm:text-[64px] lg:text-[76px] font-extrabold leading-[1.05] tracking-[-0.03em] font-sans mb-6">
             用方言翻唱
             <br />
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #c084fc, #34d399)' }}>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">
               30 秒出片
             </span>
           </h1>
 
-          {/* Subtitle — clean, readable */}
-          <p className="text-white/50 text-[17px] sm:text-[19px] max-w-[500px] mx-auto leading-[1.6] font-sans mb-10">
-            上传一首歌，选方言，AI 翻唱。自带视频，一键发抖音。
+          {/* Subtitle */}
+          <p className="text-lg text-white/50 max-w-[520px] mx-auto leading-[1.7] font-sans mb-12">
+            上传一首歌，选个方言，AI 自动翻唱并生成 MV 视频。一键发抖音、快手。
           </p>
 
-          {/* CTAs — Apple pill style */}
+          {/* CTAs */}
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link
               href="/sonic-gallery/cover"
-              className="inline-flex items-center gap-2 bg-white text-black px-8 py-[14px] rounded-full text-[14px] font-semibold font-sans hover:bg-white/90 transition-colors active:scale-[0.98]"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white px-8 py-[14px] rounded-full text-[15px] font-semibold font-sans shadow-[0_8px_32px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_40px_rgba(139,92,246,0.4)] transition-all active:scale-[0.97]"
             >
-              方言翻唱
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              开始翻唱
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
             </Link>
             <Link
               href="/sonic-gallery/create"
-              className="inline-flex items-center gap-2 px-8 py-[14px] rounded-full text-[14px] font-medium font-sans text-white/60 hover:text-white/80 border border-white/10 hover:border-white/20 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-[14px] rounded-full text-[15px] font-medium font-sans text-white/60 hover:text-white/80 border border-white/20 hover:border-white/30 transition-all"
             >
               原创 Rap
             </Link>
           </div>
 
-          {/* Stats row — Apple keynote style */}
-          <div className="flex items-center justify-center gap-12 mt-14">
+          {/* Stats row */}
+          <div className="flex items-center justify-center gap-16 mt-16 pt-8 border-t border-white/5">
             {[
               { value: '9', label: '种方言' },
               { value: '30s', label: '出翻唱' },
               { value: 'MV', label: '视频直出' },
-            ].map((stat, i) => (
+            ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-white text-[28px] font-bold tracking-tight font-sans">{stat.value}</p>
+                <p className="text-white text-[32px] font-bold tracking-tight font-sans">{stat.value}</p>
                 <p className="text-white/25 text-[11px] font-sans mt-1">{stat.label}</p>
               </div>
             ))}
@@ -118,16 +137,21 @@ export default function SonicGalleryHome() {
       </section>
 
       {/* ========== HOT WORKS ========== */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-[980px] mx-auto px-6">
-          <div className="flex items-end justify-between mb-12">
+      <section className="py-24 sm:py-32">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-end justify-between mb-14">
             <div>
-              <h2 className="text-[32px] sm:text-[40px] font-bold tracking-[-0.02em] font-sans">热门作品</h2>
-              <p className="text-white/30 text-[15px] mt-2 font-sans">用方言翻唱的热门歌曲</p>
+              <h2 className="text-[36px] sm:text-[44px] font-extrabold tracking-[-0.02em] font-sans">热门作品</h2>
+              <p className="text-white/30 text-[15px] mt-3 font-sans">用方言翻唱的热门歌曲</p>
             </div>
-            <Link href="/sonic-gallery/beats" className="text-[13px] text-[#8b5cf6] hover:text-[#a78bfa] font-sans font-medium flex items-center gap-1 transition-colors">
+            <Link
+              href="/sonic-gallery/beats"
+              className="text-[13px] text-[#8b5cf6] hover:text-[#a78bfa] font-sans font-medium flex items-center gap-1 transition-colors"
+            >
               查看全部
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
             </Link>
           </div>
 
@@ -139,67 +163,93 @@ export default function SonicGalleryHome() {
                 onMouseLeave={() => setHoveredWork(null)}
                 className="group text-left"
               >
+                {/* Card */}
                 <div
-                  className="relative aspect-square rounded-[20px] overflow-hidden mb-3.5 transition-transform duration-500 group-hover:scale-[1.02]"
+                  className="relative aspect-square rounded-[20px] overflow-hidden mb-4 transition-transform duration-500 group-hover:scale-[1.02]"
                   style={{ background: work.gradient }}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className={`w-14 h-14 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center transition-all duration-500 ${hoveredWork === work.id ? 'scale-110 bg-black/30' : ''}`}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="white" className="ml-0.5"><polygon points="8 5 20 12 8 19"/></svg>
+                  {/* Play overlay on hover */}
+                  <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${hoveredWork === work.id ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="w-16 h-16 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                        <circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.3)" />
+                        <polygon points="10 8 16 12 10 16" fill="white" />
+                      </svg>
                     </div>
                   </div>
-                  <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
-                  <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between">
-                    <span className="text-white/70 text-[11px] font-medium font-sans">{work.dialect}</span>
-                    <span className="text-white/30 text-[10px] font-sans tabular-nums">
+
+                  {/* Bottom gradient */}
+                  <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+
+                  {/* Bottom info row */}
+                  <div className="absolute bottom-3 left-3.5 right-3.5 flex items-end justify-between">
+                    {/* Dialect pill */}
+                    <span
+                      className="text-[11px] font-semibold font-sans px-2.5 py-1 rounded-full"
+                      style={{
+                        backgroundColor: `${work.accent}20`,
+                        color: work.accent,
+                      }}
+                    >
+                      {work.dialect}
+                    </span>
+                    {/* Play count */}
+                    <span className="flex items-center gap-1 text-white/40 text-[11px] font-sans tabular-nums">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                      </svg>
                       {work.plays >= 10000 ? `${(work.plays / 10000).toFixed(1)}w` : `${(work.plays / 1000).toFixed(1)}k`}
                     </span>
                   </div>
                 </div>
+
+                {/* Title + creator */}
                 <h3 className="text-white text-[14px] font-semibold font-sans truncate">{work.title}</h3>
-                <p className="text-white/25 text-[12px] font-sans mt-0.5">{work.creator}</p>
+                <p className="text-white/30 text-[12px] font-sans mt-1">{work.creator}</p>
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ========== DIALECTS ========== */}
-      <section className="py-20 sm:py-28 border-t border-white/[0.04]">
-        <div className="max-w-[980px] mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-[32px] sm:text-[40px] font-bold tracking-[-0.02em] font-sans">9 种方言</h2>
-            <p className="text-white/30 text-[15px] mt-2 font-sans">覆盖中国核心方言体系</p>
+      {/* ========== DIALECTS — dark bg ========== */}
+      <section className="py-24 sm:py-32 bg-[#0e0e0e]">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-[36px] sm:text-[44px] font-extrabold tracking-[-0.02em] font-sans">9 种方言</h2>
+            <p className="text-white/30 text-[15px] mt-3 font-sans">覆盖中国核心方言体系</p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
             {dialectCards.map((d) => (
               <div
                 key={d.name}
-                className="group w-[96px] py-6 flex flex-col items-center rounded-2xl bg-[#1C1C1E] hover:bg-[#2C2C2E] transition-colors duration-300 cursor-default"
+                className="group flex flex-col items-center cursor-default transition-transform duration-300 hover:-translate-y-2"
               >
+                {/* Circle with character */}
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: `${d.accent}15` }}
+                  className="w-24 h-24 rounded-full flex items-center justify-center mb-3 transition-transform duration-300"
+                  style={{ backgroundColor: `${d.accent}15` }}
                 >
-                  <span className="text-[16px] font-bold font-sans" style={{ color: d.accent }}>{d.initial}</span>
+                  <span className="text-[28px] font-bold font-sans" style={{ color: d.accent }}>{d.initial}</span>
                 </div>
-                <span className="text-white text-[12px] font-semibold font-sans">{d.name}</span>
-                <span className="text-white/20 text-[10px] font-sans mt-0.5">{d.region}</span>
+                <span className="text-white text-[13px] font-semibold font-sans">{d.name}</span>
+                <span className="text-white/25 text-[11px] font-sans mt-0.5">{d.region}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ========== FEATURES — Apple product grid ========== */}
-      <section className="py-20 sm:py-28 border-t border-white/[0.04]">
-        <div className="max-w-[980px] mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-[32px] sm:text-[40px] font-bold tracking-[-0.02em] font-sans">
+      {/* ========== FEATURES — 3-col grid ========== */}
+      <section className="py-24 sm:py-32">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-[36px] sm:text-[44px] font-extrabold tracking-[-0.02em] font-sans">
               从上传到出片，
               <br className="sm:hidden" />
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #c084fc, #34d399)' }}>全链路 AI</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">全链路 AI</span>
             </h2>
           </div>
 
@@ -207,30 +257,51 @@ export default function SonicGalleryHome() {
             {[
               {
                 icon: (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#iconGrad1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <defs>
+                      <linearGradient id="iconGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8B5CF6" />
+                        <stop offset="100%" stopColor="#10B981" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M9 18V5l12-2v13" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="16" r="3" />
                   </svg>
                 ),
                 title: 'AI 方言翻唱',
-                desc: '上传一首歌，30 秒用方言重新演绎。SunoAPI 驱动。',
+                desc: '上传一首歌，30 秒用方言重新演绎。Suno API 驱动，自然流畅。',
                 stat: '30 秒',
                 statSub: '生成翻唱',
               },
               {
                 icon: (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#iconGrad2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <defs>
+                      <linearGradient id="iconGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8B5CF6" />
+                        <stop offset="100%" stopColor="#10B981" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ),
                 title: 'AI 歌词创作',
-                desc: 'Claude 分析方言文化符号，生成有记忆点的歌词。',
+                desc: 'Claude 分析方言文化符号，生成有记忆点的原创歌词。',
                 stat: '9 种',
                 statSub: '方言覆盖',
               },
               {
                 icon: (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round">
-                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#iconGrad3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <defs>
+                      <linearGradient id="iconGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8B5CF6" />
+                        <stop offset="100%" stopColor="#10B981" />
+                      </linearGradient>
+                    </defs>
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                   </svg>
                 ),
                 title: 'MV 视频直出',
@@ -239,13 +310,16 @@ export default function SonicGalleryHome() {
                 statSub: '视频生成',
               },
             ].map((f) => (
-              <div key={f.title} className="p-8 rounded-[24px] bg-[#1C1C1E] group hover:bg-[#2C2C2E] transition-colors duration-500">
+              <div
+                key={f.title}
+                className="p-8 rounded-[24px] bg-[#1C1C1E] group hover:bg-[#2C2C2E] transition-colors duration-500 flex flex-col"
+              >
                 <div className="mb-6">{f.icon}</div>
-                <h3 className="text-[20px] font-semibold text-white font-sans mb-2">{f.title}</h3>
-                <p className="text-white/35 text-[14px] leading-[1.6] font-sans mb-8">{f.desc}</p>
+                <h3 className="text-[20px] font-semibold text-white font-sans mb-3">{f.title}</h3>
+                <p className="text-white/35 text-[14px] leading-[1.65] font-sans mb-8 flex-1">{f.desc}</p>
                 <div className="border-t border-white/[0.06] pt-6">
-                  <p className="text-white text-[28px] font-bold tracking-tight font-sans">{f.stat}</p>
-                  <p className="text-white/20 text-[12px] font-sans mt-0.5">{f.statSub}</p>
+                  <p className="text-[28px] font-bold tracking-tight font-sans bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">{f.stat}</p>
+                  <p className="text-white/20 text-[12px] font-sans mt-1">{f.statSub}</p>
                 </div>
               </div>
             ))}
@@ -253,36 +327,39 @@ export default function SonicGalleryHome() {
         </div>
       </section>
 
-      {/* ========== CTA ========== */}
-      <section className="py-28 sm:py-36 border-t border-white/[0.04]">
-        <div className="max-w-[980px] mx-auto px-6 text-center">
-          <h2 className="text-[40px] sm:text-[56px] font-bold tracking-[-0.03em] font-sans mb-4">
+      {/* ========== BOTTOM CTA — gradient glow ========== */}
+      <section className="relative py-32 sm:py-40 overflow-hidden">
+        {/* Glow blobs */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-20 blur-[120px] bg-[#8B5CF6] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/3 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px] bg-[#10B981] pointer-events-none" />
+
+        <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-[40px] sm:text-[56px] font-extrabold tracking-[-0.03em] font-sans mb-5">
             准备好了吗？
           </h2>
-          <p className="text-white/35 text-[17px] font-sans mb-10">上传一首歌，30 秒后你会听到完全不同的版本</p>
+          <p className="text-white/40 text-lg font-sans mb-12 max-w-md mx-auto">
+            上传一首歌，30 秒后你会听到完全不同的版本
+          </p>
           <Link
             href="/sonic-gallery/cover"
-            className="inline-flex items-center gap-2 bg-white text-black px-10 py-[16px] rounded-full text-[15px] font-semibold font-sans hover:bg-white/90 transition-colors active:scale-[0.98]"
+            className="inline-flex items-center gap-2 bg-white text-black px-10 py-[16px] rounded-full text-[15px] font-semibold font-sans hover:bg-white/90 transition-all active:scale-[0.97]"
           >
             开始翻唱
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
       </section>
 
       {/* ========== FOOTER ========== */}
-      <footer className="py-8 border-t border-white/[0.04]">
-        <div className="max-w-[980px] mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 rounded bg-white flex items-center justify-center">
-              <span className="text-black text-[9px] font-black">W</span>
-            </div>
-            <span className="text-white/20 text-[11px] font-sans">Copyright © 2026 方言回响. All rights reserved.</span>
-          </div>
+      <footer className="py-8 border-t border-white/5">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+          <span className="text-white/20 text-[12px] font-sans">Copyright &copy; 2026 方言回响. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <Link href="#" className="text-white/15 hover:text-white/40 text-[11px] font-sans transition-colors">隐私</Link>
-            <Link href="#" className="text-white/15 hover:text-white/40 text-[11px] font-sans transition-colors">条款</Link>
-            <Link href="#" className="text-white/15 hover:text-white/40 text-[11px] font-sans transition-colors">联系</Link>
+            <Link href="#" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</Link>
+            <Link href="#" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</Link>
+            <Link href="#" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">联系</Link>
           </div>
         </div>
       </footer>

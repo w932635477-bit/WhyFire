@@ -299,9 +299,10 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   if (state.result.status === 'generating') {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-8">
-        {/* 旋转音符 */}
+        {/* 旋转音符 + 环境光晕 */}
         <div className="relative w-28 h-28">
-          <div className="absolute inset-0 rounded-full border border-white/[0.04]" />
+          <div className="absolute -z-10 w-[200px] h-[200px] bg-[#8B5CF6]/5 blur-[60px] rounded-full" />
+          <div className="absolute inset-0 rounded-full" />
           <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white animate-spin" style={{ animationDuration: '2s' }} />
           <div className="absolute inset-0 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -310,13 +311,13 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
 
         {/* 状态文案 */}
         <div className="text-center space-y-2">
-          <p className="text-white text-[20px] font-semibold font-sans">正在生成{dialectName}翻唱</p>
-          <p className="text-white/40 text-[14px] font-sans transition-all duration-500">{state.result.progressMessage || 'AI 正在用方言重新演绎...'}</p>
+          <p className="text-white text-[20px] font-semibold tracking-tight font-sans">正在生成{dialectName}翻唱</p>
+          <p className="text-white/50 text-[14px] font-sans transition-all duration-500">{state.result.progressMessage || 'AI 正在用方言重新演绎...'}</p>
         </div>
 
         {/* 真实进度条 */}
         <div className="w-56 space-y-2">
-          <div className="h-[3px] bg-white/[0.06] rounded-full overflow-hidden">
+          <div className="h-[3px] bg-[#353535] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-1000 ease-out"
               style={{
@@ -325,12 +326,12 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
               }}
             />
           </div>
-          <p className="text-white/15 text-[11px] font-sans text-right tabular-nums">{Math.round(state.result.progress)}%</p>
+          <p className="text-white/30 text-[11px] font-sans text-right tabular-nums">{Math.round(state.result.progress)}%</p>
         </div>
 
         {/* 趣味提示 */}
         <div className="h-5 flex items-center">
-          <p className="text-white/20 text-[12px] font-sans animate-fade-in" key={tipIndex}>
+          <p className="text-white/30 text-[12px] font-sans animate-fade-in" key={tipIndex}>
             {FUN_TIPS[tipIndex]}
           </p>
         </div>
@@ -343,13 +344,13 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
     return (
       <div className="space-y-6">
         {/* Success */}
-        <div className="flex items-center gap-4 p-6 rounded-2xl bg-[#1C1C1E]">
+        <div className="flex items-center gap-4 p-6 rounded-2xl bg-[#10b981]/5">
           <div className="w-10 h-10 rounded-full bg-[#10b981]/10 flex items-center justify-center flex-shrink-0">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <div>
-            <p className="text-white text-[16px] font-semibold font-sans">{dialectName}翻唱完成</p>
-            <p className="text-white/20 text-[12px] font-sans mt-0.5">{state.result.duration ? `${Math.round(state.result.duration)} 秒` : ''}  · 方言回响</p>
+            <p className="text-white text-[16px] font-semibold tracking-tight font-sans">{dialectName}翻唱完成</p>
+            <p className="text-white/40 text-[12px] font-sans mt-0.5">{state.result.duration ? `${Math.round(state.result.duration)} 秒` : ''}  · 方言回响</p>
           </div>
         </div>
 
@@ -365,8 +366,8 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                 )}
               </button>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-[16px] font-semibold font-sans truncate">{dialectName}翻唱</p>
-                <p className="text-white/15 text-[12px] font-sans mt-0.5">方言回响</p>
+                <p className="text-white text-[16px] font-semibold tracking-tight font-sans truncate">{dialectName}翻唱</p>
+                <p className="text-white/30 text-[12px] font-sans mt-0.5">方言回响</p>
               </div>
             </div>
 
@@ -376,14 +377,14 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                 <div
                   key={i}
                   className="flex-1 min-w-[1.5px] rounded-full transition-all duration-300"
-                  style={{ height: `${h}%`, background: i / N <= pct ? 'white' : 'rgba(255,255,255,0.1)' }}
+                  style={{ height: `${h}%`, background: i / N <= pct ? 'white' : '#353535' }}
                 />
               ))}
             </div>
 
             <div className="flex justify-between">
-              <span className="text-white/15 text-[10px] font-sans tabular-nums">{fmt(time)}</span>
-              <span className="text-white/15 text-[10px] font-sans tabular-nums">{fmt(dur || state.result.duration || 0)}</span>
+              <span className="text-white/30 text-[10px] font-sans tabular-nums">{fmt(time)}</span>
+              <span className="text-white/30 text-[10px] font-sans tabular-nums">{fmt(dur || state.result.duration || 0)}</span>
             </div>
 
             <audio ref={audioRef} src={state.result.audioUrl} preload="metadata" />
@@ -395,7 +396,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
           <div className="p-6 rounded-2xl bg-[#1C1C1E]">
             <div className="flex items-center justify-between mb-4">
               <p className="text-white/50 text-[14px] font-semibold font-sans">歌词</p>
-              <span className="text-white/10 text-[10px] font-sans">{state.result.lyrics.length} 字</span>
+              <span className="text-white/30 text-[10px] font-sans">{state.result.lyrics.length} 字</span>
             </div>
             <div className="text-white/30 text-[13px] leading-[1.8] font-sans whitespace-pre-wrap max-h-[240px] overflow-y-auto">
               {state.result.lyrics}
@@ -407,11 +408,11 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
         <div className="p-6 rounded-2xl bg-[#1C1C1E]">
           <div className="flex items-center justify-between mb-5">
             <p className="text-white/50 text-[14px] font-semibold font-sans">MV 视频</p>
-            <span className="text-white/10 text-[10px] font-sans">可直接发抖音</span>
+            <span className="text-white/30 text-[10px] font-sans">可直接发抖音</span>
           </div>
 
           {state.result.mvStatus === 'idle' && (
-            <button onClick={doMV} className="w-full py-4 rounded-2xl bg-[#2C2C2E] text-white/60 text-[13px] font-semibold font-sans hover:bg-[#3A3A3C] transition-colors active:scale-[0.98] flex items-center justify-center gap-2">
+            <button onClick={doMV} className="w-full py-4 rounded-2xl bg-[#2a2a2a] text-white/60 text-[13px] font-semibold font-sans hover:bg-[#353535] transition-colors active:scale-96 flex items-center justify-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
               生成音乐视频
             </button>
@@ -421,9 +422,9 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
             <div className="space-y-3 py-2">
               <div className="flex items-center justify-center gap-3 py-3">
                 <div className="w-4 h-4 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
-                <span className="text-white/40 text-[13px] font-sans">MV 生成中...</span>
+                <span className="text-white/50 text-[13px] font-sans">MV 生成中...</span>
               </div>
-              <div className="h-[2px] bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-[2px] bg-[#353535] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-1000"
                   style={{
@@ -432,7 +433,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                   }}
                 />
               </div>
-              <p className="text-white/10 text-[11px] font-sans text-center">预计 1-3 分钟</p>
+              <p className="text-white/30 text-[11px] font-sans text-center">预计 1-3 分钟</p>
             </div>
           )}
 
@@ -442,7 +443,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
 
           {state.result.mvStatus === 'failed' && (
             <div className="text-center py-4 space-y-2">
-              <p className="text-white/10 text-[12px] font-sans">MV 生成失败</p>
+              <p className="text-white/30 text-[12px] font-sans">MV 生成失败</p>
               <button onClick={doMV} className="text-white/30 text-[12px] hover:text-white/50 font-sans">重试</button>
             </div>
           )}
@@ -453,11 +454,11 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
           <div className="p-6 rounded-2xl bg-[#1C1C1E]">
             <div className="flex items-center justify-between mb-5">
               <p className="text-white/50 text-[14px] font-semibold font-sans">KTV 歌词视频</p>
-              <span className="text-white/10 text-[10px] font-sans">逐字高亮</span>
+              <span className="text-white/30 text-[10px] font-sans">逐字高亮</span>
             </div>
 
             {state.result.ktvStatus === 'idle' && (
-              <button onClick={doKTV} className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600/20 to-emerald-600/20 border border-white/[0.06] text-white/70 text-[13px] font-semibold font-sans hover:border-white/[0.12] transition-colors active:scale-[0.98] flex items-center justify-center gap-2">
+              <button onClick={doKTV} className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600/10 to-emerald-600/10 text-white/70 text-[13px] font-semibold font-sans hover:from-purple-600/15 hover:to-emerald-600/15 transition-colors active:scale-96 flex items-center justify-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                 生成 KTV 歌词视频
               </button>
@@ -467,9 +468,9 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
               <div className="space-y-3 py-2">
                 <div className="flex items-center justify-center gap-3 py-3">
                   <div className="w-4 h-4 rounded-full border-2 border-white/10 border-t-purple-400 animate-spin" />
-                  <span className="text-white/40 text-[13px] font-sans">{state.result.ktvMessage || '处理中...'}</span>
+                  <span className="text-white/50 text-[13px] font-sans">{state.result.ktvMessage || '处理中...'}</span>
                 </div>
-                <div className="h-[2px] bg-white/[0.06] rounded-full overflow-hidden">
+                <div className="h-[2px] bg-[#353535] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
@@ -478,7 +479,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                     }}
                   />
                 </div>
-                <p className="text-white/10 text-[11px] font-sans text-center">FFmpeg 客户端渲染，无需服务器</p>
+                <p className="text-white/30 text-[11px] font-sans text-center">FFmpeg 客户端渲染，无需服务器</p>
               </div>
             )}
 
@@ -499,7 +500,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
 
             {state.result.ktvStatus === 'failed' && (
               <div className="text-center py-4 space-y-2">
-                <p className="text-white/10 text-[12px] font-sans">{state.result.ktvMessage || 'KTV 生成失败'}</p>
+                <p className="text-white/30 text-[12px] font-sans">{state.result.ktvMessage || 'KTV 生成失败'}</p>
                 <button onClick={doKTV} className="text-white/30 text-[12px] hover:text-white/50 font-sans">重试</button>
               </div>
             )}
@@ -508,11 +509,11 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button onClick={doDownload} className="flex-1 py-4 rounded-2xl bg-white text-black font-semibold text-[14px] font-sans active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+          <button onClick={doDownload} className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white font-bold text-[14px] font-sans shadow-[0_8px_32px_rgba(139,92,246,0.3)] active:scale-96 transition-all flex items-center justify-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             下载
           </button>
-          <button onClick={doShare} className="flex-1 py-4 rounded-2xl bg-[#1C1C1E] text-white/40 font-semibold text-[14px] font-sans hover:bg-[#2C2C2E] transition-all flex items-center justify-center gap-2">
+          <button onClick={doShare} className="flex-1 py-4 rounded-2xl bg-[#2a2a2a] text-white/60 font-semibold text-[14px] font-sans hover:bg-[#353535] transition-all flex items-center justify-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             分享
           </button>
@@ -525,14 +526,14 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   if (state.result.status === 'failed') {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-6">
-        <div className="w-16 h-16 rounded-full bg-red-500/[0.06] flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-red-500/5 flex items-center justify-center">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
         <div className="text-center space-y-2">
-          <p className="text-white text-[20px] font-semibold font-sans">翻唱生成失败</p>
-          <p className="text-white/20 text-[13px] font-sans">{state.result.error}</p>
+          <p className="text-white text-[20px] font-semibold tracking-tight font-sans">翻唱生成失败</p>
+          <p className="text-white/40 text-[13px] font-sans">{state.result.error}</p>
         </div>
-        <button onClick={doGenerate} className="px-8 py-3.5 rounded-full bg-white text-black font-semibold text-[13px] font-sans active:scale-[0.98] transition-all">重试</button>
+        <button onClick={doGenerate} className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white font-bold text-[13px] font-sans shadow-[0_8px_32px_rgba(139,92,246,0.3)] active:scale-96 transition-all">重试</button>
       </div>
     )
   }
@@ -541,33 +542,33 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-[32px] font-bold tracking-[-0.02em] font-sans">确认生成</h2>
-        <p className="text-white/20 text-[14px] font-sans mt-2">检查设置，开始 AI 方言翻唱</p>
+        <h2 className="text-[32px] font-bold tracking-tight font-sans">确认生成</h2>
+        <p className="text-white/40 text-[14px] font-sans mt-2">检查设置，开始 AI 方言翻唱</p>
       </div>
 
       <div className="p-7 rounded-2xl bg-[#1C1C1E] space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-white/10 text-[10px] uppercase tracking-[0.15em] font-sans mb-2">方言</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-sans mb-2">方言</p>
             <p className="text-white text-[18px] font-semibold font-sans">{dialectName}</p>
           </div>
           <div>
-            <p className="text-white/10 text-[10px] uppercase tracking-[0.15em] font-sans mb-2">人声</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-sans mb-2">人声</p>
             <p className="text-white text-[18px] font-semibold font-sans">{state.vocalGender === 'm' ? '男声' : '女声'}</p>
           </div>
           <div className="col-span-2">
-            <p className="text-white/10 text-[10px] uppercase tracking-[0.15em] font-sans mb-2">歌词</p>
-            <p className="text-white/40 text-[13px] font-sans">{lyricsLabel}</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-sans mb-2">歌词</p>
+            <p className="text-white/50 text-[13px] font-sans">{lyricsLabel}</p>
           </div>
         </div>
       </div>
 
-      <button onClick={doGenerate} className="w-full py-[18px] rounded-full bg-white text-black font-semibold text-[15px] font-sans flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all">
+      <button onClick={doGenerate} className="w-full py-[18px] rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white font-bold text-[15px] font-sans shadow-[0_8px_32px_rgba(139,92,246,0.3)] flex items-center justify-center gap-2.5 active:scale-96 transition-all">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         开始翻唱
       </button>
 
-      <p className="text-center text-white/10 text-[11px] font-sans">预计 30 秒 · 翻唱完成后可生成 MV</p>
+      <p className="text-center text-white/30 text-[11px] font-sans">预计 30 秒 · 翻唱完成后可生成 MV</p>
     </div>
   )
 }
