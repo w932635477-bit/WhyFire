@@ -279,6 +279,163 @@ export async function withRetry<T>(
 }
 
 /**
+ * 翻唱歌曲上传
+ */
+export async function uploadSong(file: File): Promise<{ url: string; objectKey: string }> {
+  const formData = new FormData()
+  formData.append('audio', file)
+
+  const response = await fetch('/api/cover/upload', {
+    method: 'POST',
+    body: formData,
+  })
+
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || '上传失败')
+  }
+
+  return result.data
+}
+
+/**
+ * 方言翻唱生成请求
+ */
+export interface CoverGenerateRequest {
+  songUrl: string
+  dialect: DialectCode
+  customLyrics?: string
+  brandMessage?: string
+  vocalGender?: 'm' | 'f'
+}
+
+/**
+ * 方言翻唱生成（异步模式）
+ * POST 提交任务，返回 taskId，前端轮询状态
+ */
+export async function submitCoverGeneration(
+  params: CoverGenerateRequest
+): Promise<{ taskId: string; status: string }> {
+  const response = await fetch('/api/cover/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: `cover-user-${Date.now()}`,
+      ...params,
+    }),
+  })
+
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || '翻唱生成失败')
+  }
+
+  return result.data
+}
+
+/**
+ * 查询翻唱任务状态
+ */
+export async function getCoverTaskStatus(taskId: string): Promise<{
+  taskId: string
+  status: string
+  step: string
+  stepName: string
+  progress: number
+  message: string
+  audioUrl?: string
+  audioId?: string
+  duration?: number
+  lyrics?: string
+  dialect?: string
+  error?: string
+}> {
+  const response = await fetch(`/api/cover/generate?taskId=${taskId}`)
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || '查询失败')
+  }
+
+  return result.data
+}
+
+/**
+ * 提交 MV 生成任务（异步模式）
+ */
+export async function submitMusicVideoGeneration(params: {
+  taskId: string
+  audioId: string
+  author?: string
+}): Promise<{ taskId: string; status: string }> {
+  const response = await fetch('/api/cover/music-video', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
+
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || 'MV 生成失败')
+  }
+
+  return result.data
+}
+
+/**
+ * 查询 MV 状态
+ */
+export async function getMusicVideoStatus(taskId: string): Promise<{
+  taskId: string
+  videoUrl?: string
+  status: string
+  error?: string
+}> {
+  const response = await fetch(`/api/cover/music-video?taskId=${taskId}`)
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || '查询失败')
+  }
+
+  return result.data
+}
+
+/**
+ * 获取时间戳歌词（逐词时间戳对齐）
+ */
+export async function fetchTimestampedLyrics(params: {
+  taskId: string
+  audioId: string
+}): Promise<{
+  alignedWords: Array<{
+    word: string
+    success: boolean
+    startS: number
+    endS: number
+    palign: number
+  }>
+  wordCount: number
+}> {
+  const response = await fetch('/api/cover/timestamped-lyrics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
+
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new ApiError(result.code, result.message || '获取时间戳歌词失败')
+  }
+
+  return result.data
+}
+
+/**
  * 轮询任务状态
  */
 export async function pollTaskStatus<T>(

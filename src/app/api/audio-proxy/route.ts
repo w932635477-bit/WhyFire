@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const OSS_BASE_URL = `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION || 'oss-cn-beijing'}.aliyuncs.com`
 
 // 允许的音频文件扩展名
-const ALLOWED_EXTENSIONS = ['.mp3', '.wav', '.webm', '.ogg', '.m4a', '.aac', '.flac']
+const ALLOWED_EXTENSIONS = ['.mp3', '.wav', '.webm', '.ogg', '.m4a', '.aac', '.flac', '.mp4', '.mov', '.avi', '.mkv']
 
 // 允许的路径前缀（白名单）
 const ALLOWED_PATH_PREFIXES = [
@@ -26,6 +26,7 @@ const ALLOWED_PATH_PREFIXES = [
   'samples/',
   'temp/',
   'rap/',
+  'cover-uploads/',
 ]
 
 /**

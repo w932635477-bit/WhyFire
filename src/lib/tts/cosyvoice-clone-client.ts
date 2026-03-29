@@ -5,6 +5,8 @@
  * API 文档: https://help.aliyun.com/zh/model-studio/cosyvoice-clone-design-api
  */
 
+import { proxiedFetch } from '@/lib/fetch'
+
 // ============================================================================
 // 类型定义
 // ============================================================================
@@ -70,7 +72,7 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
     try {
       console.log('[CosyVoice] Creating voice with prefix:', options.prefix)
 
-      const response = await fetch(this.baseUrl, {
+      const response = await proxiedFetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -124,7 +126,7 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
 
     while (Date.now() - startTime < timeout) {
       try {
-        const response = await fetch(this.baseUrl, {
+        const response = await proxiedFetch(this.baseUrl, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -173,7 +175,7 @@ class CosyVoiceCloneClient implements ICosyVoiceCloneClient {
     }
 
     try {
-      const response = await fetch(this.baseUrl, {
+      const response = await proxiedFetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,

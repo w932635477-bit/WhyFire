@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
     serverActions: {
-      bodySizeLimit: '50mb',
+      bodySizeLimit: '20mb',
     },
   },
   // 添加安全响应头以支持 SharedArrayBuffer (FFmpeg.wasm 多线程需要)
