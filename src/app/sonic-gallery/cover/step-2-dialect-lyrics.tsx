@@ -7,17 +7,46 @@ const DIALECT_COLORS: Record<string, string> = {
   shaanxi: '#10b981', wu: '#8b5cf6', minnan: '#06b6d4', tianjin: '#ec4899', nanjing: '#a855f7',
 }
 
+// Inline SVG icons for vocal gender
+const ManIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="7" r="4" />
+    <path d="M5.5 21c0-3.5 3-6.5 6.5-6.5s6.5 3 6.5 6.5" />
+  </svg>
+)
+
+const WomanIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="7" r="4" />
+    <path d="M4 21c0-3.5 3.5-6.5 8-6.5s8 3 8 6.5" />
+    <path d="M12 11v3" />
+    <path d="M10 14l2 4 2-4" />
+  </svg>
+)
+
 export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   const { state, dispatch } = useCoverContext()
 
   return (
     <div className="space-y-12">
+      {/* Header */}
+      <div>
+        <div className="flex items-baseline gap-4 mb-2">
+          <span className="text-[56px] font-extrabold leading-none bg-gradient-to-r from-[#8B5CF6] to-[#10B981] bg-clip-text text-transparent">
+            02
+          </span>
+          <h2 className="text-[24px] font-bold tracking-[-0.02em] text-white">方言与词作</h2>
+        </div>
+        <p className="text-white/50 text-[14px]">选择你的母语印记</p>
+      </div>
+
       {/* Dialect */}
       <div>
-        <h2 className="text-[32px] font-bold tracking-[-0.02em] font-sans mb-2">选方言</h2>
-        <p className="text-white/25 text-[14px] font-sans mb-8">决定翻唱的味道</p>
+        <h3 className="uppercase tracking-[0.2em] text-white/40 text-[12px] font-semibold mb-4">
+          选择方言 / Dialect
+        </h3>
 
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {COVER_DIALECTS.map((d) => {
             const selected = state.dialect.selected === d.id
             const color = DIALECT_COLORS[d.id] || '#fff'
@@ -26,16 +55,16 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
                 key={d.id}
                 onClick={() => dispatch({ type: 'SET_DIALECT', dialect: d.id })}
                 className={`relative py-5 rounded-2xl text-center transition-all duration-300 ${
-                  selected ? 'bg-[#2C2C2E]' : 'bg-[#1C1C1E] hover:bg-[#2C2C2E]/60'
+                  selected ? 'bg-[#2a2a2a]' : 'bg-[#0e0e0e] hover:bg-[#2a2a2a]'
                 }`}
               >
                 {selected && (
                   <div className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: color }} />
                 )}
-                <span className={`text-[13px] font-semibold font-sans block ${selected ? 'text-white' : 'text-white/40'}`}>
+                <span className={`text-[13px] font-semibold block ${selected ? 'text-white' : 'text-white/40'}`}>
                   {d.name}
                 </span>
-                <span className="text-white/15 text-[10px] font-sans mt-0.5 block">{d.region}</span>
+                <span className="text-white/50 text-[10px] mt-0.5 block">{d.region}</span>
               </button>
             )
           })}
@@ -44,11 +73,12 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
 
       {/* Lyrics mode */}
       <div>
-        <h3 className="text-[20px] font-semibold font-sans mb-2">歌词</h3>
-        <p className="text-white/25 text-[13px] font-sans mb-6">选择歌词处理方式</p>
+        <h3 className="uppercase tracking-[0.2em] text-white/40 text-[12px] font-semibold mb-4">
+          歌词模式 / Lyrics Mode
+        </h3>
 
-        {/* Apple segmented control */}
-        <div className="flex p-1 bg-[#1C1C1E] rounded-xl mb-6">
+        {/* Segmented control */}
+        <div className="flex p-1 bg-[#1f1f1f] rounded-2xl mb-6">
           {[
             { id: 'original' as const, label: '保留原词' },
             { id: 'custom' as const, label: '自定义' },
@@ -57,10 +87,10 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
             <button
               key={mode.id}
               onClick={() => dispatch({ type: 'SET_LYRICS_MODE', mode: mode.id })}
-              className={`flex-1 py-2.5 rounded-lg text-[12px] font-semibold font-sans transition-all duration-300 ${
+              className={`flex-1 py-2.5 rounded-xl text-[12px] transition-all duration-300 ${
                 state.lyrics.mode === mode.id
-                  ? 'bg-[#2C2C2E] text-white shadow-sm'
-                  : 'text-white/25 hover:text-white/40'
+                  ? 'bg-[#2a2a2a] shadow-lg text-white font-semibold'
+                  : 'text-white/50 font-medium hover:text-white/70'
               }`}
             >
               {mode.label}
@@ -69,27 +99,31 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
         </div>
 
         {state.lyrics.mode === 'custom' && (
-          <div className="space-y-2">
+          <div className="relative">
             <textarea
               value={state.lyrics.customLyrics}
               onChange={(e) => dispatch({ type: 'SET_CUSTOM_LYRICS', lyrics: e.target.value })}
               placeholder={"用方言写歌词...\n\n支持 [Verse]、[Chorus] 等标记"}
               rows={8}
-              className="w-full bg-[#1C1C1E] border border-white/[0.06] rounded-2xl px-6 py-4 text-white text-[14px] leading-[1.7] placeholder:text-white/10 focus:outline-none focus:border-white/[0.15] resize-none transition-colors font-sans"
+              className="w-full bg-[#2a2a2a] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
             />
-            <p className="text-right text-white/10 text-[11px] font-sans">{state.lyrics.customLyrics.length} 字</p>
+            <span className="absolute bottom-4 right-4 text-[10px] font-mono text-white/30 bg-black/40 px-2 py-1 rounded-md">
+              {state.lyrics.customLyrics.length}
+            </span>
           </div>
         )}
 
         {state.lyrics.mode === 'ai-generate' && (
           <div className="space-y-4">
-            <textarea
-              value={state.lyrics.brandMessage}
-              onChange={(e) => dispatch({ type: 'SET_BRAND_MESSAGE', message: e.target.value })}
-              placeholder="输入品牌或产品信息，AI 据此生成方言歌词..."
-              rows={4}
-              className="w-full bg-[#1C1C1E] border border-white/[0.06] rounded-2xl px-6 py-4 text-white text-[14px] leading-[1.7] placeholder:text-white/10 focus:outline-none focus:border-white/[0.15] resize-none transition-colors font-sans"
-            />
+            <div className="relative">
+              <textarea
+                value={state.lyrics.brandMessage}
+                onChange={(e) => dispatch({ type: 'SET_BRAND_MESSAGE', message: e.target.value })}
+                placeholder="输入品牌或产品信息，AI 据此生成方言歌词..."
+                rows={4}
+                className="w-full bg-[#2a2a2a] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
+              />
+            </div>
             <button
               onClick={async () => {
                 if (!state.lyrics.brandMessage.trim()) return
@@ -109,7 +143,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
                 }
               }}
               disabled={!state.lyrics.brandMessage.trim() || state.lyrics.isGenerating}
-              className="w-full py-3.5 rounded-2xl bg-white text-black font-semibold text-[13px] font-sans disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-white to-white/90 text-black font-semibold text-[13px] disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
             >
               {state.lyrics.isGenerating ? (
                 <><div className="w-4 h-4 rounded-full border-2 border-black/20 border-t-black animate-spin" />生成中...</>
@@ -119,12 +153,14 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
             </button>
 
             {state.lyrics.generatedLyrics && (
-              <textarea
-                value={state.lyrics.generatedLyrics}
-                onChange={(e) => dispatch({ type: 'SET_GENERATED_LYRICS', lyrics: e.target.value })}
-                rows={8}
-                className="w-full bg-[#1C1C1E] border border-[#8b5cf6]/10 rounded-2xl px-6 py-4 text-white text-[14px] leading-[1.7] focus:outline-none focus:border-white/[0.15] resize-none transition-colors font-sans"
-              />
+              <div className="relative">
+                <textarea
+                  value={state.lyrics.generatedLyrics}
+                  onChange={(e) => dispatch({ type: 'SET_GENERATED_LYRICS', lyrics: e.target.value })}
+                  rows={8}
+                  className="w-full bg-[#2a2a2a] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
+                />
+              </div>
             )}
           </div>
         )}
@@ -132,33 +168,52 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
 
       {/* Vocal gender */}
       <div>
-        <h3 className="text-[20px] font-semibold font-sans mb-4">人声</h3>
-        <div className="flex gap-3">
+        <h3 className="uppercase tracking-[0.2em] text-white/40 text-[12px] font-semibold mb-4">
+          人声性别 / Vocal Gender
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
           {([
-            { id: 'm' as const, label: '男声' },
-            { id: 'f' as const, label: '女声' },
-          ]).map((g) => (
-            <button
-              key={g.id}
-              onClick={() => dispatch({ type: 'SET_VOCAL_GENDER', gender: g.id })}
-              className={`flex-1 py-5 rounded-2xl text-center transition-all duration-300 font-sans ${
-                state.vocalGender === g.id ? 'bg-[#2C2C2E] text-white' : 'bg-[#1C1C1E] text-white/30 hover:bg-[#2C2C2E]/60'
-              }`}
-            >
-              <span className="text-[14px] font-semibold">{g.label}</span>
-            </button>
-          ))}
+            { id: 'm' as const, label: '男声 Male', Icon: ManIcon },
+            { id: 'f' as const, label: '女声 Female', Icon: WomanIcon },
+          ]).map((g) => {
+            const selected = state.vocalGender === g.id
+            return (
+              <button
+                key={g.id}
+                onClick={() => dispatch({ type: 'SET_VOCAL_GENDER', gender: g.id })}
+                className={`flex flex-col items-center justify-center gap-3 py-6 rounded-2xl transition-all duration-300 ${
+                  selected
+                    ? 'bg-[#2a2a2a] ring-2 ring-[#8B5CF6]/30'
+                    : 'bg-[#0e0e0e] hover:bg-[#2a2a2a]'
+                }`}
+              >
+                <g.Icon className={`w-8 h-8 ${selected ? 'text-[#8B5CF6]' : 'text-white/40'}`} />
+                <span className={`text-[14px] font-semibold ${selected ? 'text-white' : 'text-white/40'}`}>
+                  {g.label}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* Next button */}
-      <button
-        onClick={onNext}
-        className="w-full py-[18px] rounded-full bg-white text-black font-semibold text-[15px] font-sans flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all"
-      >
-        下一步
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
+      {/* Navigation */}
+      <div className="flex gap-3">
+        <button
+          onClick={onPrev}
+          className="flex-1 py-[18px] rounded-full bg-[#1f1f1f] text-white/60 font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:bg-[#2a2a2a]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          上一步
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 py-[18px] rounded-full bg-white text-black font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+        >
+          下一步
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
     </div>
   )
 }

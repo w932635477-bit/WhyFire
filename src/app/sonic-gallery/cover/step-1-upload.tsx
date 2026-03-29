@@ -118,10 +118,21 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
   const isCompleted = state.song.uploadStatus === 'completed'
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
+      {/* Step indicator */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-emerald-500" />
+          <span className="text-white/40 text-[12px] font-sans font-medium tracking-wide">Step 1/3</span>
+        </div>
+        <div className="w-px h-3 bg-white/10" />
+        <span className="text-white/60 text-[12px] font-sans">Upload</span>
+      </div>
+
+      {/* Header */}
       <div>
-        <h2 className="text-[32px] font-bold tracking-[-0.02em] font-sans">上传原唱</h2>
-        <p className="text-white/30 text-[15px] mt-2 font-sans">上传你想翻唱的歌曲</p>
+        <h2 className="text-[32px] font-extrabold tracking-[-0.02em] font-sans text-white">上传原唱</h2>
+        <p className="text-white/50 text-[14px] mt-2 font-sans">上传你想翻唱的歌曲原声</p>
       </div>
 
       {/* Upload area */}
@@ -129,24 +140,27 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`rounded-[24px] p-16 text-center cursor-pointer transition-all duration-500 ${
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+        className={`relative rounded-[24px] p-16 text-center cursor-pointer transition-all duration-500 bg-[#2a2a2a] ${
           isDragOver
-            ? 'bg-[#1C1C1E] border-2 border-[#8b5cf6]/40 scale-[1.01]'
-            : isCompleted
-            ? 'bg-[#1C1C1E] border border-[#10b981]/20'
-            : 'bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-transparent'
-        }`}
+            ? 'scale-[1.01]'
+            : ''
+        } ${isUploading ? 'pointer-events-none' : ''}`}
       >
         <input ref={fileInputRef} type="file" accept="audio/*,video/*,.mp3,.wav,.ogg,.webm,.m4a,.aac,.flac,.mp4,.mov,.avi,.mkv" onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])} className="hidden" />
 
+        {/* Ambient glow behind success state */}
+        {isCompleted && (
+          <div className="absolute inset-0 bg-[#10B981]/5 blur-[60px] rounded-full pointer-events-none" />
+        )}
+
         {isUploading ? (
-          <div className="space-y-4">
+          <div className="relative space-y-4">
             <div className="w-12 h-12 rounded-full border-[2px] border-white/10 border-t-white animate-spin mx-auto" />
             <p className="text-white/50 text-[14px] font-sans">正在上传...</p>
           </div>
         ) : isCompleted ? (
-          <div className="space-y-3">
+          <div className="relative space-y-3">
             <div className="w-12 h-12 rounded-full bg-[#10b981]/10 flex items-center justify-center mx-auto">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
@@ -165,81 +179,86 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
       </div>
 
       {/* Divider */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         <div className="flex-1 h-px bg-white/[0.06]" />
-        <span className="text-white/15 text-[11px] font-sans tracking-[0.1em] uppercase">或粘贴链接</span>
+        <span className="text-white/20 text-[12px] font-sans">或粘贴链接</span>
         <div className="flex-1 h-px bg-white/[0.06]" />
       </div>
 
-      {/* URL input */}
-      <div className="flex gap-3">
+      {/* URL input — pill-shaped */}
+      <div className="flex items-center bg-[#1f1f1f] p-2 pl-6 rounded-full">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" className="flex-shrink-0">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
         <input
           type="url"
           value={pasteUrl}
           onChange={(e) => setPasteUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && pasteUrl.trim().startsWith('http') && handlePasteUrl()}
           placeholder="https://example.com/song.mp3"
-          className="flex-1 bg-[#1C1C1E] border border-white/[0.06] rounded-xl px-5 py-3.5 text-white text-[13px] placeholder:text-white/15 focus:outline-none focus:border-white/[0.15] transition-colors font-sans"
+          className="flex-1 bg-transparent border-none px-4 py-2 text-white text-[13px] placeholder:text-white/20 focus:outline-none font-sans"
         />
         <button
           onClick={handlePasteUrl}
           disabled={!pasteUrl.trim().startsWith('http')}
-          className="px-6 py-3.5 rounded-xl bg-[#1C1C1E] text-white/40 text-[13px] font-medium hover:bg-[#2C2C2E] disabled:opacity-25 transition-all font-sans"
+          className="bg-[#353535] text-white px-6 py-2 rounded-full text-xs font-bold font-sans hover:bg-[#404040] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex-shrink-0"
         >
           确认
         </button>
       </div>
 
-      {/* Error */}
+      {/* Error state */}
       {state.song.error && (
-        <div className="flex items-center gap-3 p-5 rounded-2xl bg-red-500/[0.08] border border-red-500/[0.12]">
+        <div className="flex items-center gap-3 p-5 rounded-2xl bg-red-500/10">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           <span className="text-red-300/60 text-[13px] font-sans">{state.song.error}</span>
         </div>
       )}
 
-      {/* 预览播放器 — 上传/粘贴完成后显示 */}
+      {/* Preview player */}
       {isCompleted && previewUrl && (
-        <div className="p-5 rounded-2xl bg-[#1C1C1E]">
+        <div className="bg-[#0e0e0e] rounded-2xl p-6">
           <div className="flex items-center gap-4">
-            <button onClick={togglePlay} className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 hover:scale-105 active:scale-95 transition-transform">
+            {/* Album art placeholder with play overlay */}
+            <button
+              onClick={togglePlay}
+              className="w-16 h-16 rounded-xl bg-[#2a2a2a] flex items-center justify-center flex-shrink-0 hover:bg-[#333] active:scale-95 transition-all relative"
+            >
               {playing ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="black"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="black" className="ml-0.5"><polygon points="8 5 20 12 8 19"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="white" className="ml-0.5"><polygon points="8 5 20 12 8 19"/></svg>
               )}
             </button>
+
+            {/* Track info + progress */}
             <div className="flex-1 min-w-0">
-              <div className="h-[2px] bg-white/[0.08] rounded-full overflow-hidden cursor-pointer" onClick={(e) => {
-                const m = mediaRef.current; if (!m || !dur) return
-                const r = e.currentTarget.getBoundingClientRect()
-                m.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * dur
-              }}>
-                <div className="h-full bg-white rounded-full" style={{ width: `${dur > 0 ? (time / dur) * 100 : 0}%` }} />
+              <p className="text-white text-[13px] font-medium font-sans truncate">{state.song.fileName || '粘贴的歌曲链接'}</p>
+              <div className="flex justify-between mt-1 mb-2">
+                <span className="text-white/30 text-[11px] font-sans tabular-nums">{fmt(time)}</span>
+                <span className="text-white/30 text-[11px] font-sans tabular-nums">{fmt(dur)}</span>
               </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="text-white/15 text-[10px] font-sans tabular-nums">{fmt(time)}</span>
-                <span className="text-white/15 text-[10px] font-sans tabular-nums">{fmt(dur)}</span>
+              {/* Sonic bar */}
+              <div
+                className="h-1 bg-[#353535] rounded-full overflow-hidden cursor-pointer"
+                onClick={(e) => {
+                  const m = mediaRef.current; if (!m || !dur) return
+                  const r = e.currentTarget.getBoundingClientRect()
+                  m.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * dur
+                }}
+              >
+                <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-emerald-500" style={{ width: `${dur > 0 ? (time / dur) * 100 : 0}%` }} />
               </div>
             </div>
           </div>
+
+          {/* Hidden media elements */}
           {isVideo ? (
             <video ref={videoRef} src={previewUrl} preload="metadata" className="hidden" />
           ) : (
             <audio ref={audioRef} src={previewUrl} preload="metadata" />
           )}
         </div>
-      )}
-
-      {/* Next button — appears after successful upload */}
-      {isCompleted && state.song.url && (
-        <button
-          onClick={onNext}
-          className="w-full py-[18px] rounded-full bg-white text-black font-semibold text-[15px] font-sans flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all"
-        >
-          下一步
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
       )}
     </div>
   )

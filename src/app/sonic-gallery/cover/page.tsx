@@ -6,10 +6,10 @@ import { Step2DialectLyrics } from './step-2-dialect-lyrics'
 import { Step3Preview } from './step-3-preview'
 import { CoverProvider, useCoverContext } from './cover-context'
 
-const steps = [
-  { id: 1, title: '上传' },
-  { id: 2, title: '方言' },
-  { id: 3, title: '生成' },
+const stepMeta = [
+  { id: 1, label: '上传' },
+  { id: 2, label: '方言歌词' },
+  { id: 3, label: '预览生成' },
 ]
 
 export default function CoverPage() {
@@ -38,67 +38,81 @@ function CoverPageContent() {
     }
   }
 
+  const currentMeta = stepMeta[state.currentStep - 1]
+
+  const showBottomBar =
+    state.currentStep > 1 &&
+    !(state.currentStep === 3 && state.result.status !== 'idle')
+
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white antialiased">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-2xl border-b border-white/[0.04]">
-        <div className="max-w-[640px] mx-auto px-6 h-12 flex items-center justify-between">
-          <Link href="/sonic-gallery" className="flex items-center gap-1 text-white/40 hover:text-white/70 transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+    <div className="min-h-screen bg-black text-white antialiased">
+      {/* ── Top Nav Bar ── */}
+      <header className="fixed top-0 inset-x-0 z-40 bg-black/70 backdrop-blur-[40px] rounded-b-2xl">
+        <div className="max-w-[640px] mx-auto px-6 h-14 flex items-center justify-between">
+          {/* Left: back + title */}
+          <Link
+            href="/sonic-gallery"
+            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            <span className="text-[15px] font-extrabold tracking-tighter text-white">方言回响</span>
           </Link>
 
-          {/* Step dots — minimal Apple style */}
-          <div className="flex items-center gap-2">
-            {steps.map((step) => (
-              <button
-                key={step.id}
-                onClick={() => canProceedToStep(step.id) && goToStep(step.id)}
-                className="flex items-center gap-1.5"
-              >
-                {state.currentStep > step.id ? (
-                  <div className="w-5 h-5 rounded-full bg-[#10b981] flex items-center justify-center">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                  </div>
-                ) : (
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-sans transition-colors ${
-                    state.currentStep === step.id ? 'bg-white text-black' : 'bg-white/10 text-white/30'
-                  }`}>{step.id}</div>
-                )}
-                <span className={`text-[11px] font-sans hidden sm:inline ${state.currentStep === step.id ? 'text-white font-medium' : 'text-white/25'}`}>{step.title}</span>
-              </button>
-            ))}
+          {/* Center: step indicator bar */}
+          <div className="flex items-center gap-2 flex-1 mx-6">
+            <span className="w-2 h-2 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#10B981] shrink-0" />
+            <span className="text-[12px] font-bold uppercase tracking-widest text-white whitespace-nowrap">
+              Step {state.currentStep}/3
+            </span>
+            <span className="h-px flex-grow bg-[#2a2a2a]" />
+            <span className="text-[12px] text-white/30 uppercase tracking-widest whitespace-nowrap">
+              {currentMeta.label}
+            </span>
           </div>
 
-          <div className="w-5 h-5 rounded bg-white flex items-center justify-center">
-            <span className="text-black text-[9px] font-black">W</span>
+          {/* Right: W logo */}
+          <div className="w-5 h-5 rounded bg-white flex items-center justify-center shrink-0">
+            <span className="text-black text-[9px] font-black leading-none">W</span>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="flex-1">
-        <div className="max-w-[640px] mx-auto px-6 py-12 sm:py-16 pb-32">
-          <div className="animate-fade-in">{renderStep()}</div>
-        </div>
+      {/* ── Content Area ── */}
+      <main className="max-w-[640px] mx-auto px-6 pt-24 pb-32">
+        <div className="animate-fade-in">{renderStep()}</div>
       </main>
 
-      {/* Bottom nav */}
-      {state.currentStep > 1 && state.currentStep < 3 && state.result.status === 'idle' && (
-        <footer className="fixed bottom-0 inset-x-0 z-40 bg-black/80 backdrop-blur-2xl border-t border-white/[0.04]">
-          <div className="max-w-[640px] mx-auto px-6 py-4 flex items-center justify-between">
-            <button onClick={() => goToStep(state.currentStep - 1)} className="text-white/30 hover:text-white/60 text-[13px] font-sans transition-colors">
-              上一步
+      {/* ── Bottom Action Bar ── */}
+      {showBottomBar && (
+        <footer className="fixed bottom-0 inset-x-0 z-40 bg-black/70 backdrop-blur-[40px] rounded-t-[32px] shadow-2xl">
+          <div className="max-w-[640px] mx-auto px-6 py-5 flex items-center justify-between">
+            {/* Previous */}
+            <button
+              onClick={() => goToStep(state.currentStep - 1)}
+              className="inline-flex items-center gap-1.5 bg-[#1C1C1E] text-white rounded-full px-8 py-3 text-[13px] font-semibold transition-all active:scale-[0.97]"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Previous
             </button>
+
+            {/* Next */}
             <button
               onClick={() => goToStep(state.currentStep + 1)}
               disabled={!canProceedToStep(state.currentStep + 1)}
-              className={`inline-flex items-center gap-2 px-8 py-3 rounded-full text-[13px] font-semibold font-sans transition-all active:scale-[0.98] ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-12 py-3 text-[13px] font-semibold transition-all active:scale-[0.97] ${
                 canProceedToStep(state.currentStep + 1)
-                  ? 'bg-white text-black hover:bg-white/90'
+                  ? 'bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white shadow-[0_8px_32px_rgba(139,92,246,0.3)]'
                   : 'bg-white/10 text-white/20 cursor-not-allowed'
               }`}
             >
               下一步
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
             </button>
           </div>
         </footer>
