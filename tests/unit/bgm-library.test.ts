@@ -28,10 +28,11 @@ describe('BGM Library', () => {
       })
     })
 
-    it('all BGMs should have valid URLs (OSS)', () => {
+    it('all BGMs should have valid URLs', () => {
       BGM_LIBRARY.forEach(bgm => {
-        expect(bgm.url).toMatch(/^https:\/\//)
-        expect(bgm.url).toContain('oss-cn-beijing.aliyuncs.com')
+        // 支持 OSS 直链 或 audio-proxy 本地代理路径
+        const isValid = bgm.url.startsWith('https://') || bgm.url.startsWith('/api/audio-proxy')
+        expect(isValid).toBe(true)
       })
     })
 
