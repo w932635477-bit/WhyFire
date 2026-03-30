@@ -17,16 +17,24 @@ function getClient(): WxPay {
   if (_client) return _client
 
   let privateKey: Buffer
+  let publicKey: Buffer
   try {
     privateKey = Buffer.from(readFileSync(privateKeyPath, 'utf-8'))
   } catch {
     privateKey = Buffer.from('')
   }
+  try {
+    // Merchant certificate (apiclient_cert.pem) - used for serial number extraction
+    const certPath = privateKeyPath.replace('key', 'cert')
+    publicKey = Buffer.from(readFileSync(certPath, 'utf-8'))
+  } catch {
+    publicKey = Buffer.from('')
+  }
 
   _client = new WxPay({
     appid: appId,
     mchid: mchId,
-    publicKey: privateKey,
+    publicKey,
     privateKey,
   })
 
