@@ -576,8 +576,8 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
           )}
         </div>
 
-        {/* KTV 歌词视频 */}
-        {(state.result.mvStatus === 'completed' || state.result.ktvStatus !== 'idle') && (
+        {/* KTV 歌词视频 — 仅在有歌词文本时显示（翻唱保留原词模式无逐词数据） */}
+        {((state.result.mvStatus === 'completed' && state.result.lyrics) || state.result.ktvStatus !== 'idle') && (
           <div className="p-6 rounded-2xl bg-[#1C1C1E]">
             <div className="flex items-center justify-between mb-5">
               <p className="text-white/50 text-[14px] font-semibold font-sans">KTV 歌词视频</p>
