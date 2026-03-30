@@ -93,7 +93,7 @@ export function LoginForm() {
       if (error) throw error
 
       // Redirect to /create on success
-      router.push('/create')
+      router.push('/sonic-gallery')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid verification code')
       setOtp('') // Clear OTP on error

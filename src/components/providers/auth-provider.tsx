@@ -16,9 +16,6 @@ interface AuthContextValue {
   profile: UserProfile | null
   loading: boolean
   signInWithEmail: (email: string) => Promise<void>
-  signInWithWeChat: () => Promise<void>
-  signInWithPhone: (phone: string) => Promise<void>
-  verifyPhoneOtp: (phone: string, token: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -38,10 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single()
       if (data) {
-        setProfile(data as UserProfile)
+        setProfile(data as unknown as UserProfile)
       }
     } catch {
-      // Profile might not exist yet (migration not run)
       setProfile(null)
     }
   }, [supabase])
@@ -87,32 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signInWithWeChat = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'wechat' as any,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    if (error) throw error
-  }
-
-  const signInWithPhone = async (phone: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-    })
-    if (error) throw error
-  }
-
-  const verifyPhoneOtp = async (phone: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: 'sms',
-    })
-    if (error) throw error
-  }
-
   const signOut = async () => {
     setLoading(true)
     const { error } = await supabase.auth.signOut()
@@ -130,9 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     signInWithEmail,
-    signInWithWeChat,
-    signInWithPhone,
-    verifyPhoneOtp,
     signOut,
   }
 

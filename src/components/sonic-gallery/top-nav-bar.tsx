@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthContext } from '@/components/providers/auth-provider'
-import { WeChatLoginButton } from '@/components/auth/wechat-login-button'
 
 export function TopNavBar() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,7 +61,12 @@ export function TopNavBar() {
                 </Link>
               </div>
             ) : (
-              <WeChatLoginButton className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-white/70 hover:text-white text-sm font-medium transition-colors" />
+              <Link
+                href="/login"
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-white/70 hover:text-white text-sm font-medium transition-colors"
+              >
+                登录
+              </Link>
             )}
 
             <Link
@@ -116,7 +120,12 @@ export function TopNavBar() {
             </Link>
           </>
         ) : (
-          <WeChatLoginButton className="bg-white text-black px-5 py-2 rounded-full text-sm hover:shadow-lg hover:shadow-white/20 transition-all duration-300 font-['PingFang_SC','Noto_Sans_SC',sans-serif]" />
+          <Link
+            href="/login"
+            className="bg-white text-black px-5 py-2 rounded-full text-sm hover:shadow-lg hover:shadow-white/20 transition-all duration-300 font-['PingFang_SC','Noto_Sans_SC',sans-serif]"
+          >
+            登录
+          </Link>
         )}
       </div>
     </header>
