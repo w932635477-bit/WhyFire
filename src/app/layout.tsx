@@ -50,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh-CN" className={`${poppins.variable} ${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="zh-CN" className={`${poppins.variable} ${inter.variable} ${spaceGrotesk.variable}`} data-scroll-behavior="smooth">
       <head>
         {/* Material Symbols Outlined - 本地字体，不依赖外部 CDN */}
         <link
