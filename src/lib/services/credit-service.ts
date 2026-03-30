@@ -28,12 +28,12 @@ export async function getCredits(userId: string): Promise<CreditBalance | null> 
     .single()
 
   if (error || !data) return null
-  return data as CreditBalance
+  return data as unknown as CreditBalance
 }
 
 export async function deductCredits(userId: string, amount: number, description: string): Promise<boolean> {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('deduct_user_credits', {
+  const { data, error } = await (supabase.rpc as any)('deduct_user_credits', {
     p_user_id: userId,
     p_amount: amount,
     p_description: description,
@@ -55,7 +55,7 @@ export async function addCredits(
   packageId?: string,
 ): Promise<void> {
   const supabase = await createClient()
-  const { error } = await supabase.rpc('add_user_credits', {
+  const { error } = await (supabase.rpc as any)('add_user_credits', {
     p_user_id: userId,
     p_amount: amount,
     p_type: type,
@@ -98,7 +98,7 @@ export async function getTransactions(
   ])
 
   return {
-    transactions: (transactionsRes.data as CreditTransaction[]) || [],
+    transactions: (transactionsRes.data as unknown as CreditTransaction[]) || [],
     total: countRes.count || 0,
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { useCredits } from '@/lib/hooks/use-credits'
@@ -11,15 +11,9 @@ export default function ProfilePage() {
   const { user, profile, loading: authLoading } = useAuthContext()
   const { credits, loading: creditsLoading } = useCredits()
   const [activeTab, setActiveTab] = useState('works')
-  const [dataLoading, setDataLoading] = useState(true)
 
-  useEffect(() => {
-    // Simulate data fetch (replace with real API call)
-    const timer = setTimeout(() => setDataLoading(false), 600)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const isLoading = authLoading || dataLoading
+  // Real data: loading state comes from auth + credits hooks
+  const isLoading = authLoading || creditsLoading
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || '创作者'
   const avatarLetter = displayName[0].toUpperCase()
