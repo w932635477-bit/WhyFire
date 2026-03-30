@@ -19,6 +19,7 @@ interface MusicVideoRequest {
   taskId: string
   audioId: string
   author?: string
+  domainName?: string
 }
 
 export const POST = withOptionalAuth(async (request: NextRequest) => {
@@ -50,6 +51,7 @@ export const POST = withOptionalAuth(async (request: NextRequest) => {
       body.taskId,
       body.audioId,
       body.author,
+      body.domainName,
     )
 
     return NextResponse.json({

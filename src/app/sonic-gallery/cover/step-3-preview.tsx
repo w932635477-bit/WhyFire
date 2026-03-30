@@ -250,7 +250,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
     try {
       const res = await fetch('/api/cover/music-video', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: state.result.sunoTaskId, audioId: state.result.audioId }),
+        body: JSON.stringify({ taskId: state.result.sunoTaskId, audioId: state.result.audioId, domainName: 'whyfire.com' }),
       })
       const d = await res.json()
       if (d.code === 0 && d.data?.taskId) {

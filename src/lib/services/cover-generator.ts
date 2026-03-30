@@ -185,7 +185,7 @@ export class CoverGenerator {
   /**
    * 提交异步 MV 任务，立即返回 taskId
    */
-  startMusicVideoGeneration(taskId: string, audioId: string, author?: string): string {
+  startMusicVideoGeneration(taskId: string, audioId: string, author?: string, domainName?: string): string {
     const mvTaskId = `mv-${Date.now()}`
 
     const state: AsyncTaskState = {
@@ -201,7 +201,7 @@ export class CoverGenerator {
     taskStore.set(mvTaskId, state)
 
     // 后台异步执行
-    this.executeMusicVideo(mvTaskId, taskId, audioId, author).catch((err) => {
+    this.executeMusicVideo(mvTaskId, taskId, audioId, author, domainName).catch((err) => {
       taskStore.update(mvTaskId, {
         status: 'failed',
         step: 'failed',
@@ -476,7 +476,7 @@ export class CoverGenerator {
   // 内部：异步执行 MV
   // ---------------------------------------------------------------------------
 
-  private async executeMusicVideo(mvTaskId: string, taskId: string, audioId: string, author?: string): Promise<void> {
+  private async executeMusicVideo(mvTaskId: string, taskId: string, audioId: string, author?: string, domainName?: string): Promise<void> {
     taskStore.update(mvTaskId, {
       step: 'mv-polling',
       stepName: '生成 MV',
@@ -488,6 +488,7 @@ export class CoverGenerator {
       taskId,
       audioId,
       author,
+      domainName,
     })
 
     if (mvResult.status === 'failed' || !mvResult.videoUrl) {
