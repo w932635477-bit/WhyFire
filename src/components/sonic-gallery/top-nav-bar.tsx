@@ -50,9 +50,6 @@ export function TopNavBar() {
             <Link href="#works" className="hidden lg:block text-white/60 hover:text-white text-sm font-medium transition-colors">
               作品库
             </Link>
-            <Link href="#pricing" className="hidden lg:block text-white/60 hover:text-white text-sm font-medium transition-colors">
-              定价
-            </Link>
 
             {/* Login & CTA */}
             <button className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-white/70 hover:text-white text-sm font-medium transition-colors">

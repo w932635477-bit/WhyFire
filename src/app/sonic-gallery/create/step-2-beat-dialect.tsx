@@ -31,12 +31,12 @@ const BGM_DISPLAY_NAMES: Record<string, string> = {
 
 // BGM 列表（从 API 动态加载，这里作为 fallback）
 const FALLBACK_BEATS: BeatInfo[] = [
-  { id: 'fortune-flow', name: '八方来财', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/八方来财.mp3', bpm: 137, duration: '1:45', styleTags: 'pop rap, upbeat, positive', energy: 'high', mood: ['happy', 'confident'] },
-  { id: 'karma-dark', name: '因果', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/因果-改.mp3', bpm: 110, duration: '2:28', styleTags: 'dark trap, drill, mysterious', energy: 'medium', mood: ['dark', 'mysterious'] },
-  { id: 'apt-remix', name: 'APT.', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/apt-改.mp3', bpm: 99, duration: '2:08', styleTags: 'trap, dark, heavy 808', energy: 'high', mood: ['aggressive', 'confident'] },
-  { id: 'brazilian-phonk', name: 'BRAZIL', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/brazli-改.mp3', bpm: 70, duration: '2:13', styleTags: 'brazilian phonk, drill, heavy bass', energy: 'high', mood: ['intense', 'energetic'] },
-  { id: 'warm-gray', name: '暖灰', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/暖灰-改.mp3', bpm: 78, duration: '1:41', styleTags: 'lo-fi, chill, ambient, smooth', energy: 'low', mood: ['relaxed', 'dreamy'] },
-  { id: 'wonderful-01', name: '精彩01', url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/精彩01.mp3', bpm: 120, duration: '2:16', styleTags: 'pop rap, upbeat, positive', energy: 'high', mood: ['happy', 'confident'] },
+  { id: 'fortune-flow', name: '八方来财', url: '/api/audio-proxy?path=bgm/八方来财.mp3', bpm: 137, duration: '1:45', styleTags: 'pop rap, upbeat, positive', energy: 'high', mood: ['happy', 'confident'] },
+  { id: 'karma-dark', name: '因果', url: '/api/audio-proxy?path=bgm/因果-改.mp3', bpm: 110, duration: '2:28', styleTags: 'dark trap, drill, mysterious', energy: 'medium', mood: ['dark', 'mysterious'] },
+  { id: 'apt-remix', name: 'APT.', url: '/api/audio-proxy?path=bgm/apt-改.mp3', bpm: 99, duration: '2:08', styleTags: 'trap, dark, heavy 808', energy: 'high', mood: ['aggressive', 'confident'] },
+  { id: 'brazilian-phonk', name: 'BRAZIL', url: '/api/audio-proxy?path=bgm/brazli-改.mp3', bpm: 70, duration: '2:13', styleTags: 'brazilian phonk, drill, heavy bass', energy: 'high', mood: ['intense', 'energetic'] },
+  { id: 'warm-gray', name: '暖灰', url: '/api/audio-proxy?path=bgm/暖灰-改.mp3', bpm: 78, duration: '1:41', styleTags: 'lo-fi, chill, ambient, smooth', energy: 'low', mood: ['relaxed', 'dreamy'] },
+  { id: 'wonderful-01', name: '精彩01', url: '/api/audio-proxy?path=bgm/精彩01.mp3', bpm: 120, duration: '2:16', styleTags: 'pop rap, upbeat, positive', energy: 'high', mood: ['happy', 'confident'] },
 ]
 
 // 默认BGM - 八方来财（最火）

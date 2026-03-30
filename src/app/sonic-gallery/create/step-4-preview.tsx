@@ -484,13 +484,11 @@ export function Step4Preview({ onPrev }: Step4PreviewProps) {
       {/* Right Column - Player Card */}
       <div className="lg:col-span-8 order-1 lg:order-2">
         <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] bg-gradient-to-br from-violet-900/30 to-emerald-900/30">
-          {/* Background Image */}
+          {/* Background Gradient */}
           <div
             className="absolute inset-0 opacity-30 mix-blend-overlay"
             style={{
-              backgroundImage: 'url(https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundImage: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(16, 185, 129, 0.3) 50%, rgba(99, 102, 241, 0.4) 100%)',
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

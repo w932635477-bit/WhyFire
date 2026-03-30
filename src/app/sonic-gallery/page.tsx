@@ -24,6 +24,9 @@ const dialectCards = [
 
 export default function SonicGalleryHome() {
   const [hoveredWork, setHoveredWork] = useState<string | null>(null)
+  const [showPrivacy, setShowPrivacy] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
+  const [showContact, setShowContact] = useState(false)
 
   return (
     <div className="min-h-screen bg-black text-white antialiased">
@@ -92,7 +95,7 @@ export default function SonicGalleryHome() {
             用方言翻唱
             <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">
-              30 秒出片
+              1 分钟出片
             </span>
           </h1>
 
@@ -124,7 +127,7 @@ export default function SonicGalleryHome() {
           <div className="flex items-center justify-center gap-16 mt-16 pt-8 border-t border-white/5">
             {[
               { value: '9', label: '种方言' },
-              { value: '30s', label: '出翻唱' },
+              { value: '1min', label: '出翻唱' },
               { value: 'MV', label: '视频直出' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
@@ -137,7 +140,7 @@ export default function SonicGalleryHome() {
       </section>
 
       {/* ========== HOT WORKS ========== */}
-      <section className="py-24 sm:py-32">
+      <section id="works" className="py-24 sm:py-32">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-end justify-between mb-14">
             <div>
@@ -270,8 +273,8 @@ export default function SonicGalleryHome() {
                   </svg>
                 ),
                 title: 'AI 方言翻唱',
-                desc: '上传一首歌，30 秒用方言重新演绎。Suno API 驱动，自然流畅。',
-                stat: '30 秒',
+                desc: '上传一首歌，1 分钟用方言重新演绎。Suno API 驱动，自然流畅。',
+                stat: '1 分钟',
                 statSub: '生成翻唱',
               },
               {
@@ -338,7 +341,7 @@ export default function SonicGalleryHome() {
             准备好了吗？
           </h2>
           <p className="text-white/40 text-lg font-sans mb-12 max-w-md mx-auto">
-            上传一首歌，30 秒后你会听到完全不同的版本
+            上传一首歌，1 分钟后你会听到完全不同的版本
           </p>
           <Link
             href="/sonic-gallery/cover"
@@ -357,12 +360,136 @@ export default function SonicGalleryHome() {
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <span className="text-white/20 text-[12px] font-sans">Copyright &copy; 2026 方言回响. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <Link href="#" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</Link>
-            <Link href="#" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</Link>
-            <Link href="#" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">联系</Link>
+            <button onClick={() => setShowPrivacy(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</button>
+            <button onClick={() => setShowTerms(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</button>
+            <button onClick={() => setShowContact(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">联系</button>
           </div>
         </div>
       </footer>
+
+      {/* ========== MODALS ========== */}
+
+      {/* Privacy Modal */}
+      {showPrivacy && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowPrivacy(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-[24px] p-8 sm:p-10"
+            style={{ background: '#1C1C1E', border: '1px solid rgba(139,92,246,0.15)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={() => setShowPrivacy(false)} className="absolute top-5 right-5 text-white/30 hover:text-white/60 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-[24px] font-extrabold font-sans mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">隐私政策</h2>
+            <div className="space-y-4 text-white/50 text-[14px] leading-[1.8] font-sans">
+              <p><span className="text-white/70 font-semibold">生效日期：</span>2026 年 3 月 1 日</p>
+              <p>方言回响（WhyFire）尊重并保护每位用户的隐私。本隐私政策说明我们如何收集、使用和保护您的个人信息。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">1. 信息收集</h3>
+              <p>我们收集您上传的音频文件和歌词文本，用于 AI 方言翻唱和 MV 视频生成。上传即表示您授权我们对内容进行必要的 AI 处理。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">2. 数据存储</h3>
+              <p>所有音频和视频文件存储于阿里云 OSS（对象存储服务），数据传输全程加密（HTTPS/TLS）。我们不会将您的音频文件分享给第三方。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">3. AI 处理</h3>
+              <p>音频处理使用自建 GPU 服务器和第三方 AI 服务（如 Suno API）。处理完成后，原始音频和生成结果仅保存在您的账户中，不会用于训练 AI 模型。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">4. 用户权利</h3>
+              <p>您可以随时删除自己的作品和数据。删除后，相关文件将从存储服务器永久移除。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">5. 联系我们</h3>
+              <p>如有隐私相关问题，请联系 contact@whyfire.ai。</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Terms Modal */}
+      {showTerms && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowTerms(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-[24px] p-8 sm:p-10"
+            style={{ background: '#1C1C1E', border: '1px solid rgba(139,92,246,0.15)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={() => setShowTerms(false)} className="absolute top-5 right-5 text-white/30 hover:text-white/60 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-[24px] font-extrabold font-sans mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">服务条款</h2>
+            <div className="space-y-4 text-white/50 text-[14px] leading-[1.8] font-sans">
+              <p><span className="text-white/70 font-semibold">生效日期：</span>2026 年 3 月 1 日</p>
+              <p>欢迎使用方言回响（WhyFire）。使用本服务即表示您同意以下条款。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">1. 服务说明</h3>
+              <p>方言回响提供 AI 方言翻唱、原创歌词创作和 MV 视频生成服务。我们保留随时修改或终止服务的权利。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">2. 用户生成内容</h3>
+              <p>您对通过本平台创作的作品享有使用权。上传的原始音频必须为您拥有合法权利的内容。严禁上传侵犯他人版权的音频。</p>
+              <p>生成的方言翻唱作品仅供个人娱乐和社交分享使用。如需商用，请另行联系我们获取授权。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">3. 禁止行为</h3>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>上传违法、色情、暴力或仇恨言论内容</li>
+                <li>利用平台生成虚假或误导性内容</li>
+                <li>批量抓取或自动化调用平台服务</li>
+                <li>将生成内容用于未授权的商业用途</li>
+              </ul>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">4. 免责声明</h3>
+              <p>AI 生成的翻唱和视频内容仅供参考和娱乐，我们不保证其准确性或适用性。因使用本服务产生的版权纠纷，由用户自行承担法律责任。</p>
+              <h3 className="text-white/70 font-semibold text-[15px] pt-2">5. 联系我们</h3>
+              <p>如有条款相关问题，请联系 contact@whyfire.ai。</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Modal */}
+      {showContact && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowContact(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-md rounded-[24px] p-8 sm:p-10"
+            style={{ background: '#1C1C1E', border: '1px solid rgba(139,92,246,0.15)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={() => setShowContact(false)} className="absolute top-5 right-5 text-white/30 hover:text-white/60 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-[24px] font-extrabold font-sans mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">联系我们</h2>
+            <div className="space-y-6">
+              {/* Email */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(139,92,246,0.15)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="M22 7l-10 7L2 7" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white/70 text-[14px] font-semibold font-sans">电子邮件</p>
+                  <a href="mailto:contact@whyfire.ai" className="text-[#8b5cf6] hover:text-[#a78bfa] text-[14px] font-sans transition-colors">contact@whyfire.ai</a>
+                </div>
+              </div>
+              {/* WeChat */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(16,185,129,0.15)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white/70 text-[14px] font-semibold font-sans">微信公众号</p>
+                  <p className="text-white/40 text-[14px] font-sans">搜索「方言回响」关注我们</p>
+                </div>
+              </div>
+              {/* Response time */}
+              <div className="pt-4 border-t border-white/[0.06]">
+                <p className="text-white/25 text-[12px] font-sans">我们会在 1-2 个工作日内回复您的邮件。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
