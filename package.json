@@ -47,6 +47,7 @@
     "tailwind-merge": "^3.5.0",
     "undici": "^7.24.6",
     "web-audio-beat-detector": "^8.2.36",
+    "wechatpay-node-v3": "^2.2.1",
     "ws": "8.18.0",
     "zustand": "^5.0.12"
   },

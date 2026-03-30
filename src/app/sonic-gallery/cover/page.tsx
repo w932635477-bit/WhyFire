@@ -86,12 +86,12 @@ function CoverPageContent() {
 
       {/* ── Bottom Action Bar ── */}
       {showBottomBar && (
-        <footer className="fixed bottom-0 inset-x-0 z-40 bg-black/70 backdrop-blur-[40px] rounded-t-[32px] shadow-2xl">
+        <footer className="fixed bottom-0 inset-x-0 z-40 bg-black/70 backdrop-blur-[40px] rounded-t-[28px] shadow-2xl">
           <div className="max-w-[640px] mx-auto px-6 py-5 flex items-center justify-between">
             {/* Previous */}
             <button
               onClick={() => goToStep(state.currentStep - 1)}
-              className="inline-flex items-center gap-1.5 bg-[#1C1C1E] text-white rounded-full px-8 py-3 text-[13px] font-semibold transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-1.5 bg-[#2C2C2E] text-white rounded-full px-8 py-3 text-[13px] font-semibold transition-all active:scale-[0.97]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />

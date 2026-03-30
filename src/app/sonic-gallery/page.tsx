@@ -360,8 +360,8 @@ export default function SonicGalleryHome() {
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <span className="text-white/20 text-[12px] font-sans">Copyright &copy; 2026 方言回响. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <button onClick={() => setShowPrivacy(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</button>
-            <button onClick={() => setShowTerms(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</button>
+            <Link href="/sonic-gallery/privacy" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</Link>
+            <Link href="/sonic-gallery/terms" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</Link>
             <button onClick={() => setShowContact(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">联系</button>
           </div>
         </div>
