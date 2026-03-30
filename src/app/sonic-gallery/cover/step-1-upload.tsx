@@ -89,6 +89,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
       if (data.code === 0 && data.data?.url) {
         dispatch({ type: 'SET_SONG_URL', url: data.data.url })
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+        onNext()
       } else {
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: data.message || '上传失败' })
       }
@@ -105,6 +106,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
     }
     dispatch({ type: 'SET_SONG_URL', url })
     dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+    onNext()
   }
 
   const handleDrop = (e: React.DragEvent) => {
