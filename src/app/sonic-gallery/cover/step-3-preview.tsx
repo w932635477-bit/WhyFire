@@ -363,7 +363,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   // ===== Generating =====
   if (state.result.status === 'generating') {
     return (
-      <div className="flex flex-col items-center justify-center py-32 space-y-8">
+      <div className="flex flex-col items-center justify-center py-24 space-y-8">
         {/* 旋转音符 + 环境光晕 */}
         <div className="relative w-28 h-28">
           <div className="absolute -z-10 w-[200px] h-[200px] bg-[#8B5CF6]/5 blur-[60px] rounded-full" />
@@ -377,12 +377,12 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
         {/* 状态文案 */}
         <div className="text-center space-y-2">
           <p className="text-white text-[20px] font-semibold tracking-tight font-sans">正在生成{dialectName}翻唱</p>
-          <p className="text-white/50 text-[14px] font-sans transition-all duration-500">{state.result.progressMessage || 'AI 正在用方言重新演绎...'}</p>
+          <p className="text-white/50 text-[15px] font-sans transition-all duration-500">{state.result.progressMessage || 'AI 正在用方言重新演绎...'}</p>
         </div>
 
         {/* 真实进度条 */}
         <div className="w-56 space-y-2">
-          <div className="h-[3px] bg-[#353535] rounded-full overflow-hidden">
+          <div className="h-[3px] bg-[#3A3A3C] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-1000 ease-out"
               style={{
@@ -391,14 +391,14 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
               }}
             />
           </div>
-          <p className="text-white/30 text-[11px] font-sans text-right tabular-nums">
+          <p className="text-white/30 text-[12px] font-sans text-right tabular-nums">
             {Math.round(state.result.progress)}%{elapsed > 0 && ` · ${elapsed}秒`}
           </p>
         </div>
 
         {/* 趣味提示 */}
         <div className="h-5 flex items-center">
-          <p className="text-white/30 text-[12px] font-sans animate-fade-in" key={tipIndex}>
+          <p className="text-white/30 text-[13px] font-sans animate-fade-in" key={tipIndex}>
             {FUN_TIPS[tipIndex]}
           </p>
         </div>
@@ -424,7 +424,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
               </button>
               <div className="flex-1 min-w-0">
                 <p className="text-white/50 text-[12px] font-semibold font-sans truncate">听听原曲</p>
-                <p className="text-white/25 text-[10px] font-sans">等待时解解闷</p>
+                <p className="text-white/25 text-[11px] font-sans">等待时解解闷</p>
               </div>
               <button
                 onClick={() => setOrigMuted(m => !m)}
@@ -440,7 +440,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
 
             {/* Progress bar */}
             <div
-              className="h-[2px] bg-[#353535] rounded-full overflow-hidden cursor-pointer"
+              className="h-[2px] bg-[#3A3A3C] rounded-full overflow-hidden cursor-pointer"
               onClick={(e) => {
                 const a = origAudioRef.current
                 if (!a || !origDur) return
@@ -455,8 +455,8 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
             </div>
 
             <div className="flex justify-between">
-              <span className="text-white/20 text-[9px] font-sans tabular-nums">{fmt(origTime)}</span>
-              <span className="text-white/20 text-[9px] font-sans tabular-nums">{fmt(origDur)}</span>
+              <span className="text-white/20 text-[11px] font-sans tabular-nums">{fmt(origTime)}</span>
+              <span className="text-white/20 text-[11px] font-sans tabular-nums">{fmt(origDur)}</span>
             </div>
 
             <audio ref={origAudioRef} src={state.song.url} preload="auto" loop={false} />
@@ -476,8 +476,8 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <div>
-            <p className="text-white text-[16px] font-semibold tracking-tight font-sans">{dialectName}翻唱完成</p>
-            <p className="text-white/40 text-[12px] font-sans mt-0.5">{state.result.duration ? `${Math.round(state.result.duration)} 秒` : ''}  · 方言回响</p>
+            <p className="text-white text-[17px] font-semibold tracking-tight font-sans">{dialectName}翻唱完成</p>
+            <p className="text-white/40 text-[13px] font-sans mt-0.5">{state.result.duration ? `${Math.round(state.result.duration)} 秒` : ''}  · 方言回响</p>
           </div>
         </div>
 
@@ -493,8 +493,8 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                 )}
               </button>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-[16px] font-semibold tracking-tight font-sans truncate">{dialectName}翻唱</p>
-                <p className="text-white/30 text-[12px] font-sans mt-0.5">方言回响</p>
+                <p className="text-white text-[17px] font-semibold tracking-tight font-sans truncate">{dialectName}翻唱</p>
+                <p className="text-white/30 text-[13px] font-sans mt-0.5">方言回响</p>
               </div>
             </div>
 
@@ -510,8 +510,8 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
             </div>
 
             <div className="flex justify-between">
-              <span className="text-white/30 text-[10px] font-sans tabular-nums">{fmt(time)}</span>
-              <span className="text-white/30 text-[10px] font-sans tabular-nums">{fmt(dur || state.result.duration || 0)}</span>
+              <span className="text-white/30 text-[11px] font-sans tabular-nums">{fmt(time)}</span>
+              <span className="text-white/30 text-[11px] font-sans tabular-nums">{fmt(dur || state.result.duration || 0)}</span>
             </div>
 
             <audio ref={audioRef} src={state.result.audioUrl} preload="metadata" />
@@ -523,7 +523,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
           <div className="p-6 rounded-2xl bg-[#1C1C1E]">
             <div className="flex items-center justify-between mb-4">
               <p className="text-white/50 text-[14px] font-semibold font-sans">歌词</p>
-              <span className="text-white/30 text-[10px] font-sans">{state.result.lyrics.length} 字</span>
+              <span className="text-white/30 text-[11px] font-sans">{state.result.lyrics.length} 字</span>
             </div>
             <div className="text-white/30 text-[13px] leading-[1.8] font-sans whitespace-pre-wrap max-h-[240px] overflow-y-auto">
               {state.result.lyrics}
@@ -535,11 +535,11 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
         <div className="p-6 rounded-2xl bg-[#1C1C1E]">
           <div className="flex items-center justify-between mb-5">
             <p className="text-white/50 text-[14px] font-semibold font-sans">MV 视频</p>
-            <span className="text-white/30 text-[10px] font-sans">可直接发抖音</span>
+            <span className="text-white/30 text-[11px] font-sans">可直接发抖音</span>
           </div>
 
           {state.result.mvStatus === 'idle' && (
-            <button onClick={doMV} className="w-full py-4 rounded-2xl bg-[#2a2a2a] text-white/60 text-[13px] font-semibold font-sans hover:bg-[#353535] transition-colors active:scale-96 flex items-center justify-center gap-2">
+            <button onClick={doMV} className="w-full py-4 rounded-2xl bg-[#2C2C2E] text-white/60 text-[13px] font-semibold font-sans hover:bg-[#3A3A3C] transition-colors active:scale-96 flex items-center justify-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
               生成音乐视频
             </button>
@@ -551,7 +551,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                 <div className="w-4 h-4 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
                 <span className="text-white/50 text-[13px] font-sans">MV 生成中...</span>
               </div>
-              <div className="h-[2px] bg-[#353535] rounded-full overflow-hidden">
+              <div className="h-[2px] bg-[#3A3A3C] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-1000"
                   style={{
@@ -581,7 +581,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
           <div className="p-6 rounded-2xl bg-[#1C1C1E]">
             <div className="flex items-center justify-between mb-5">
               <p className="text-white/50 text-[14px] font-semibold font-sans">KTV 歌词视频</p>
-              <span className="text-white/30 text-[10px] font-sans">逐字高亮</span>
+              <span className="text-white/30 text-[11px] font-sans">逐字高亮</span>
             </div>
 
             {state.result.ktvStatus === 'idle' && (
@@ -597,7 +597,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
                   <div className="w-4 h-4 rounded-full border-2 border-white/10 border-t-purple-400 animate-spin" />
                   <span className="text-white/50 text-[13px] font-sans">{state.result.ktvMessage || '处理中...'}</span>
                 </div>
-                <div className="h-[2px] bg-[#353535] rounded-full overflow-hidden">
+                <div className="h-[2px] bg-[#3A3A3C] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
@@ -640,7 +640,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             下载
           </button>
-          <button onClick={doShare} className="flex-1 py-4 rounded-2xl bg-[#2a2a2a] text-white/60 font-semibold text-[14px] font-sans hover:bg-[#353535] transition-all flex items-center justify-center gap-2">
+          <button onClick={doShare} className="flex-1 py-4 rounded-2xl bg-[#2C2C2E] text-white/60 font-semibold text-[14px] font-sans hover:bg-[#3A3A3C] transition-all flex items-center justify-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             分享
           </button>
@@ -652,7 +652,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   // ===== Failed =====
   if (state.result.status === 'failed') {
     return (
-      <div className="flex flex-col items-center justify-center py-32 space-y-6">
+      <div className="flex flex-col items-center justify-center py-24 space-y-6">
         <div className="w-16 h-16 rounded-full bg-red-500/5 flex items-center justify-center">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
@@ -669,22 +669,22 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-[32px] font-bold tracking-tight font-sans">确认生成</h2>
-        <p className="text-white/40 text-[14px] font-sans mt-2">检查设置，开始 AI 方言翻唱</p>
+        <h2 className="text-[28px] font-bold tracking-tight font-sans">确认生成</h2>
+        <p className="text-white/40 text-[15px] font-sans mt-2">检查设置，开始 AI 方言翻唱</p>
       </div>
 
-      <div className="p-7 rounded-2xl bg-[#1C1C1E] space-y-6">
+      <div className="p-6 rounded-2xl bg-[#1C1C1E] space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-sans mb-2">方言</p>
-            <p className="text-white text-[18px] font-semibold font-sans">{dialectName}</p>
+            <p className="text-white/30 text-[11px] uppercase tracking-[0.2em] font-sans mb-2">方言</p>
+            <p className="text-white text-[17px] font-semibold font-sans">{dialectName}</p>
           </div>
           <div>
-            <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-sans mb-2">人声</p>
-            <p className="text-white text-[18px] font-semibold font-sans">{state.vocalGender === 'm' ? '男声' : '女声'}</p>
+            <p className="text-white/30 text-[11px] uppercase tracking-[0.2em] font-sans mb-2">人声</p>
+            <p className="text-white text-[17px] font-semibold font-sans">{state.vocalGender === 'm' ? '男声' : '女声'}</p>
           </div>
           <div className="col-span-2">
-            <p className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-sans mb-2">歌词</p>
+            <p className="text-white/30 text-[11px] uppercase tracking-[0.2em] font-sans mb-2">歌词</p>
             <p className="text-white/50 text-[13px] font-sans">{lyricsLabel}</p>
           </div>
         </div>

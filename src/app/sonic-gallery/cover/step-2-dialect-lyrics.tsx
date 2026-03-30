@@ -28,14 +28,14 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
   const { state, dispatch } = useCoverContext()
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       {/* Header */}
       <div>
         <div className="flex items-baseline gap-4 mb-2">
-          <span className="text-[56px] font-extrabold leading-none bg-gradient-to-r from-[#8B5CF6] to-[#10B981] bg-clip-text text-transparent">
+          <span className="text-[48px] font-extrabold leading-none bg-gradient-to-r from-[#8B5CF6] to-[#10B981] bg-clip-text text-transparent">
             02
           </span>
-          <h2 className="text-[24px] font-bold tracking-[-0.02em] text-white">方言与词作</h2>
+          <h2 className="text-[22px] font-bold tracking-[-0.02em] text-white">方言与词作</h2>
         </div>
         <p className="text-white/50 text-[14px]">选择你的母语印记</p>
       </div>
@@ -55,7 +55,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
                 key={d.id}
                 onClick={() => dispatch({ type: 'SET_DIALECT', dialect: d.id })}
                 className={`relative py-5 rounded-2xl text-center transition-all duration-300 ${
-                  selected ? 'bg-[#2a2a2a]' : 'bg-[#0e0e0e] hover:bg-[#2a2a2a]'
+                  selected ? 'bg-[#2C2C2E]' : 'bg-[#1C1C1E] hover:bg-[#2C2C2E]'
                 }`}
               >
                 {selected && (
@@ -78,7 +78,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
         </h3>
 
         {/* Segmented control */}
-        <div className="flex p-1 bg-[#1f1f1f] rounded-2xl mb-6">
+        <div className="flex p-1 bg-[#1C1C1E] rounded-2xl mb-6">
           {[
             { id: 'original' as const, label: '保留原词' },
             { id: 'custom' as const, label: '自定义' },
@@ -89,7 +89,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
               onClick={() => dispatch({ type: 'SET_LYRICS_MODE', mode: mode.id })}
               className={`flex-1 py-2.5 rounded-xl text-[12px] transition-all duration-300 ${
                 state.lyrics.mode === mode.id
-                  ? 'bg-[#2a2a2a] shadow-lg text-white font-semibold'
+                  ? 'bg-[#2C2C2E] shadow-lg text-white font-semibold'
                   : 'text-white/50 font-medium hover:text-white/70'
               }`}
             >
@@ -105,7 +105,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
               onChange={(e) => dispatch({ type: 'SET_CUSTOM_LYRICS', lyrics: e.target.value })}
               placeholder={"用方言写歌词...\n\n支持 [Verse]、[Chorus] 等标记"}
               rows={8}
-              className="w-full bg-[#2a2a2a] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
+              className="w-full bg-[#2C2C2E] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
             />
             <span className="absolute bottom-4 right-4 text-[10px] font-mono text-white/30 bg-black/40 px-2 py-1 rounded-md">
               {state.lyrics.customLyrics.length}
@@ -121,7 +121,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
                 onChange={(e) => dispatch({ type: 'SET_BRAND_MESSAGE', message: e.target.value })}
                 placeholder="输入品牌或产品信息，AI 据此生成方言歌词..."
                 rows={4}
-                className="w-full bg-[#2a2a2a] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
+                className="w-full bg-[#2C2C2E] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
               />
             </div>
             <button
@@ -158,7 +158,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
                   value={state.lyrics.generatedLyrics}
                   onChange={(e) => dispatch({ type: 'SET_GENERATED_LYRICS', lyrics: e.target.value })}
                   rows={8}
-                  className="w-full bg-[#2a2a2a] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
+                  className="w-full bg-[#2C2C2E] rounded-2xl p-6 text-white text-[14px] leading-[1.7] placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] resize-none transition-colors"
                 />
               </div>
             )}
@@ -183,8 +183,8 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
                 onClick={() => dispatch({ type: 'SET_VOCAL_GENDER', gender: g.id })}
                 className={`flex flex-col items-center justify-center gap-3 py-6 rounded-2xl transition-all duration-300 ${
                   selected
-                    ? 'bg-[#2a2a2a] ring-2 ring-[#8B5CF6]/30'
-                    : 'bg-[#0e0e0e] hover:bg-[#2a2a2a]'
+                    ? 'bg-[#2C2C2E] ring-2 ring-[#8B5CF6]/30'
+                    : 'bg-[#1C1C1E] hover:bg-[#2C2C2E]'
                 }`}
               >
                 <g.Icon className={`w-8 h-8 ${selected ? 'text-[#8B5CF6]' : 'text-white/40'}`} />
@@ -201,7 +201,7 @@ export function Step2DialectLyrics({ onNext, onPrev }: { onNext: () => void; onP
       <div className="flex gap-3">
         <button
           onClick={onPrev}
-          className="flex-1 py-[18px] rounded-full bg-[#1f1f1f] text-white/60 font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:bg-[#2a2a2a]"
+          className="flex-1 py-[18px] rounded-full bg-[#1C1C1E] text-white/60 font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:bg-[#2C2C2E]"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           上一步
