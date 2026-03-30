@@ -139,7 +139,7 @@ export class RapGeneratorSunoRvc {
       style: combinedStyle,
       negativeTags: EXCLUDED_STYLES,
       audioWeight: 0.6,
-      model: 'V4_5PLUS',
+      model: 'V4_5',               // V4_5 比 V4_5PLUS 快 2-3x
     })
 
     if (!addVocalsResult.audioUrl) {

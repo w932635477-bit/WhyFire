@@ -43,7 +43,7 @@ export function toSunoStyle(bgm: BGMMetadata): string {
 export const BGM_LIBRARY: BGMMetadata[] = [
   {
     id: 'apt-remix',
-    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/apt-改.mp3',
+    url: '/api/audio-proxy?path=bgm/apt-改.mp3',
     bpm: 99,
     styleTags: 'trap, dark, heavy 808, southern hip-hop',
     energy: 'high',
@@ -52,7 +52,7 @@ export const BGM_LIBRARY: BGMMetadata[] = [
   },
   {
     id: 'brazilian-phonk',
-    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/brazli-改.mp3',
+    url: '/api/audio-proxy?path=bgm/brazli-改.mp3',
     bpm: 70,
     styleTags: 'brazilian phonk, drill, heavy bass, funk carioca',
     energy: 'high',
@@ -61,7 +61,7 @@ export const BGM_LIBRARY: BGMMetadata[] = [
   },
   {
     id: 'fortune-flow',
-    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/八方来财.mp3',
+    url: '/api/audio-proxy?path=bgm/八方来财.mp3',
     bpm: 137,
     styleTags: 'pop rap, upbeat, positive, chinese style',
     energy: 'high',
@@ -70,7 +70,7 @@ export const BGM_LIBRARY: BGMMetadata[] = [
   },
   {
     id: 'karma-dark',
-    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/因果-改.mp3',
+    url: '/api/audio-proxy?path=bgm/因果-改.mp3',
     bpm: 110,
     styleTags: 'dark trap, drill, mysterious, heavy bass',
     energy: 'medium',
@@ -79,7 +79,7 @@ export const BGM_LIBRARY: BGMMetadata[] = [
   },
   {
     id: 'warm-gray',
-    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/暖灰-改.mp3',
+    url: '/api/audio-proxy?path=bgm/暖灰-改.mp3',
     bpm: 78,
     styleTags: 'lo-fi, chill, ambient, smooth, jazz',
     energy: 'low',
@@ -88,7 +88,7 @@ export const BGM_LIBRARY: BGMMetadata[] = [
   },
   {
     id: 'wonderful-01',
-    url: 'https://whyfire-02.oss-cn-beijing.aliyuncs.com/bgm/精彩01.mp3',
+    url: '/api/audio-proxy?path=bgm/精彩01.mp3',
     bpm: 120,
     styleTags: 'pop rap, upbeat, positive, energetic',
     energy: 'high',

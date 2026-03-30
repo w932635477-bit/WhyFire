@@ -40,6 +40,15 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const tipRef = useRef<NodeJS.Timeout | null>(null)
   const [tipIndex, setTipIndex] = useState(0)
+  const [elapsed, setElapsed] = useState(0)
+  const startTimeRef = useRef<number>(0)
+
+  // Original song player state (for generating wait screen)
+  const origAudioRef = useRef<HTMLAudioElement>(null)
+  const [origPlaying, setOrigPlaying] = useState(false)
+  const [origTime, setOrigTime] = useState(0)
+  const [origDur, setOrigDur] = useState(0)
+  const [origMuted, setOrigMuted] = useState(false)
 
   const dialectName = COVER_DIALECTS.find(d => d.id === state.dialect.selected)?.name || '方言'
 
@@ -154,7 +163,63 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
     return () => { if (tipRef.current) clearTimeout(tipRef.current) }
   }, [state.result.status, tipIndex])
 
+  // Auto-play original song when entering generating state
+  useEffect(() => {
+    if (state.result.status !== 'generating' || !state.song.url) return
+    const a = origAudioRef.current
+    if (!a) return
+
+    const tu = () => setOrigTime(a.currentTime)
+    const lm = () => {
+      setOrigDur(a.duration)
+      // Attempt auto-play once metadata is loaded
+      a.play().then(() => setOrigPlaying(true)).catch(() => {
+        // Browser blocked autoplay, user needs to click play
+        setOrigPlaying(false)
+      })
+    }
+    const en = () => setOrigPlaying(false)
+
+    a.addEventListener('timeupdate', tu)
+    a.addEventListener('loadedmetadata', lm)
+    a.addEventListener('ended', en)
+
+    // If already loaded, try auto-play immediately
+    if (a.readyState >= 1 && a.duration) {
+      a.play().then(() => setOrigPlaying(true)).catch(() => setOrigPlaying(false))
+    }
+
+    return () => {
+      a.removeEventListener('timeupdate', tu)
+      a.removeEventListener('loadedmetadata', lm)
+      a.removeEventListener('ended', en)
+      a.pause()
+      setOrigPlaying(false)
+    }
+  }, [state.result.status, state.song.url])
+
+  // Sync mute state to audio element
+  useEffect(() => {
+    const a = origAudioRef.current
+    if (a) a.muted = origMuted
+  }, [origMuted])
+
+  // 计时器：显示已等待时间
+  useEffect(() => {
+    if (state.result.status !== 'generating') {
+      setElapsed(0)
+      return
+    }
+    startTimeRef.current = Date.now()
+    const timer = setInterval(() => {
+      setElapsed(Math.round((Date.now() - startTimeRef.current) / 1000))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [state.result.status])
+
   const doGenerate = async () => {
+    startTimeRef.current = Date.now()
+    setElapsed(0)
     dispatch({ type: 'SET_RESULT', result: { status: 'generating', progress: 0, progressMessage: '提交翻唱任务...' } })
     try {
       const res = await fetch('/api/cover/generate', {
@@ -326,7 +391,9 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
               }}
             />
           </div>
-          <p className="text-white/30 text-[11px] font-sans text-right tabular-nums">{Math.round(state.result.progress)}%</p>
+          <p className="text-white/30 text-[11px] font-sans text-right tabular-nums">
+            {Math.round(state.result.progress)}%{elapsed > 0 && ` · ${elapsed}秒`}
+          </p>
         </div>
 
         {/* 趣味提示 */}
@@ -335,6 +402,66 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
             {FUN_TIPS[tipIndex]}
           </p>
         </div>
+
+        {/* 原曲播放器 - 等待时聆听 */}
+        {state.song.url && (
+          <div className="w-72 mt-2 p-4 rounded-2xl bg-[#1C1C1E] space-y-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  const a = origAudioRef.current
+                  if (!a) return
+                  if (origPlaying) { a.pause(); setOrigPlaying(false) }
+                  else { a.play().then(() => setOrigPlaying(true)).catch(() => setOrigPlaying(false)) }
+                }}
+                className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 hover:bg-white/15 active:scale-95 transition-all"
+              >
+                {origPlaying ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white" className="ml-0.5"><polygon points="8 5 20 12 8 19"/></svg>
+                )}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-white/50 text-[12px] font-semibold font-sans truncate">听听原曲</p>
+                <p className="text-white/25 text-[10px] font-sans">等待时解解闷</p>
+              </div>
+              <button
+                onClick={() => setOrigMuted(m => !m)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
+              >
+                {origMuted ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white/30" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white/50" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                )}
+              </button>
+            </div>
+
+            {/* Progress bar */}
+            <div
+              className="h-[2px] bg-[#353535] rounded-full overflow-hidden cursor-pointer"
+              onClick={(e) => {
+                const a = origAudioRef.current
+                if (!a || !origDur) return
+                const r = e.currentTarget.getBoundingClientRect()
+                a.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * origDur
+              }}
+            >
+              <div
+                className="h-full rounded-full bg-white/40 transition-all duration-300"
+                style={{ width: `${origDur > 0 ? (origTime / origDur) * 100 : 0}%` }}
+              />
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-white/20 text-[9px] font-sans tabular-nums">{fmt(origTime)}</span>
+              <span className="text-white/20 text-[9px] font-sans tabular-nums">{fmt(origDur)}</span>
+            </div>
+
+            <audio ref={origAudioRef} src={state.song.url} preload="auto" loop={false} />
+          </div>
+        )}
       </div>
     )
   }
@@ -568,7 +695,7 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
         开始翻唱
       </button>
 
-      <p className="text-center text-white/30 text-[11px] font-sans">预计 30 秒 · 翻唱完成后可生成 MV</p>
+      <p className="text-center text-white/30 text-[11px] font-sans">预计 1-2 分钟 · 翻唱完成后可生成 MV</p>
     </div>
   )
 }
