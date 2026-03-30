@@ -219,8 +219,8 @@ interface Mp4SubmitResponse {
 export class SunoApiClient {
   private apiKey: string
   private baseUrl: string
-  private pollInterval = 5000
-  private maxPollAttempts = 120 // 10 分钟超时
+  private pollInterval = 3000     // 3 秒轮询（从 5s 优化）
+  private maxPollAttempts = 180   // 9 分钟超时（3s * 180 = 540s）
 
   constructor() {
     this.apiKey = process.env.SUNOAPI_API_KEY || ''
@@ -249,7 +249,7 @@ export class SunoApiClient {
     }
 
     console.log('[SunoAPI] Submitting Add Vocals task')
-    console.log(`  Style: ${request.style}, Model: ${request.model || 'V4_5PLUS'}`)
+    console.log(`  Style: ${request.style}, Model: ${request.model || 'V4_5'}`)
 
     // Step 1: 提交任务
     const taskId = await this.submitTask(request)
@@ -403,7 +403,7 @@ export class SunoApiClient {
       prompt: request.prompt,
       title: request.title,
       style: request.style,
-      model: request.model || 'V4_5PLUS',
+      model: request.model || 'V4_5',
       audioWeight: request.audioWeight ?? 0.6,
     }
 
@@ -524,7 +524,7 @@ export class SunoApiClient {
       uploadUrl: request.uploadUrl,
       customMode: request.customMode,
       instrumental: request.instrumental,
-      model: request.model || 'V4_5PLUS',
+      model: request.model || 'V4_5',
     }
 
     if (request.customMode) {

@@ -20,6 +20,7 @@ import { VIRAL_DIALECT_CONFIGS } from '@/lib/ai/prompts/viral-lyrics-prompts'
 import { getTimeContext } from '@/lib/ai/context/festival-service'
 import { getTrendingService } from '@/lib/ai/context/trending-service'
 import { getOSSsignedUrl } from '@/lib/oss'
+import { getCoverCache } from '@/lib/cache/cover-cache'
 import type { DialectCode } from '@/types/dialect'
 
 // ============================================================================
@@ -228,6 +229,32 @@ export class CoverGenerator {
   private async executeGeneration(taskId: string, params: CoverGenerationParams): Promise<void> {
     const { dialect, vocalGender } = params
 
+    // 缓存查询：只对"使用原歌词"或"自定义歌词"模式做缓存（AI 生成歌词每次不同）
+    const useCache = !params.brandMessage
+    if (useCache) {
+      const cached = getCoverCache().get(params.songUrl, dialect, vocalGender)
+      if (cached) {
+        console.log(`[CoverGenerator] Cache HIT: returning cached result for ${dialect}`)
+        taskStore.update(taskId, {
+          status: 'completed',
+          step: 'completed',
+          stepName: '完成',
+          progress: 100,
+          message: '翻唱生成完成（缓存命中）',
+          result: {
+            audioUrl: cached.audioUrl,
+            audioId: cached.audioId,
+            taskId: cached.sunoTaskId,
+            duration: cached.duration,
+            lyrics: cached.lyrics,
+            dialect,
+            pipeline: 'upload-cover',
+          },
+        })
+        return
+      }
+    }
+
     // 如果 songUrl 是 OSS 私有链接，生成签名 URL 供 SunoAPI 下载
     let songUrl = params.songUrl
     if (songUrl.includes('.aliyuncs.com/') && !songUrl.includes('Signature=')) {
@@ -290,7 +317,7 @@ export class CoverGenerator {
           audioWeight: 0.5,
           styleWeight: 0.7,
           vocalGender,
-          model: 'V4_5PLUS',
+          model: 'V4_5',               // V4_5 比 V4_5PLUS 快 2-3x
           negativeTags: 'singing badly, off-key, monotone, chanting',
         })
         break
@@ -329,6 +356,23 @@ export class CoverGenerator {
       pipeline: 'upload-cover',
     }
 
+    // 写入缓存（仅"使用原歌词"或"自定义歌词"模式）
+    if (useCache) {
+      const cacheKey = getCoverCache().makeKey(params.songUrl, dialect, vocalGender)
+      getCoverCache().set({
+        cacheKey,
+        songUrl: params.songUrl,
+        dialect,
+        audioUrl: result.audioUrl,
+        audioId: result.audioId,
+        sunoTaskId: result.taskId,
+        duration: result.duration,
+        lyrics,
+        vocalGender,
+        createdAt: Date.now(),
+      })
+    }
+
     taskStore.update(taskId, {
       status: 'completed',
       step: 'completed',
@@ -343,14 +387,24 @@ export class CoverGenerator {
    * 轮询翻唱结果，带进度更新
    */
   private async pollCoverWithProgress(taskId: string, sunoTaskId: string): Promise<UploadCoverResult> {
-    const maxAttempts = 120
-    const interval = 5000
+    // 优化后的轮询策略：
+    // - 前 20 次：3 秒间隔（前 60 秒，快速发现完成）
+    // - 后续：5 秒间隔（避免过度请求）
+    // - 总超时：~7 分钟（比原来 10 分钟更早失败）
+    const fastPollInterval = 3000
+    const slowPollInterval = 5000
+    const fastPollLimit = 20       // 前 20 次用快速轮询
+    const maxAttempts = 120        // 总次数上限
+    const startTime = Date.now()
     let lastProgress = 30
     let lastUnknownStatus = ''
 
     let consecutiveErrors = 0
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const currentInterval = attempt < fastPollLimit ? fastPollInterval : slowPollInterval
+      const elapsedSec = Math.round((Date.now() - startTime) / 1000)
+
       let info
       try {
         info = await this.sunoApiClient.fetchRecordInfo(sunoTaskId)
@@ -366,16 +420,16 @@ export class CoverGenerator {
           progress: Math.round(lastProgress),
           message: '网络波动，正在重试...',
         })
-        await new Promise(resolve => setTimeout(resolve, interval))
+        await new Promise(resolve => setTimeout(resolve, currentInterval))
         continue
       }
 
       // 根据轮询状态推算进度
       const sunoStatus = info.data.status
 
-      // 每 10 次打印一次状态日志
-      if (attempt % 10 === 0) {
-        console.log(`[CoverGenerator] Poll ${attempt + 1}/${maxAttempts}: sunoStatus=${sunoStatus}, sunoTaskId=${sunoTaskId}`)
+      // 每 5 次打印一次状态日志
+      if (attempt % 5 === 0) {
+        console.log(`[CoverGenerator] Poll ${attempt + 1}/${maxAttempts} (${elapsedSec}s): sunoStatus=${sunoStatus}, sunoTaskId=${sunoTaskId}`)
       }
 
       if (sunoStatus === 'PENDING') {
@@ -385,34 +439,37 @@ export class CoverGenerator {
       } else if (sunoStatus === 'FIRST_SUCCESS') {
         lastProgress = Math.min(80 + attempt * 0.5, 95)
       } else if (sunoStatus === 'SUCCESS') {
-        console.log(`[CoverGenerator] SunoAPI task completed: ${sunoTaskId}`)
+        const totalSec = Math.round((Date.now() - startTime) / 1000)
+        console.log(`[CoverGenerator] SunoAPI task completed in ${totalSec}s: ${sunoTaskId}`)
         return this.sunoApiClient.parseCoverRecordInfo(sunoTaskId, info)
       } else if (sunoStatus === 'CREATE_TASK_FAILED' || sunoStatus === 'GENERATE_AUDIO_FAILED') {
         return { taskId: sunoTaskId, status: 'failed', error: `SunoAPI task failed: ${sunoStatus}` }
       } else {
-        // 未知状态：记录日志
         if (sunoStatus !== lastUnknownStatus) {
           console.warn(`[CoverGenerator] Unknown sunoStatus="${sunoStatus}", sunoTaskId=${sunoTaskId}, full response:`, JSON.stringify(info.data).substring(0, 500))
           lastUnknownStatus = sunoStatus
         }
       }
 
+      // 进度消息带时间提示
+      const timeHint = elapsedSec > 30 ? ` (${elapsedSec}秒)` : ''
       taskStore.update(taskId, {
         progress: Math.round(lastProgress),
         message: sunoStatus === 'PENDING'
-          ? 'AI 正在分析原曲...'
+          ? `AI 正在分析原曲${timeHint}...`
           : sunoStatus === 'TEXT_SUCCESS'
-          ? '正在生成翻唱音频...'
+          ? `正在生成翻唱音频${timeHint}...`
           : sunoStatus === 'FIRST_SUCCESS'
           ? '即将完成...'
-          : `处理中 (${sunoStatus})...`,
+          : `处理中 (${sunoStatus})${timeHint}...`,
       })
 
-      await new Promise(resolve => setTimeout(resolve, interval))
+      await new Promise(resolve => setTimeout(resolve, currentInterval))
     }
 
-    console.error(`[CoverGenerator] Polling timeout: sunoTaskId=${sunoTaskId}, lastStatus=${lastUnknownStatus || 'known'}`)
-    return { taskId: sunoTaskId, status: 'failed', error: '翻唱生成超时，请稍后重试' }
+    const totalElapsed = Math.round((Date.now() - startTime) / 1000)
+    console.error(`[CoverGenerator] Polling timeout after ${totalElapsed}s: sunoTaskId=${sunoTaskId}, lastStatus=${lastUnknownStatus || 'known'}`)
+    return { taskId: sunoTaskId, status: 'failed', error: `翻唱生成超时 (${totalElapsed}秒)，请稍后重试` }
   }
 
   // ---------------------------------------------------------------------------
@@ -490,7 +547,7 @@ export class CoverGenerator {
       audioWeight: 0.5,
       styleWeight: 0.7,
       vocalGender,
-      model: 'V4_5PLUS',
+      model: 'V4_5',               // V4_5 比 V4_5PLUS 快 2-3x，方言翻唱质量足够
       negativeTags: 'singing badly, off-key, monotone, chanting',
     })
 
