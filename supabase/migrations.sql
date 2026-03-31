@@ -31,7 +31,7 @@ BEGIN
     COALESCE(NEW.email, '')
   );
   INSERT INTO public.user_credits (user_id, balance, total_purchased, total_used)
-  VALUES (NEW.id, 2, 0, 0)
+  VALUES (NEW.id, 6, 6, 0)
   ON CONFLICT (user_id) DO NOTHING;
   RETURN NEW;
 END;
@@ -92,10 +92,9 @@ CREATE TABLE IF NOT EXISTS public.credit_packages (
 -- Seed credit packages (idempotent)
 INSERT INTO public.credit_packages (name, credits, price, original_price, bonus, popular, description, sort_order)
 VALUES
-  ('体验包', 10, 900, NULL, 0, false, '10 积分，适合尝鲜', 1),
-  ('基础包', 60, 4900, 5900, 5, false, '60+5 积分', 2),
-  ('超值包', 200, 14900, 19900, 30, true, '200+30 积分，最划算', 3),
-  ('专业包', 500, 29900, 39900, 100, false, '500+100 积分，创作者首选', 4)
+  ('单次体验', 2, 690, NULL, 0, false, '1 次翻唱，适合尝鲜', 1),
+  ('5 次包', 10, 2900, NULL, 0, false, '5 次翻唱，¥5.8/次', 2),
+  ('15 次包', 30, 6900, 9900, 0, true, '15 次翻唱，¥4.6/次，最划算', 3)
 ON CONFLICT DO NOTHING;
 
 -- ============================================
