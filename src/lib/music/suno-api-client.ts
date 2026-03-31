@@ -11,7 +11,7 @@
  *   POST /api/v1/generate/add-vocals     — Add Vocals 提交
  *   POST /api/v1/generate/upload-cover   — Upload & Cover 提交
  *   GET  /api/v1/generate/record-info    — 音乐任务轮询
- *   POST /api/v1/mp4/create              — MV 提交
+ *   POST /api/v1/mp4/generate             — MV 提交
  *   GET  /api/v1/mp4/record-info         — MV 任务轮询
  */
 
@@ -107,6 +107,8 @@ export interface CreateMusicVideoRequest {
   audioId: string
   /** 作者名（最多 50 字符） */
   author?: string
+  /** 水印域名（最多 50 字符，显示在视频底部） */
+  domainName?: string
   /** 回调 URL */
   callBackUrl?: string
 }
@@ -199,7 +201,8 @@ interface Mp4RecordInfoResponse {
     response?: {
       videoUrl: string
     }
-    successFlag?: boolean
+    successFlag?: 'SUCCESS' | 'PENDING' | 'GENERATE_MP4_FAILED' | 'CREATE_TASK_FAILED' | boolean
+    errorMessage?: string
   }
 }
 
@@ -341,7 +344,8 @@ export class SunoApiClient {
 
     const data: Mp4RecordInfoResponse = await res.json()
 
-    if (data.data.successFlag && data.data.response?.videoUrl) {
+    const flag = data.data.successFlag
+    if ((flag === 'SUCCESS' || flag === true) && data.data.response?.videoUrl) {
       return {
         taskId: data.data.taskId,
         status: 'completed',
@@ -349,8 +353,8 @@ export class SunoApiClient {
       }
     }
 
-    if (data.data.successFlag === false) {
-      return { taskId, status: 'failed', error: 'MV generation failed' }
+    if (flag === 'GENERATE_MP4_FAILED' || flag === 'CREATE_TASK_FAILED' || flag === false) {
+      return { taskId, status: 'failed', error: data.data.errorMessage || 'MV generation failed' }
     }
 
     return { taskId, status: 'pending' }
@@ -629,8 +633,9 @@ export class SunoApiClient {
     }
 
     if (request.author) body.author = request.author
+    if (request.domainName) body.domainName = request.domainName
 
-    const res = await proxiedFetch(`${this.baseUrl}/api/v1/mp4/create`, {
+    const res = await proxiedFetch(`${this.baseUrl}/api/v1/mp4/generate`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,

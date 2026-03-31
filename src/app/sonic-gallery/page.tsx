@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { TopNavBar } from '@/components/sonic-gallery'
 
 const sampleWorks = [
   { id: '1', title: '成都漂移', dialect: '四川话', creator: '蜀山客', plays: 12800, gradient: 'linear-gradient(135deg, rgba(245,158,11,0.3), rgba(239,68,68,0.15))', accent: '#f59e0b' },
@@ -30,61 +31,33 @@ export default function SonicGalleryHome() {
 
   return (
     <div className="min-h-screen bg-black text-white antialiased">
-
-      {/* ========== NAVIGATION — glass shell ========== */}
-      <nav className="fixed top-0 inset-x-0 z-50">
-        <div className="mx-auto max-w-6xl px-6">
-          <div
-            className="flex items-center justify-between h-14 px-6 rounded-b-2xl"
-            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
-          >
-            {/* Left: text logo */}
-            <Link href="/sonic-gallery" className="text-[16px] font-extrabold tracking-tighter text-white font-sans">
-              方言回响
-            </Link>
-
-            {/* Center: nav links */}
-            <div className="flex items-center gap-8">
-              <Link href="/sonic-gallery/cover" className="text-[13px] text-white/50 hover:text-white transition-colors font-sans font-medium">
-                Cover
-              </Link>
-              <Link href="/sonic-gallery/create" className="text-[13px] text-white/50 hover:text-white transition-colors font-sans font-medium">
-                Rap
-              </Link>
-              <Link href="/sonic-gallery/beats" className="text-[13px] text-white/50 hover:text-white transition-colors font-sans font-medium">
-                Gallery
-              </Link>
-            </div>
-
-            {/* Right: account icon */}
-            <button className="text-white/50 hover:text-white transition-colors">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M20 21a8 8 0 1 0-16 0" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* Top Navigation */}
+      <TopNavBar />
 
       {/* ========== HERO — full viewport ========== */}
       <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background gradient (fallback for no external image) */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0" style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(139,92,246,0.15) 0%, rgba(16,185,129,0.08) 40%, transparent 70%)'
-          }} />
-          <div className="absolute inset-0" style={{
-            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.95) 100%)'
-          }} />
-        </div>
+        {/* Background video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
 
-        {/* hero-mask overlay */}
+        {/* Dark overlay on top of video */}
         <div className="absolute inset-0 z-[1]" style={{
-          background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, #000000 100%)'
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.95) 100%)'
         }} />
 
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center pt-24">
+        {/* Purple accent glow */}
+        <div className="absolute inset-0 z-[2]" style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(139,92,246,0.15) 0%, rgba(16,185,129,0.08) 40%, transparent 70%)'
+        }} />
+
+        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center pt-28">
           {/* Overline */}
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/30 font-sans font-medium mb-8">
             全新上线
@@ -245,6 +218,59 @@ export default function SonicGalleryHome() {
         </div>
       </section>
 
+      {/* ========== PRICING — 简洁定价展示 ========== */}
+      <section className="py-24 sm:py-32 bg-[#0e0e0e]">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-[36px] sm:text-[44px] font-extrabold tracking-[-0.02em] font-sans mb-3">
+              1 次翻唱 = <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#10B981]">2 积分</span>
+            </h2>
+            <p className="text-white/30 text-[15px] font-sans">3 次免费体验，按需购买，积分永不过期</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-3xl mx-auto">
+            {/* Free */}
+            <div className="p-6 rounded-[20px] bg-[#1C1C1E] text-center">
+              <h3 className="text-white text-[17px] font-bold mb-1">Free</h3>
+              <div className="text-white text-[32px] font-bold mb-1">免费</div>
+              <p className="text-white/25 text-[12px] mb-4">3 次翻唱 · 3 种方言 · 720p 带水印</p>
+              <Link
+                href="/sonic-gallery/cover"
+                className="inline-block w-full py-3 rounded-full text-[13px] font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
+              >
+                立即开始
+              </Link>
+            </div>
+
+            {/* Lite */}
+            <div className="p-6 rounded-[20px] bg-gradient-to-b from-[#8B5CF6]/20 to-[#10B981]/10 ring-1 ring-[#8B5CF6]/30 text-center">
+              <h3 className="text-white text-[17px] font-bold mb-1">Lite</h3>
+              <div className="flex items-baseline justify-center gap-0.5 mb-1">
+                <span className="text-white text-[32px] font-bold">¥19</span>
+                <span className="text-white/30 text-[12px]">/月</span>
+              </div>
+              <p className="text-white/25 text-[12px] mb-4">10 次/月 · 9 种方言 · 声音克隆 · 1080p 无水印</p>
+              <span className="inline-block w-full py-3 rounded-full text-[13px] font-semibold bg-white/10 text-white/40 cursor-not-allowed">
+                即将上线
+              </span>
+            </div>
+
+            {/* 单次包 */}
+            <div className="p-6 rounded-[20px] bg-[#1C1C1E] text-center">
+              <h3 className="text-white text-[17px] font-bold mb-1">按次购买</h3>
+              <div className="text-white text-[32px] font-bold mb-1">¥6.9 起</div>
+              <p className="text-white/25 text-[12px] mb-4">1/5/15 次包 · 永久有效 · 无需订阅</p>
+              <Link
+                href="/sonic-gallery/pricing"
+                className="inline-block w-full py-3 rounded-full text-[13px] font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white shadow-[0_6px_20px_rgba(139,92,246,0.2)] hover:shadow-[0_8px_28px_rgba(139,92,246,0.3)] transition-all active:scale-[0.97]"
+              >
+                查看套餐
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ========== FEATURES — 3-col grid ========== */}
       <section className="py-24 sm:py-32">
         <div className="max-w-6xl mx-auto px-6">
@@ -360,8 +386,8 @@ export default function SonicGalleryHome() {
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <span className="text-white/20 text-[12px] font-sans">Copyright &copy; 2026 方言回响. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <button onClick={() => setShowPrivacy(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</button>
-            <button onClick={() => setShowTerms(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</button>
+            <Link href="/sonic-gallery/privacy" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">隐私</Link>
+            <Link href="/sonic-gallery/terms" className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">条款</Link>
             <button onClick={() => setShowContact(true)} className="text-white/15 hover:text-white/40 text-[12px] font-sans transition-colors">联系</button>
           </div>
         </div>

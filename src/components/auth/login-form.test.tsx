@@ -32,7 +32,7 @@ describe('LoginForm', () => {
     render(<LoginForm />)
 
     expect(screen.getByPlaceholderText('your@email.com')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /send verification code/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /发送验证码/ })).toBeInTheDocument()
   })
 
   it('shows error for invalid email', async () => {
@@ -40,12 +40,12 @@ describe('LoginForm', () => {
     render(<LoginForm />)
 
     const emailInput = screen.getByPlaceholderText('your@email.com')
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
 
     await user.type(emailInput, 'invalid-email')
     await user.click(sendButton)
 
-    expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument()
+    expect(screen.getByText(/请输入有效的邮箱地址/)).toBeInTheDocument()
   })
 
   it('sends OTP and moves to verification step', async () => {
@@ -54,7 +54,7 @@ describe('LoginForm', () => {
     render(<LoginForm />)
 
     const emailInput = screen.getByPlaceholderText('your@email.com')
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
 
     await user.type(emailInput, 'test@example.com')
     await user.click(sendButton)
@@ -62,14 +62,11 @@ describe('LoginForm', () => {
     await waitFor(() => {
       expect(mockSignInWithOtp).toHaveBeenCalledWith({
         email: 'test@example.com',
-        options: {
-          emailRedirectTo: expect.any(String),
-        },
       })
     })
 
     await waitFor(() => {
-      expect(screen.getByText(/enter verification code/i)).toBeInTheDocument()
+      expect(screen.getByText(/输入验证码/)).toBeInTheDocument()
     })
   })
 
@@ -81,7 +78,7 @@ describe('LoginForm', () => {
     const emailInput = screen.getByPlaceholderText('your@email.com')
     await user.type(emailInput, 'test@example.com')
 
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
     await user.click(sendButton)
 
     await waitFor(() => {
@@ -99,7 +96,7 @@ describe('LoginForm', () => {
     const emailInput = screen.getByPlaceholderText('your@email.com')
     await user.type(emailInput, 'test@example.com')
 
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
     await user.click(sendButton)
 
     // Wait for OTP input
@@ -120,7 +117,7 @@ describe('LoginForm', () => {
     })
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/create')
+      expect(mockPush).toHaveBeenCalledWith('/sonic-gallery')
     })
   })
 
@@ -136,7 +133,7 @@ describe('LoginForm', () => {
     const emailInput = screen.getByPlaceholderText('your@email.com')
     await user.type(emailInput, 'test@example.com')
 
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
     await user.click(sendButton)
 
     // Wait for OTP input
@@ -149,7 +146,7 @@ describe('LoginForm', () => {
     await user.type(otpInput, '000000')
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid verification code/i)).toBeInTheDocument()
+      expect(screen.getByText(/操作失败，请重试/)).toBeInTheDocument()
     })
   })
 
@@ -162,16 +159,16 @@ describe('LoginForm', () => {
     const emailInput = screen.getByPlaceholderText('your@email.com')
     await user.type(emailInput, 'test@example.com')
 
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
     await user.click(sendButton)
 
     // Wait for OTP step
     await waitFor(() => {
-      expect(screen.getByText(/change email/i)).toBeInTheDocument()
+      expect(screen.getByText(/更换邮箱/)).toBeInTheDocument()
     })
 
     // Click back
-    const backButton = screen.getByText(/change email/i)
+    const backButton = screen.getByText(/更换邮箱/)
     await user.click(backButton)
 
     // Should be back to email step
@@ -183,7 +180,7 @@ describe('LoginForm', () => {
   it('disables send button when email is empty', () => {
     render(<LoginForm />)
 
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
     expect(sendButton).toBeDisabled()
   })
 
@@ -192,7 +189,7 @@ describe('LoginForm', () => {
     render(<LoginForm />)
 
     const emailInput = screen.getByPlaceholderText('your@email.com')
-    const sendButton = screen.getByRole('button', { name: /send verification code/i })
+    const sendButton = screen.getByRole('button', { name: /发送验证码/ })
 
     await user.type(emailInput, 'test@example.com')
 

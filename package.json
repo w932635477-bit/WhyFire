@@ -1,6 +1,6 @@
 {
   "name": "whyfire",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "AI Rap 视频一键生成器 - 输入信息，一键生成创意短视频",
   "scripts": {
@@ -47,6 +47,7 @@
     "tailwind-merge": "^3.5.0",
     "undici": "^7.24.6",
     "web-audio-beat-detector": "^8.2.36",
+    "wechatpay-node-v3": "^2.2.1",
     "ws": "8.18.0",
     "zustand": "^5.0.12"
   },

@@ -9,6 +9,44 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      users: {
+        Row: {
+          id: string
+          display_name: string | null
+          avatar_url: string | null
+          phone: string | null
+          email: string | null
+          wechat_openid: string | null
+          wechat_unionid: string | null
+          plan: 'free' | 'lite' | 'pro'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          display_name?: string | null
+          avatar_url?: string | null
+          phone?: string | null
+          email?: string | null
+          wechat_openid?: string | null
+          wechat_unionid?: string | null
+          plan?: 'free' | 'lite' | 'pro'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          display_name?: string | null
+          avatar_url?: string | null
+          phone?: string | null
+          email?: string | null
+          wechat_openid?: string | null
+          wechat_unionid?: string | null
+          plan?: 'free' | 'lite' | 'pro'
+          created_at?: string
+          updated_at?: string
+        }
+      }
       videos: {
         Row: {
           id: string
@@ -202,6 +240,14 @@ export interface Database {
           p_package_id?: string | null
         }
         Returns: void
+      }
+      deduct_user_credits: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_description: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

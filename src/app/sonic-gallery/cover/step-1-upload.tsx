@@ -89,6 +89,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
       if (data.code === 0 && data.data?.url) {
         dispatch({ type: 'SET_SONG_URL', url: data.data.url })
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+        onNext()
       } else {
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: data.message || '上传失败' })
       }
@@ -105,6 +106,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
     }
     dispatch({ type: 'SET_SONG_URL', url })
     dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+    onNext()
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -119,19 +121,9 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
 
   return (
     <div className="space-y-8">
-      {/* Step indicator */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-emerald-500" />
-          <span className="text-white/40 text-[12px] font-sans font-medium tracking-wide">Step 1/3</span>
-        </div>
-        <div className="w-px h-3 bg-white/10" />
-        <span className="text-white/60 text-[12px] font-sans">Upload</span>
-      </div>
-
       {/* Header */}
       <div>
-        <h2 className="text-[32px] font-extrabold tracking-[-0.02em] font-sans text-white">上传原唱</h2>
+        <h2 className="text-[28px] font-extrabold tracking-[-0.02em] font-sans text-white">上传原唱</h2>
         <p className="text-white/50 text-[14px] mt-2 font-sans">上传你想翻唱的歌曲原声</p>
       </div>
 
@@ -141,7 +133,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onClick={() => !isUploading && fileInputRef.current?.click()}
-        className={`relative rounded-[24px] p-16 text-center cursor-pointer transition-all duration-500 bg-[#2a2a2a] ${
+        className={`relative rounded-[20px] p-12 text-center cursor-pointer transition-all duration-500 bg-[#1C1C1E] ${
           isDragOver
             ? 'scale-[1.01]'
             : ''
@@ -164,16 +156,16 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
             <div className="w-12 h-12 rounded-full bg-[#10b981]/10 flex items-center justify-center mx-auto">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <p className="text-white text-[14px] font-medium font-sans">{state.song.fileName || '已设置歌曲 URL'}</p>
-            <p className="text-white/20 text-[12px] font-sans">点击可重新选择</p>
+            <p className="text-white text-[15px] font-medium font-sans">{state.song.fileName || '已设置歌曲 URL'}</p>
+            <p className="text-white/25 text-[12px] font-sans">点击可重新选择</p>
           </div>
         ) : (
           <div className="space-y-4">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" className="mx-auto">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" className="mx-auto">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <p className="text-white/40 text-[14px] font-sans">拖拽音频或视频文件到这里，或点击选择</p>
-            <p className="text-white/15 text-[12px] font-sans">MP3、WAV、MP4、MOV · 最大 500MB</p>
+            <p className="text-white/50 text-[15px] font-sans">拖拽音频或视频文件到这里，或点击选择</p>
+            <p className="text-white/25 text-[12px] font-sans">MP3、WAV、MP4、MOV · 最大 500MB</p>
           </div>
         )}
       </div>
@@ -186,7 +178,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
       </div>
 
       {/* URL input — pill-shaped */}
-      <div className="flex items-center bg-[#1f1f1f] p-2 pl-6 rounded-full">
+      <div className="flex items-center bg-[#1C1C1E] p-2 pl-6 rounded-full">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" className="flex-shrink-0">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
@@ -201,7 +193,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
         <button
           onClick={handlePasteUrl}
           disabled={!pasteUrl.trim().startsWith('http')}
-          className="bg-[#353535] text-white px-6 py-2 rounded-full text-xs font-bold font-sans hover:bg-[#404040] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex-shrink-0"
+          className="bg-[#3A3A3C] text-white px-6 py-2 rounded-full text-xs font-bold font-sans hover:bg-[#48484A] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex-shrink-0"
         >
           确认
         </button>
@@ -217,7 +209,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
 
       {/* Preview player */}
       {isCompleted && previewUrl && (
-        <div className="bg-[#0e0e0e] rounded-2xl p-6">
+        <div className="bg-[#1C1C1E] rounded-2xl p-6">
           <div className="flex items-center gap-4">
             {/* Album art placeholder with play overlay */}
             <button
