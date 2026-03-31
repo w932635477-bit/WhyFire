@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/sonic-gallery/create', '/sonic-gallery/profile', '/sonic-gallery/pricing']
+  const protectedPaths = ['/sonic-gallery/create', '/sonic-gallery/profile']
   const isProtectedPath = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p))
 
   if (isProtectedPath && !user) {

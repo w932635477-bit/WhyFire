@@ -1,4 +1,4 @@
-import { SideNavBar, TopNavBar, BottomNavBar } from '@/components/sonic-gallery'
+import { SideNavBar, BottomNavBar } from '@/components/sonic-gallery'
 
 export default function SonicGalleryLayout({
   children,
@@ -10,11 +10,8 @@ export default function SonicGalleryLayout({
       {/* Side Navigation */}
       <SideNavBar />
 
-      {/* Top Navigation */}
-      <TopNavBar />
-
       {/* Main Content */}
-      <main className="pt-16 pb-28 min-h-screen">
+      <main className="pb-28 min-h-screen">
         {children}
       </main>
 
