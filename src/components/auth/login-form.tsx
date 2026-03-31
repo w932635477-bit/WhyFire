@@ -2,10 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, ArrowRight } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 type Step = 'email' | 'otp'
 
@@ -22,14 +20,12 @@ export function LoginForm() {
 
   const otpInputRef = useRef<HTMLInputElement>(null)
 
-  // Focus OTP input when step changes to OTP
   useEffect(() => {
     if (step === 'otp' && otpInputRef.current) {
       otpInputRef.current.focus()
     }
   }, [step])
 
-  // Countdown timer for resend
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
@@ -49,11 +45,28 @@ export function LoginForm() {
     return emailRegex.test(email)
   }
 
+  const getErrorMessage = (err: unknown): string => {
+    if (err instanceof Error) {
+      const msg = err.message.toLowerCase()
+      if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many')) {
+        return '请求过于频繁，请稍后再试'
+      }
+      if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
+        return '网络连接失败，请检查网络后重试'
+      }
+      if (msg.includes('invalid') || msg.includes('not found')) {
+        return '邮箱格式不正确'
+      }
+      return err.message
+    }
+    return '操作失败，请重试'
+  }
+
   const handleSendOtp = useCallback(async () => {
     setError(null)
 
     if (!validateEmail(email)) {
-      setError('Please enter a valid email address')
+      setError('请输入有效的邮箱地址')
       return
     }
 
@@ -61,17 +74,14 @@ export function LoginForm() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       })
 
       if (error) throw error
 
       setStep('otp')
-      setCountdown(60) // 60 second countdown
+      setCountdown(60)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send verification code')
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -92,11 +102,10 @@ export function LoginForm() {
 
       if (error) throw error
 
-      // Redirect to /create on success
       router.push('/sonic-gallery')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid verification code')
-      setOtp('') // Clear OTP on error
+      setError(getErrorMessage(err))
+      setOtp('')
     } finally {
       setLoading(false)
     }
@@ -125,88 +134,100 @@ export function LoginForm() {
       {step === 'email' ? (
         <div className="space-y-4">
           <div className="space-y-2 text-center">
-            <h1 className="text-2xl font-bold text-foreground">Login to WhyFire</h1>
-            <p className="text-muted text-sm">
-              Enter your email to receive a verification code
+            <h1 className="text-2xl font-bold text-white">登录方言回响</h1>
+            <p className="text-white/40 text-sm">
+              输入邮箱，我们将发送 6 位验证码
             </p>
           </div>
 
           <div className="space-y-4">
-            <Input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              icon={Mail}
-              error={error || undefined}
-              disabled={loading}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendOtp()
-                }
-              }}
-            />
+            <div className="space-y-1">
+              <div className="relative">
+                {Mail && (
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                )}
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(null) }}
+                  disabled={loading}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSendOtp()
+                  }}
+                  className="w-full h-12 rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-colors disabled:opacity-50"
+                />
+              </div>
+              {error && (
+                <p className="text-xs text-red-400 px-1">{error}</p>
+              )}
+            </div>
 
-            <Button
+            <button
               onClick={handleSendOtp}
-              loading={loading}
               disabled={!email || loading}
-              className="w-full"
-              size="lg"
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#10B981] text-white font-semibold text-[15px] shadow-[0_8px_32px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_40px_rgba(139,92,246,0.4)] transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Send Verification Code
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+              {loading ? (
+                <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                '发送验证码'
+              )}
+            </button>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="space-y-2 text-center">
-            <h1 className="text-2xl font-bold text-foreground">Enter Verification Code</h1>
-            <p className="text-muted text-sm">
-              We sent a 6-digit code to <span className="font-medium text-foreground">{email}</span>
+            <h1 className="text-2xl font-bold text-white">输入验证码</h1>
+            <p className="text-white/40 text-sm">
+              请在邮件中找到 6 位数字验证码
             </p>
+            <p className="text-white font-medium text-sm">{email}</p>
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="relative">
-                <input
-                  ref={otpInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="\d{6}"
-                  value={otp}
-                  onChange={handleOtpChange}
-                  disabled={loading}
-                  placeholder="000000"
-                  className="w-full rounded-lg border border-border bg-card px-4 py-3 text-center text-2xl tracking-[1em] text-foreground transition-colors placeholder:tracking-normal placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </div>
+            <div className="space-y-1">
+              <input
+                ref={otpInputRef}
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                value={otp}
+                onChange={handleOtpChange}
+                disabled={loading}
+                placeholder="000000"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-center text-2xl tracking-[1em] text-white placeholder:tracking-normal placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-colors disabled:opacity-50"
+              />
               {error && (
-                <p className="text-center text-xs text-error">{error}</p>
+                <p className="text-center text-xs text-red-400">{error}</p>
               )}
             </div>
 
             <div className="flex items-center justify-center gap-4 text-sm">
               <button
                 onClick={handleBack}
-                className="text-muted hover:text-foreground transition-colors"
+                className="text-white/40 hover:text-white/70 transition-colors"
               >
-                Change email
+                更换邮箱
               </button>
-              <span className="text-border">|</span>
+              <span className="text-white/10">|</span>
               <button
                 onClick={handleResend}
                 disabled={countdown > 0 || loading}
-                className="text-muted hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-white/40 hover:text-white/70 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {countdown > 0 ? `Resend in ${countdown}s` : 'Resend code'}
+                {countdown > 0 ? `${countdown}s 后重发` : '重新发送'}
               </button>
             </div>
 
             {loading && (
-              <p className="text-center text-xs text-muted">Verifying...</p>
+              <div className="flex items-center justify-center gap-2 text-white/30 text-xs">
+                <span className="inline-block w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                验证中...
+              </div>
             )}
           </div>
         </div>
