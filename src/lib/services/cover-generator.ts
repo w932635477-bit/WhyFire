@@ -52,12 +52,16 @@ export interface CoverGenerationProgress {
 
 export interface CoverGenerationResult {
   audioUrl: string
+  /** 流式音频 URL，比 audioUrl 早 30-50 秒可用（V5 TEXT_SUCCESS 时即可播放） */
+  streamAudioUrl?: string
   audioId: string
   taskId: string
   duration: number
   lyrics?: string
   dialect: DialectCode
   pipeline: 'upload-cover'
+  /** true = 流式结果，完整 audioUrl 尚未可用 */
+  isPartial?: boolean
 }
 
 export interface MusicVideoGenerationResult {
@@ -311,13 +315,15 @@ export class CoverGenerator {
           uploadUrl: songUrl,
           customMode: hasCustomLyrics,
           instrumental: false,
-          prompt: hasCustomLyrics ? lyrics : undefined,
+          // customMode:false 时 prompt 必填（SunoAPI 文档要求），用作创意描述自动生成歌词
+          // customMode:true 时 prompt 用作精确歌词
+          prompt: hasCustomLyrics ? lyrics : `用${dialectStyle || dialect}方言重新演绎这首歌曲`,
           style: hasCustomLyrics ? dialectStyle : undefined,
           title: hasCustomLyrics ? `方言翻唱-${dialect}` : undefined,
           audioWeight: 0.5,
           styleWeight: 0.7,
           vocalGender,
-          model: 'V4_5',               // V4_5 比 V4_5PLUS 快 2-3x
+          model: 'V4_5',
           negativeTags: 'singing badly, off-key, monotone, chanting',
         })
         break
@@ -341,23 +347,33 @@ export class CoverGenerator {
     // 轮询 Suno 结果，逐步更新进度
     const coverResult = await this.pollCoverWithProgress(taskId, sunoTaskId)
 
-    if (coverResult.status === 'failed' || !coverResult.audioUrl) {
+    if (coverResult.status === 'failed') {
       throw new Error(coverResult.error || '翻唱生成失败')
+    }
+
+    // partial 结果（streamAudioUrl 可用，audioUrl 尚未就绪）不算失败
+    const isPartial = coverResult.status === 'partial' && !!coverResult.streamAudioUrl
+
+    // 非部分结果必须有 audioUrl
+    if (!isPartial && !coverResult.audioUrl) {
+      throw new Error('翻唱生成失败：未获得音频 URL')
     }
 
     // 完成
     const result: CoverGenerationResult = {
-      audioUrl: coverResult.audioUrl,
+      audioUrl: coverResult.audioUrl || '',
+      streamAudioUrl: coverResult.streamAudioUrl,
       audioId: coverResult.audioId || '',
       taskId: coverResult.taskId,
       duration: coverResult.duration || 0,
       lyrics,
       dialect,
       pipeline: 'upload-cover',
+      isPartial,
     }
 
-    // 写入缓存（仅"使用原歌词"或"自定义歌词"模式）
-    if (useCache) {
+    // 写入缓存（仅完整结果 + "使用原歌词"或"自定义歌词"模式）
+    if (useCache && !isPartial && result.audioUrl) {
       const cacheKey = getCoverCache().makeKey(params.songUrl, dialect, vocalGender)
       getCoverCache().set({
         cacheKey,
@@ -385,16 +401,16 @@ export class CoverGenerator {
 
   /**
    * 轮询翻唱结果，带进度更新
+   *
+   * V5 优化策略：
+   * - 统一 2 秒轮询（V5 生成快，需要更密轮询）
+   * - TEXT_SUCCESS 时检查 streamAudioUrl，有就立即返回（~42s）
+   * - FIRST_SUCCESS 时确认可用（~88s）
+   * - 总超时 90 秒（V5 不应该超过这个时间）
    */
   private async pollCoverWithProgress(taskId: string, sunoTaskId: string): Promise<UploadCoverResult> {
-    // 优化后的轮询策略：
-    // - 前 20 次：3 秒间隔（前 60 秒，快速发现完成）
-    // - 后续：5 秒间隔（避免过度请求）
-    // - 总超时：~7 分钟（比原来 10 分钟更早失败）
-    const fastPollInterval = 3000
-    const slowPollInterval = 5000
-    const fastPollLimit = 20       // 前 20 次用快速轮询
-    const maxAttempts = 120        // 总次数上限
+    const pollInterval = 2000
+    const maxAttempts = 45          // 2s * 45 = 90s
     const startTime = Date.now()
     let lastProgress = 30
     let lastUnknownStatus = ''
@@ -402,7 +418,6 @@ export class CoverGenerator {
     let consecutiveErrors = 0
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const currentInterval = attempt < fastPollLimit ? fastPollInterval : slowPollInterval
       const elapsedSec = Math.round((Date.now() - startTime) / 1000)
 
       let info
@@ -411,39 +426,53 @@ export class CoverGenerator {
         consecutiveErrors = 0
       } catch (fetchErr) {
         consecutiveErrors++
-        if (consecutiveErrors >= 10) {
+        if (consecutiveErrors >= 5) {
           console.error(`[CoverGenerator] ${consecutiveErrors} consecutive fetch errors, giving up: ${sunoTaskId}`)
           return { taskId: sunoTaskId, status: 'failed', error: `网络请求连续失败 (${consecutiveErrors} 次): ${fetchErr instanceof Error ? fetchErr.message : 'fetch failed'}` }
         }
-        console.warn(`[CoverGenerator] Poll fetch error (${consecutiveErrors}/10), retrying: ${fetchErr instanceof Error ? fetchErr.message : 'unknown'}`)
+        console.warn(`[CoverGenerator] Poll fetch error (${consecutiveErrors}/5), retrying: ${fetchErr instanceof Error ? fetchErr.message : 'unknown'}`)
         taskStore.update(taskId, {
           progress: Math.round(lastProgress),
           message: '网络波动，正在重试...',
         })
-        await new Promise(resolve => setTimeout(resolve, currentInterval))
+        await new Promise(resolve => setTimeout(resolve, pollInterval))
         continue
       }
 
-      // 根据轮询状态推算进度
       const sunoStatus = info.data.status
 
-      // 每 5 次打印一次状态日志
       if (attempt % 5 === 0) {
         console.log(`[CoverGenerator] Poll ${attempt + 1}/${maxAttempts} (${elapsedSec}s): sunoStatus=${sunoStatus}, sunoTaskId=${sunoTaskId}`)
       }
 
       if (sunoStatus === 'PENDING') {
-        lastProgress = Math.min(35 + attempt * 0.5, 85)
+        lastProgress = Math.min(35 + attempt * 1, 60)
       } else if (sunoStatus === 'TEXT_SUCCESS') {
-        lastProgress = Math.min(50 + attempt * 0.5, 90)
+        lastProgress = Math.min(60 + attempt * 0.5, 80)
+        // V5 流式交付：TEXT_SUCCESS 时 streamAudioUrl 可能已可用（~42s）
+        const parsed = this.sunoApiClient.parseCoverRecordInfo(sunoTaskId, info)
+        if (parsed.status === 'partial' && parsed.streamAudioUrl) {
+          const totalSec = Math.round((Date.now() - startTime) / 1000)
+          console.log(`[CoverGenerator] Stream audio available at TEXT_SUCCESS (${totalSec}s): ${sunoTaskId}`)
+          return parsed
+        }
       } else if (sunoStatus === 'FIRST_SUCCESS') {
-        lastProgress = Math.min(80 + attempt * 0.5, 95)
+        lastProgress = Math.min(85 + attempt * 0.3, 95)
+        // FIRST_SUCCESS 时流式 URL 一定可用
+        const parsed = this.sunoApiClient.parseCoverRecordInfo(sunoTaskId, info)
+        if (parsed.status === 'partial' && parsed.streamAudioUrl) {
+          const totalSec = Math.round((Date.now() - startTime) / 1000)
+          console.log(`[CoverGenerator] Stream audio confirmed at FIRST_SUCCESS (${totalSec}s): ${sunoTaskId}`)
+          return parsed
+        }
       } else if (sunoStatus === 'SUCCESS') {
         const totalSec = Math.round((Date.now() - startTime) / 1000)
         console.log(`[CoverGenerator] SunoAPI task completed in ${totalSec}s: ${sunoTaskId}`)
         return this.sunoApiClient.parseCoverRecordInfo(sunoTaskId, info)
       } else if (sunoStatus === 'CREATE_TASK_FAILED' || sunoStatus === 'GENERATE_AUDIO_FAILED') {
         return { taskId: sunoTaskId, status: 'failed', error: `SunoAPI task failed: ${sunoStatus}` }
+      } else if (sunoStatus === 'SENSITIVE_WORD_ERROR') {
+        return { taskId: sunoTaskId, status: 'failed', error: '歌词包含敏感内容，请修改后重试' }
       } else {
         if (sunoStatus !== lastUnknownStatus) {
           console.warn(`[CoverGenerator] Unknown sunoStatus="${sunoStatus}", sunoTaskId=${sunoTaskId}, full response:`, JSON.stringify(info.data).substring(0, 500))
@@ -452,7 +481,7 @@ export class CoverGenerator {
       }
 
       // 进度消息带时间提示
-      const timeHint = elapsedSec > 30 ? ` (${elapsedSec}秒)` : ''
+      const timeHint = elapsedSec > 20 ? ` (${elapsedSec}秒)` : ''
       taskStore.update(taskId, {
         progress: Math.round(lastProgress),
         message: sunoStatus === 'PENDING'
@@ -464,7 +493,7 @@ export class CoverGenerator {
           : `处理中 (${sunoStatus})${timeHint}...`,
       })
 
-      await new Promise(resolve => setTimeout(resolve, currentInterval))
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
     }
 
     const totalElapsed = Math.round((Date.now() - startTime) / 1000)
@@ -542,13 +571,13 @@ export class CoverGenerator {
       uploadUrl: songUrl,
       customMode: hasCustomLyrics,
       instrumental: false,
-      prompt: hasCustomLyrics ? lyrics : undefined,
+      prompt: hasCustomLyrics ? lyrics : `用${dialectStyle || dialect}方言重新演绎这首歌曲`,
       style: hasCustomLyrics ? dialectStyle : undefined,
       title: hasCustomLyrics ? `方言翻唱-${dialect}` : undefined,
       audioWeight: 0.5,
       styleWeight: 0.7,
       vocalGender,
-      model: 'V4_5',               // V4_5 比 V4_5PLUS 快 2-3x，方言翻唱质量足够
+      model: 'V4_5',
       negativeTags: 'singing badly, off-key, monotone, chanting',
     })
 

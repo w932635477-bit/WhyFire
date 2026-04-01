@@ -89,13 +89,17 @@ export interface UploadCoverRequest {
 
 export interface UploadCoverResult {
   taskId: string
-  status: 'pending' | 'completed' | 'failed'
+  status: 'pending' | 'completed' | 'partial' | 'failed'
   audioUrl?: string
+  /** 流式音频 URL，TEXT_SUCCESS / FIRST_SUCCESS 时可用（~42-88s），比 audioUrl 早 30-50s */
+  streamAudioUrl?: string
   audioId?: string              // 关键：MV 生成需要此字段
   duration?: number
   title?: string
   tags?: string
   imageUrl?: string
+  /** true 表示流式结果，完整 audioUrl 尚未可用，后台仍在轮询 */
+  isPartial?: boolean
   error?: string
 }
 
@@ -158,6 +162,8 @@ type RecordStatus =
   | 'SUCCESS'
   | 'CREATE_TASK_FAILED'
   | 'GENERATE_AUDIO_FAILED'
+  | 'SENSITIVE_WORD_ERROR'
+  | 'CALLBACK_EXCEPTION'
 
 /** 轮询响应 */
 interface RecordInfoResponse {
@@ -222,8 +228,8 @@ interface Mp4SubmitResponse {
 export class SunoApiClient {
   private apiKey: string
   private baseUrl: string
-  private pollInterval = 3000     // 3 秒轮询（从 5s 优化）
-  private maxPollAttempts = 180   // 9 分钟超时（3s * 180 = 540s）
+  private pollInterval = 2000     // 2 秒轮询（V5 生成快，需要更密的轮询）
+  private maxPollAttempts = 90    // 3 分钟超时（2s * 90 = 180s），V5 通常 42-90s 完成
 
   constructor() {
     this.apiKey = process.env.SUNOAPI_API_KEY || ''
@@ -543,6 +549,8 @@ export class SunoApiClient {
     if (request.vocalGender) body.vocalGender = request.vocalGender
     body.callBackUrl = request.callBackUrl || process.env.SUNOAPI_CALLBACK_URL || 'https://httpbin.org/post'
 
+    console.log(`[SunoAPI] submitCoverTask: model=${body.model}, customMode=${body.customMode}`)
+
     const res = await proxiedFetch(`${this.baseUrl}/api/v1/generate/upload-cover`, {
       method: 'POST',
       headers: {
@@ -610,11 +618,38 @@ export class SunoApiClient {
       }
     }
 
+    // V5 流式交付：TEXT_SUCCESS / FIRST_SUCCESS 时 streamAudioUrl 可用
+    // TEXT_SUCCESS (~42s)：歌词完成，流式音频 URL 已可用
+    // FIRST_SUCCESS (~88s)：第一首确认完成，流式音频稳定
+    if ((info.data.status === 'TEXT_SUCCESS' || info.data.status === 'FIRST_SUCCESS')
+        && info.data.response?.sunoData?.length) {
+      const song = info.data.response.sunoData[0]
+      if (song.streamAudioUrl) {
+        return {
+          taskId,
+          status: 'partial',
+          streamAudioUrl: song.streamAudioUrl,
+          audioId: song.id,
+          duration: song.duration,
+          isPartial: true,
+        }
+      }
+    }
+
     if (info.data.status === 'CREATE_TASK_FAILED' || info.data.status === 'GENERATE_AUDIO_FAILED') {
       return {
         taskId,
         status: 'failed',
         error: `Cover task failed: ${info.data.status}`,
+      }
+    }
+
+    // 新增：敏感词错误处理
+    if (info.data.status === 'SENSITIVE_WORD_ERROR') {
+      return {
+        taskId,
+        status: 'failed',
+        error: '歌词包含敏感内容，请修改后重试',
       }
     }
 
