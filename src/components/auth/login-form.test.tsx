@@ -146,7 +146,7 @@ describe('LoginForm', () => {
     await user.type(otpInput, '000000')
 
     await waitFor(() => {
-      expect(screen.getByText(/操作失败，请重试/)).toBeInTheDocument()
+      expect(screen.getByText(/验证码错误或已过期/)).toBeInTheDocument()
     })
   })
 

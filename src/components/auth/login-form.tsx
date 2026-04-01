@@ -19,6 +19,15 @@ export function LoginForm() {
   const [countdown, setCountdown] = useState(0)
 
   const otpInputRef = useRef<HTMLInputElement>(null)
+  // 用 ref 追踪最新值，避免闭包过期
+  const otpRef = useRef(otp)
+  const emailRef = useRef(email)
+  const loadingRef = useRef(loading)
+
+  // 同步 ref
+  otpRef.current = otp
+  emailRef.current = email
+  loadingRef.current = loading
 
   useEffect(() => {
     if (step === 'otp' && otpInputRef.current) {
@@ -33,34 +42,61 @@ export function LoginForm() {
     }
   }, [countdown])
 
-  // Auto-submit when OTP is complete (6 digits)
-  useEffect(() => {
-    if (otp.length === 6 && !loading) {
-      handleVerifyOtp()
+  const getErrorMessage = (err: unknown, context: 'email' | 'otp' = 'email'): string => {
+    const msg = err instanceof Error
+      ? err.message.toLowerCase()
+      : (typeof err === 'object' && err !== null && 'message' in err)
+        ? String((err as { message: unknown }).message).toLowerCase()
+        : ''
+
+    if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many')) {
+      return '请求过于频繁，请稍后再试'
     }
-  }, [otp])
+    if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
+      return '网络连接失败，请检查网络后重试'
+    }
+    if (context === 'otp') {
+      if (msg.includes('invalid') || msg.includes('expired') || msg.includes('otp')) {
+        return '验证码错误或已过期，请重新获取'
+      }
+      return '验证失败，请重试'
+    }
+    if (msg.includes('invalid') || msg.includes('not found')) {
+      return '邮箱格式不正确'
+    }
+    return msg || '操作失败，请重试'
+  }
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
   }
 
-  const getErrorMessage = (err: unknown): string => {
-    if (err instanceof Error) {
-      const msg = err.message.toLowerCase()
-      if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many')) {
-        return '请求过于频繁，请稍后再试'
-      }
-      if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
-        return '网络连接失败，请检查网络后重试'
-      }
-      if (msg.includes('invalid') || msg.includes('not found')) {
-        return '邮箱格式不正确'
-      }
-      return err.message
+  const handleVerifyOtp = useCallback(async (code?: string) => {
+    const currentOtp = code ?? otpRef.current
+    if (currentOtp.length !== 6) return
+    if (loadingRef.current) return // 防止重复提交
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: emailRef.current,
+        token: currentOtp,
+        type: 'email',
+      })
+
+      if (error) throw error
+
+      router.push('/sonic-gallery')
+    } catch (err) {
+      setError(getErrorMessage(err, 'otp'))
+      setOtp('')
+    } finally {
+      setLoading(false)
     }
-    return '操作失败，请重试'
-  }
+  }, [router, supabase.auth])
 
   const handleSendOtp = useCallback(async () => {
     setError(null)
@@ -79,6 +115,7 @@ export function LoginForm() {
       if (error) throw error
 
       setStep('otp')
+      setOtp('') // 清空旧验证码
       setCountdown(60)
     } catch (err) {
       setError(getErrorMessage(err))
@@ -87,37 +124,23 @@ export function LoginForm() {
     }
   }, [email, supabase.auth])
 
-  const handleVerifyOtp = useCallback(async () => {
-    if (otp.length !== 6) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email',
-      })
-
-      if (error) throw error
-
-      router.push('/sonic-gallery')
-    } catch (err) {
-      setError(getErrorMessage(err))
-      setOtp('')
-    } finally {
-      setLoading(false)
+  // Auto-submit when OTP reaches 6 digits
+  useEffect(() => {
+    if (otp.length === 6 && !loading) {
+      handleVerifyOtp(otp)
     }
-  }, [email, otp, router, supabase.auth])
+  }, [otp, loading, handleVerifyOtp])
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6)
     setOtp(value)
+    if (error) setError(null) // 输入时清除错误
   }
 
   const handleResend = () => {
-    if (countdown === 0) {
+    if (countdown === 0 && !loading) {
+      setOtp('')  // 清空旧验证码
+      setError(null)
       handleSendOtp()
     }
   }
