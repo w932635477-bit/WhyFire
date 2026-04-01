@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.2.0] - 2026-04-01
+
+### Added
+- 视频文件上传支持：MP4、MOV、AVI 等格式自动提取音频（FFmpeg.wasm 客户端处理）
+- 分享链接解析：粘贴抖音、网易云、汽水音乐链接自动提取音频（yt-dlp + OSS）
+- V5 流式音频：TEXT_SUCCESS 时即返回流式 URL，用户提前 30-50 秒听到翻唱结果
+- MV 视频代理：新增 /api/video-proxy 解决 COEP 跨域视频加载问题
+- URL 解析 API：新增 /api/cover/resolve-url 支持多平台音频链接解析
+- 登录 OTP 自动提交：输入完 6 位验证码自动验证，无需手动点击
+
+### Changed
+- COEP 策略从 require-corp 改为 credentialless，兼容 FFmpeg.wasm SharedArrayBuffer
+- 轮询策略优化：统一 2 秒间隔 + 90 秒超时（适配 V5 生成速度）
+- 翻唱生成进度显示优化：超过 20 秒后显示已用时间提示
+- 登录表单错误信息更精细：区分验证码错误、频率限制、网络失败等场景
+- 防重复提交：loadingRef 防止 OTP 验证并发请求
+
+### Fixed
+- 登录测试断言更新：匹配新的 OTP 错误信息文案
+- 敏感词错误处理：新增 SENSITIVE_WORD_ERROR 状态识别
+- 连续网络错误容忍度从 10 次降至 5 次，更快失败
+
 ## [2.1.0] - 2026-03-31
 
 ### Added
