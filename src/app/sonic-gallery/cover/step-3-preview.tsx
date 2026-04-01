@@ -91,9 +91,13 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
       const { status, step, stepName, progress, message, audioUrl, audioId, sunoTaskId, duration, lyrics, dialect } = d.data
 
       if (status === 'completed') {
+        // 代理外部音频 URL 以兼容 COEP
+        const proxiedAudioUrl = audioUrl && !audioUrl.startsWith('/') && !audioUrl.startsWith('blob:')
+          ? `/api/video-proxy?url=${encodeURIComponent(audioUrl)}`
+          : audioUrl
         dispatch({
           type: 'SET_RESULT',
-          result: { status: 'completed', taskId, audioId, audioUrl, sunoTaskId, duration, lyrics, progress: 100, progressMessage: '完成' },
+          result: { status: 'completed', taskId, audioId, audioUrl: proxiedAudioUrl, sunoTaskId, duration, lyrics, progress: 100, progressMessage: '完成' },
         })
         return
       }
@@ -274,15 +278,34 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
     else { await navigator.clipboard.writeText(url) }
   }
 
-  const doDownload = () => {
-    const url = state.result.ktvVideoUrl || state.result.mvVideoUrl || state.result.audioUrl
-    if (!url) return
-    const a = document.createElement('a')
-    a.href = url
-    const isKtv = url === state.result.ktvVideoUrl
+  /** 下载：通过 blob 方式，解决跨域 URL 无法 <a download> 的问题 */
+  const doDownload = async () => {
+    const rawUrl = state.result.ktvVideoUrl || state.result.mvVideoUrl || state.result.audioUrl
+    if (!rawUrl) return
+
+    const isKtv = rawUrl === state.result.ktvVideoUrl
     const ext = isKtv || state.result.mvVideoUrl ? 'mp4' : 'mp3'
-    a.download = `方言翻唱-${dialectName}-${Date.now()}.${ext}`
-    a.click()
+    const filename = `方言翻唱-${dialectName}-${Date.now()}.${ext}`
+
+    try {
+      // 如果已经是代理 URL 或 blob URL，直接 fetch
+      // 如果是外部 URL，通过 video-proxy 代理下载
+      const fetchUrl = rawUrl.startsWith('/') ? rawUrl : `/api/video-proxy?url=${encodeURIComponent(rawUrl)}`
+      const res = await fetch(fetchUrl)
+      if (!res.ok) throw new Error(`下载失败: ${res.status}`)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = filename
+      a.click()
+      // 延迟释放 blob URL，确保下载已开始
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+    } catch (err) {
+      console.error('[Download] 失败:', err)
+      // fallback: 直接打开 URL（浏览器会尝试播放/下载）
+      window.open(rawUrl, '_blank')
+    }
   }
 
   const doKTV = async () => {

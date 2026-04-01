@@ -7,6 +7,32 @@ import { createClient } from '@/lib/supabase/client'
 
 type Step = 'email' | 'otp'
 
+/** 错误信息友好化（纯函数，无闭包依赖） */
+function getErrorMessage(err: unknown, context: 'email' | 'otp' = 'email'): string {
+  const msg = err instanceof Error
+    ? err.message.toLowerCase()
+    : (typeof err === 'object' && err !== null && 'message' in err)
+      ? String((err as { message: unknown }).message).toLowerCase()
+      : ''
+
+  if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many')) {
+    return '请求过于频繁，请稍后再试'
+  }
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
+    return '网络连接失败，请检查网络后重试'
+  }
+  if (context === 'otp') {
+    if (msg.includes('invalid') || msg.includes('expired') || msg.includes('otp')) {
+      return '验证码错误或已过期，请重新获取'
+    }
+    return '验证失败，请重试'
+  }
+  if (msg.includes('invalid') || msg.includes('not found')) {
+    return '邮箱格式不正确'
+  }
+  return msg || '操作失败，请重试'
+}
+
 export function LoginForm() {
   const router = useRouter()
   const supabase = createClient()
@@ -41,31 +67,6 @@ export function LoginForm() {
       return () => clearTimeout(timer)
     }
   }, [countdown])
-
-  const getErrorMessage = (err: unknown, context: 'email' | 'otp' = 'email'): string => {
-    const msg = err instanceof Error
-      ? err.message.toLowerCase()
-      : (typeof err === 'object' && err !== null && 'message' in err)
-        ? String((err as { message: unknown }).message).toLowerCase()
-        : ''
-
-    if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many')) {
-      return '请求过于频繁，请稍后再试'
-    }
-    if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
-      return '网络连接失败，请检查网络后重试'
-    }
-    if (context === 'otp') {
-      if (msg.includes('invalid') || msg.includes('expired') || msg.includes('otp')) {
-        return '验证码错误或已过期，请重新获取'
-      }
-      return '验证失败，请重试'
-    }
-    if (msg.includes('invalid') || msg.includes('not found')) {
-      return '邮箱格式不正确'
-    }
-    return msg || '操作失败，请重试'
-  }
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

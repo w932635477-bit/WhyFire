@@ -5,6 +5,8 @@ import { useCoverContext } from './cover-context'
 import { extractAudioFromVideo, isVideoFile } from '@/lib/audio/audio-extractor'
 // 注意：不要从 @/lib/audio/index.ts 导入，会拉入 Node.js 模块 (child_process) 导致客户端构建失败
 
+const MAX_UPLOAD_DURATION = 480 // SunoAPI 最多支持 8 分钟
+
 function fmt(s: number): string {
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 }
@@ -19,6 +21,10 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
   const [playing, setPlaying] = useState(false)
   const [time, setTime] = useState(0)
   const [dur, setDur] = useState(0)
+  // AbortController：取消进行中的请求（防止竞态条件）
+  const abortRef = useRef<AbortController | null>(null)
+  // Object URL 清理追踪
+  const objectUrlRef = useRef<string | null>(null)
 
   // 判断是否为视频文件
   const isVideo = useMemo(() => {
@@ -70,7 +76,18 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
     setPlaying(false); setTime(0); setDur(0)
   }, [state.song.url])
 
+  // 组件卸载时取消进行中的请求
+  useEffect(() => {
+    return () => { abortRef.current?.abort() }
+  }, [])
+
   const handleFileSelect = async (file: File) => {
+    // 取消之前的请求
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    const { signal } = controller
+
     const isAudio = file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|webm|m4a|aac|flac)$/i)
     const isVid = file.type.startsWith('video/') || file.name.match(/\.(mp4|mov|avi|mkv|flv|wmv|webm)$/i)
     if (!isAudio && !isVid) {
@@ -90,18 +107,23 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: 5 })
 
       try {
-        const { audioBlob } = await extractAudioFromVideo(file, {
+        const { audioBlob, audioUrl } = await extractAudioFromVideo(file, {
           onProgress: (p) => {
             dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: Math.round(p * 40) })
           },
           outputFormat: 'mp3',
         })
+        if (signal.aborted) return
+
+        // 记录 Object URL 用于后续清理
+        objectUrlRef.current = audioUrl
 
         // 用音频 blob 替代视频文件上传
         const mp3Name = file.name.replace(/\.[^.]+$/, '.mp3')
         uploadFile = new File([audioBlob], mp3Name, { type: 'audio/mpeg' })
         dispatch({ type: 'SET_SONG_FILE', file: uploadFile, fileName: mp3Name })
       } catch (err) {
+        if (signal.aborted) return
         console.error('[CoverUpload] 视频提取音频失败:', err)
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '视频处理失败，请直接上传音频文件' })
         return
@@ -114,21 +136,31 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
     try {
       const formData = new FormData()
       formData.append('audio', uploadFile)
-      const res = await fetch('/api/cover/upload', { method: 'POST', body: formData })
+      const res = await fetch('/api/cover/upload', { method: 'POST', body: formData, signal })
+      if (signal.aborted) return
       const data = await res.json()
       if (data.code === 0 && data.data?.url) {
         dispatch({ type: 'SET_SONG_URL', url: data.data.url })
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+        // 清理 Object URL
+        if (objectUrlRef.current) { URL.revokeObjectURL(objectUrlRef.current); objectUrlRef.current = null }
         onNext()
       } else {
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: data.message || '上传失败' })
       }
-    } catch {
+    } catch (err) {
+      if (signal.aborted) return
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '上传失败，请重试' })
     }
   }
 
   const handlePasteUrl = async () => {
+    // 取消之前的请求
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    const { signal } = controller
+
     const url = pasteUrl.trim()
     if (!url.startsWith('http')) {
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '请输入有效的 URL' })
@@ -151,20 +183,23 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
+        signal,
       })
+      if (signal.aborted) return
       const data = await res.json()
 
       if (data.code === 0 && data.data?.url) {
         dispatch({ type: 'SET_SONG_URL', url: data.data.url })
         if (data.data.title) {
-          dispatch({ type: 'SET_SONG_FILE', file: null as any, fileName: `${data.data.title}.mp3` })
+          dispatch({ type: 'SET_SONG_FILE', file: null, fileName: `${data.data.title}.mp3` })
         }
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
         onNext()
       } else {
         dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: data.message || '链接解析失败，请直接上传音频文件' })
       }
-    } catch {
+    } catch (err) {
+      if (signal.aborted) return
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '链接解析失败，请直接上传音频文件' })
     }
   }

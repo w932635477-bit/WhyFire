@@ -70,7 +70,7 @@ export interface CoverState {
 }
 
 type CoverAction =
-  | { type: 'SET_SONG_FILE'; file: File; fileName: string }
+  | { type: 'SET_SONG_FILE'; file: File | null; fileName: string }
   | { type: 'SET_SONG_URL'; url: string }
   | { type: 'SET_UPLOAD_STATUS'; status: CoverState['song']['uploadStatus']; progress?: number; error?: string }
   | { type: 'SET_DIALECT'; dialect: DialectCode }

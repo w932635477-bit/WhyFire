@@ -18,6 +18,8 @@ export interface ExtractAudioOptions {
 
 /**
  * 从视频文件中提取音频
+ *
+ * 注意：返回的 audioUrl 是 Object URL，调用方用完后应调用 URL.revokeObjectURL() 释放内存
  */
 export async function extractAudioFromVideo(
   videoFile: File | Blob,
@@ -131,14 +133,18 @@ function getMimeType(format: 'mp3' | 'wav' | 'aac'): string {
 async function getAudioDuration(audioBlob: Blob): Promise<number> {
   return new Promise((resolve) => {
     const audio = new Audio()
+    const objectUrl = URL.createObjectURL(audioBlob)
     audio.onloadedmetadata = () => {
-      resolve(audio.duration)
+      const dur = audio.duration
+      URL.revokeObjectURL(objectUrl)
+      resolve(dur)
     }
     audio.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
       console.warn('[AudioExtractor] 无法获取音频时长')
       resolve(0)
     }
-    audio.src = URL.createObjectURL(audioBlob)
+    audio.src = objectUrl
   })
 }
 
