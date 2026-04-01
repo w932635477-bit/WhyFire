@@ -397,6 +397,13 @@ export class CoverGenerator {
       message: '翻唱生成完成',
       result,
     })
+
+    // 如果是 partial 结果，后台继续轮询直到拿到完整 audioUrl 并更新缓存
+    if (isPartial && coverResult.streamAudioUrl) {
+      this.pollForFullResult(taskId, sunoTaskId, params, result, useCache, lyrics, vocalGender).catch(err => {
+        console.warn(`[CoverGenerator] Background full-result poll failed: ${err instanceof Error ? err.message : err}`)
+      })
+    }
   }
 
   /**
@@ -406,11 +413,11 @@ export class CoverGenerator {
    * - 统一 2 秒轮询（V5 生成快，需要更密轮询）
    * - TEXT_SUCCESS 时检查 streamAudioUrl，有就立即返回（~42s）
    * - FIRST_SUCCESS 时确认可用（~88s）
-   * - 总超时 90 秒（V5 不应该超过这个时间）
+   * - 总超时 120 秒（V4.5 实际耗时可能超过 90 秒）
    */
   private async pollCoverWithProgress(taskId: string, sunoTaskId: string): Promise<UploadCoverResult> {
     const pollInterval = 2000
-    const maxAttempts = 45          // 2s * 45 = 90s
+    const maxAttempts = 60          // 2s * 60 = 120s（V4.5 可能需要 90s+）
     const startTime = Date.now()
     let lastProgress = 30
     let lastUnknownStatus = ''
@@ -535,6 +542,81 @@ export class CoverGenerator {
         taskId: mvResult.taskId,
       },
     })
+  }
+
+  // ---------------------------------------------------------------------------
+  // 内部：partial 结果后继续轮询直到拿到完整 audioUrl
+  // ---------------------------------------------------------------------------
+
+  /**
+   * 后台继续轮询 Suno，等 SUCCESS 状态拿到完整 audioUrl 后更新任务缓存
+   */
+  private async pollForFullResult(
+    taskId: string,
+    sunoTaskId: string,
+    params: CoverGenerationParams,
+    partialResult: CoverGenerationResult,
+    useCache: boolean,
+    lyrics: string | undefined,
+    vocalGender: 'm' | 'f' | undefined,
+  ): Promise<void> {
+    const maxAttempts = 60 // 再最多等 120s
+    const pollInterval = 3000
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+      try {
+        const info = await this.sunoApiClient.fetchRecordInfo(sunoTaskId)
+        const sunoStatus = info.data.status
+
+        if (sunoStatus === 'SUCCESS' && info.data.response?.sunoData?.length) {
+          const song = info.data.response.sunoData[0]
+          if (song.audioUrl) {
+            console.log(`[CoverGenerator] Full audioUrl now available for ${taskId}`)
+
+            // 更新任务结果为完整版
+            const fullResult: CoverGenerationResult = {
+              ...partialResult,
+              audioUrl: song.audioUrl,
+              duration: song.duration || partialResult.duration,
+              isPartial: false,
+            }
+
+            taskStore.update(taskId, {
+              result: fullResult,
+            })
+
+            // 写入缓存（完整结果）
+            if (useCache) {
+              const cacheKey = getCoverCache().makeKey(params.songUrl, params.dialect, vocalGender)
+              getCoverCache().set({
+                cacheKey,
+                songUrl: params.songUrl,
+                dialect: params.dialect,
+                audioUrl: song.audioUrl,
+                audioId: song.id || partialResult.audioId,
+                sunoTaskId,
+                duration: song.duration || partialResult.duration,
+                lyrics,
+                vocalGender,
+                createdAt: Date.now(),
+              })
+            }
+            return
+          }
+        }
+
+        if (sunoStatus === 'CREATE_TASK_FAILED' || sunoStatus === 'GENERATE_AUDIO_FAILED') {
+          console.warn(`[CoverGenerator] Background poll: task failed after partial: ${sunoStatus}`)
+          return // partial 结果仍可用，不覆盖
+        }
+      } catch (err) {
+        console.warn(`[CoverGenerator] Background poll error: ${err instanceof Error ? err.message : err}`)
+      }
+    }
+
+    console.warn(`[CoverGenerator] Background poll timed out, partial result remains for ${taskId}`)
   }
 
   // ---------------------------------------------------------------------------
