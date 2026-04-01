@@ -5,6 +5,11 @@
  * 使用 yt-dlp 作为核心解析引擎（支持 YouTube、Bilibili、SoundCloud 等几百个平台）。
  * 解析后下载音频，上传到 OSS，返回 OSS URL。
  *
+ * 安全：
+ * - SSRF 防护：输入和解析结果 URL 都必须通过 isValidPublicUrl 校验
+ * - 下载大小限制：100MB（Content-Length + 流式累积检查）
+ * - 速率限制：10 次/分钟/客户端
+ *
  * POST /api/cover/resolve-url
  * Body: { url: string }
  * Response: { code: 0, data: { url, title? } }
@@ -13,12 +18,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { execFile } from 'child_process'
 import { uploadToOSS, isOSSConfigured } from '@/lib/oss'
-import { withOptionalAuth, checkRateLimit } from '@/lib/middleware/auth'
+import { withOptionalAuth, checkRateLimit, getClientIp } from '@/lib/middleware/auth'
+import { isValidPublicUrl } from '@/lib/utils/url-validator'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.webm', '.m4a', '.aac', '.flac', '.mp4', '.mov', '.wma']
+const MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024 // 100MB
 
 function isDirectAudioUrl(url: string): boolean {
   try {
@@ -89,22 +96,72 @@ function resolveWithYtdlp(inputUrl: string): Promise<YtdlpResult> {
 
 /**
  * 下载媒体文件并上传到 OSS
+ *
+ * 安全：流式读取 + 大小限制，防止内存溢出
  */
 async function downloadAndUpload(mediaUrl: string, filename: string): Promise<string> {
   console.log(`[ResolveURL] Downloading: ${mediaUrl.substring(0, 100)}...`)
 
-  const response = await fetch(mediaUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-    },
-  })
+  // 手动处理重定向，对每个 Location 做 SSRF 校验
+  let currentUrl = mediaUrl
+  let response: Response | null = null
+  for (let i = 0; i < 5; i++) {
+    response = await fetch(currentUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      },
+      redirect: 'manual',
+    })
+    const status = response.status
+    if (status >= 300 && status < 400) {
+      const location = response.headers.get('location')
+      if (!location) break
+      const nextUrl = new URL(location, currentUrl).toString()
+      // 对重定向目标也做 SSRF 校验
+      if (!isValidPublicUrl(nextUrl)) {
+        throw new Error('下载链接重定向到不安全地址')
+      }
+      currentUrl = nextUrl
+      continue
+    }
+    break
+  }
+  // After loop, response is guaranteed non-null (loop always runs at least once)
+  if (!response) {
+    throw new Error('下载音频失败：无响应')
+  }
 
   if (!response.ok) {
     throw new Error(`下载音频失败 (${response.status})`)
   }
 
+  // 大小检查：先看 Content-Length
+  const contentLength = parseInt(response.headers.get('content-length') || '0', 10)
+  if (contentLength > MAX_DOWNLOAD_SIZE) {
+    throw new Error(`文件过大（${Math.round(contentLength / 1024 / 1024)}MB），最大支持 100MB`)
+  }
+
   const contentType = response.headers.get('content-type') || 'audio/mpeg'
-  const buffer = Buffer.from(await response.arrayBuffer())
+
+  // 流式读取 + 累积大小检查，防止 Content-Length 伪造或无 Content-Length 时内存溢出
+  const chunks: Uint8Array[] = []
+  let totalSize = 0
+  const reader = response.body!.getReader()
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      totalSize += value.length
+      if (totalSize > MAX_DOWNLOAD_SIZE) {
+        throw new Error('文件过大，最大支持 100MB')
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const buffer = Buffer.concat(chunks)
 
   console.log(`[ResolveURL] Downloaded ${buffer.length} bytes, type=${contentType}`)
 
@@ -131,7 +188,7 @@ async function downloadAndUpload(mediaUrl: string, filename: string): Promise<st
 }
 
 export const POST = withOptionalAuth(async (request: NextRequest) => {
-  const clientId = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+  const clientId = getClientIp(request)
   const rateLimit = checkRateLimit(`resolve-url:${clientId}`, 10, 60000)
   if (!rateLimit.allowed) {
     return NextResponse.json({ code: 429, message: '请求过于频繁' }, { status: 429 })
@@ -141,6 +198,11 @@ export const POST = withOptionalAuth(async (request: NextRequest) => {
     const { url } = await request.json()
     if (!url || typeof url !== 'string') {
       return NextResponse.json({ code: 400, message: '请提供 URL' }, { status: 400 })
+    }
+
+    // SSRF 防护：验证输入 URL
+    if (!isValidPublicUrl(url)) {
+      return NextResponse.json({ code: 400, message: '不支持该链接地址' }, { status: 400 })
     }
 
     // 直接音频链接：不需要解析
@@ -158,6 +220,14 @@ export const POST = withOptionalAuth(async (request: NextRequest) => {
       return NextResponse.json({
         code: 400,
         message: '无法从该链接提取音频。请直接上传音频文件。',
+      }, { status: 400 })
+    }
+
+    // SSRF 防护：验证 yt-dlp 解析出的 URL 也是公网地址
+    if (!isValidPublicUrl(result.url)) {
+      return NextResponse.json({
+        code: 400,
+        message: '解析结果不安全，请直接上传音频文件。',
       }, { status: 400 })
     }
 
