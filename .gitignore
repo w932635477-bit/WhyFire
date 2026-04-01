@@ -83,3 +83,4 @@ test-voice-audio.mp3
 
 # 本地服务配置（仅根目录）
 /services/
+supabase/.temp/

@@ -130,7 +130,9 @@ export function Step3Preview({ onPrev }: { onPrev: () => void }) {
       const { status, videoUrl } = d.data
 
       if (status === 'completed') {
-        dispatch({ type: 'SET_MV_RESULT', result: { mvStatus: 'completed', mvVideoUrl: videoUrl, mvTaskId: taskId, mvProgress: 100 } })
+        // 代理 MV 视频URL，避免 COEP/ORB 拦截跨域资源
+        const proxiedVideoUrl = videoUrl ? `/api/video-proxy?url=${encodeURIComponent(videoUrl)}` : ''
+        dispatch({ type: 'SET_MV_RESULT', result: { mvStatus: 'completed', mvVideoUrl: proxiedVideoUrl, mvTaskId: taskId, mvProgress: 100 } })
         return
       }
 

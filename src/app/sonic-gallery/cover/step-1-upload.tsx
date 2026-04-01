@@ -2,6 +2,8 @@
 
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { useCoverContext } from './cover-context'
+import { extractAudioFromVideo, isVideoFile } from '@/lib/audio/audio-extractor'
+// 注意：不要从 @/lib/audio/index.ts 导入，会拉入 Node.js 模块 (child_process) 导致客户端构建失败
 
 function fmt(s: number): string {
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
@@ -70,8 +72,8 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
 
   const handleFileSelect = async (file: File) => {
     const isAudio = file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|webm|m4a|aac|flac)$/i)
-    const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|mov|avi|mkv|flv|wmv|webm)$/i)
-    if (!isAudio && !isVideo) {
+    const isVid = file.type.startsWith('video/') || file.name.match(/\.(mp4|mov|avi|mkv|flv|wmv|webm)$/i)
+    if (!isAudio && !isVid) {
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '请上传音频或视频文件（MP3、MP4 等）' })
       return
     }
@@ -79,11 +81,39 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '文件过大，最大 500MB' })
       return
     }
-    dispatch({ type: 'SET_SONG_FILE', file, fileName: file.name })
-    dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: 0 })
+
+    let uploadFile: File = file
+
+    // 视频文件：先用 FFmpeg.wasm 提取音频，再上传音频
+    if (isVideoFile(file)) {
+      dispatch({ type: 'SET_SONG_FILE', file, fileName: file.name })
+      dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: 5 })
+
+      try {
+        const { audioBlob } = await extractAudioFromVideo(file, {
+          onProgress: (p) => {
+            dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: Math.round(p * 40) })
+          },
+          outputFormat: 'mp3',
+        })
+
+        // 用音频 blob 替代视频文件上传
+        const mp3Name = file.name.replace(/\.[^.]+$/, '.mp3')
+        uploadFile = new File([audioBlob], mp3Name, { type: 'audio/mpeg' })
+        dispatch({ type: 'SET_SONG_FILE', file: uploadFile, fileName: mp3Name })
+      } catch (err) {
+        console.error('[CoverUpload] 视频提取音频失败:', err)
+        dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '视频处理失败，请直接上传音频文件' })
+        return
+      }
+    } else {
+      dispatch({ type: 'SET_SONG_FILE', file, fileName: file.name })
+      dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: 0 })
+    }
+
     try {
       const formData = new FormData()
-      formData.append('audio', file)
+      formData.append('audio', uploadFile)
       const res = await fetch('/api/cover/upload', { method: 'POST', body: formData })
       const data = await res.json()
       if (data.code === 0 && data.data?.url) {
@@ -98,15 +128,45 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
     }
   }
 
-  const handlePasteUrl = () => {
+  const handlePasteUrl = async () => {
     const url = pasteUrl.trim()
     if (!url.startsWith('http')) {
       dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '请输入有效的 URL' })
       return
     }
-    dispatch({ type: 'SET_SONG_URL', url })
-    dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
-    onNext()
+
+    // 直接音频文件链接（.mp3 等）：直接使用
+    if (url.match(/\.(mp3|wav|ogg|webm|m4a|aac|flac|mp4|mov)(\?|$)/i)) {
+      dispatch({ type: 'SET_SONG_URL', url })
+      dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+      onNext()
+      return
+    }
+
+    // 分享链接（抖音、网易云等）：通过 resolve-url API 解析
+    dispatch({ type: 'SET_UPLOAD_STATUS', status: 'uploading', progress: 30 })
+
+    try {
+      const res = await fetch('/api/cover/resolve-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json()
+
+      if (data.code === 0 && data.data?.url) {
+        dispatch({ type: 'SET_SONG_URL', url: data.data.url })
+        if (data.data.title) {
+          dispatch({ type: 'SET_SONG_FILE', file: null as any, fileName: `${data.data.title}.mp3` })
+        }
+        dispatch({ type: 'SET_UPLOAD_STATUS', status: 'completed', progress: 100 })
+        onNext()
+      } else {
+        dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: data.message || '链接解析失败，请直接上传音频文件' })
+      }
+    } catch {
+      dispatch({ type: 'SET_UPLOAD_STATUS', status: 'failed', error: '链接解析失败，请直接上传音频文件' })
+    }
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -187,7 +247,7 @@ export function Step1Upload({ onNext }: { onNext: () => void }) {
           value={pasteUrl}
           onChange={(e) => setPasteUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && pasteUrl.trim().startsWith('http') && handlePasteUrl()}
-          placeholder="https://example.com/song.mp3"
+          placeholder="粘贴抖音、网易云、汽水音乐链接或音频URL"
           className="flex-1 bg-transparent border-none px-4 py-2 text-white text-[13px] placeholder:text-white/20 focus:outline-none font-sans"
         />
         <button
