@@ -344,6 +344,22 @@ export function withOptionalAuth<T extends unknown[]>(
 }
 
 // ============================================================================
+// 客户端 IP 提取
+// ============================================================================
+
+/**
+ * 从请求头提取客户端 IP
+ *
+ * 取 x-forwarded-for 的第一个值（由可信反向代理设置），
+ * 防止客户端通过追加伪造 IP 绕过速率限制。
+ */
+export function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const firstIp = forwarded ? forwarded.split(',')[0].trim() : ''
+  return firstIp || request.headers.get('x-real-ip') || 'anonymous'
+}
+
+// ============================================================================
 // 速率限制支持（可选）
 // ============================================================================
 

@@ -9,7 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getCoverGenerator, type AsyncTaskState } from '@/lib/services/cover-generator'
-import { withOptionalAuth, checkRateLimit } from '@/lib/middleware/auth'
+import { withOptionalAuth, checkRateLimit, getClientIp } from '@/lib/middleware/auth'
+import { isValidPublicUrl } from '@/lib/utils/url-validator'
 import type { DialectCode } from '@/types/dialect'
 
 export const runtime = 'nodejs'
@@ -24,52 +25,12 @@ interface CoverGenerateRequest {
   vocalGender?: 'm' | 'f'
 }
 
-/** SSRF 防护：只允许 https 协议的公网 URL，阻止内网地址 */
-function isValidPublicUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url)
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false
-    const hostname = parsed.hostname.toLowerCase()
-    if (
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('10.') ||
-      hostname.startsWith('172.16.') ||
-      hostname.startsWith('172.17.') ||
-      hostname.startsWith('172.18.') ||
-      hostname.startsWith('172.19.') ||
-      hostname.startsWith('172.20.') ||
-      hostname.startsWith('172.21.') ||
-      hostname.startsWith('172.22.') ||
-      hostname.startsWith('172.23.') ||
-      hostname.startsWith('172.24.') ||
-      hostname.startsWith('172.25.') ||
-      hostname.startsWith('172.26.') ||
-      hostname.startsWith('172.27.') ||
-      hostname.startsWith('172.28.') ||
-      hostname.startsWith('172.29.') ||
-      hostname.startsWith('172.30.') ||
-      hostname.startsWith('172.31.') ||
-      hostname.startsWith('169.254.') ||
-      hostname.endsWith('.internal') ||
-      hostname.endsWith('.local') ||
-      hostname.endsWith('.localhost')
-    ) {
-      return false
-    }
-    return true
-  } catch {
-    return false
-  }
-}
-
 /**
  * POST /api/cover/generate
  * 提交方言翻唱任务（异步）
  */
 export const POST = withOptionalAuth(async (request: NextRequest) => {
-  const clientId = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+  const clientId = getClientIp(request)
   const rateLimit = checkRateLimit(`cover:${clientId}`, 3, 60000)
   if (!rateLimit.allowed) {
     return NextResponse.json(
@@ -189,12 +150,15 @@ export const GET = withOptionalAuth(async (request: NextRequest) => {
 
   if (taskState.status === 'completed' && taskState.result) {
     const result = taskState.result as any
-    response.audioUrl = result.audioUrl
+    // 使用 streamAudioUrl 作为首选（V5 流式交付，比 audioUrl 早 30-50s）
+    response.audioUrl = result.streamAudioUrl || result.audioUrl || ''
+    response.streamAudioUrl = result.streamAudioUrl || ''
     response.audioId = result.audioId
     response.sunoTaskId = result.taskId   // SunoAPI 原始 taskId（MV 生成需要）
     response.duration = result.duration
     response.lyrics = result.lyrics
     response.dialect = result.dialect
+    response.isPartial = result.isPartial || false
   }
 
   if (taskState.status === 'failed') {
